@@ -8,32 +8,32 @@ Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vo
 
 ## Feature-Übersicht & Stand
 
+### 🌍 Multi-Biome System & Prozedurale Strukturen (`Biome`)
+- **Dynamisches Biome-Noise (Temperatur & Feuchtigkeit)**:
+  - 🌾 **Plains (Grasebenen)**: Sanfte Hügellandschaften mit Gras & Eichenbäumen.
+  - 🏜️ **Desert (Wüste)**: Sand-Terrain, Sandstein & **Kakteen-Strukturen (`Cactus`)**.
+  - 🌲 **Forest (Dichter Wald)**: Hohe Baumdichte mit Eichen- und **Birkenstämmen (`BirchLog`)**.
+  - 🏔️ **Mountains (Berge)**: Hohe Felsgipfel mit **Schnee-Oberflächen (`Snow`)**.
+
 ### 🌊 Wasser-Physik, Schwimmen & Unterwasser-Nebel
-- **Flüssigkeits-Physik & Auftrieb (`PhysicsEngine`)**:
-  - Unterwasser-Dämpfung (erhöhter Bewegungswiderstand) & verringerte Gravitation.
-  - **Schwimmen (`Space` Taste im Wasser)**: Auftauchen und Aufsteigen im Wasser.
-- **Unterwasser-Nebelschader (`block.frag`)**: Automatisches Aktivieren von tiefblauem Unterwasser-Nebel und Farbtönung (`u_IsUnderwater`), wenn sich die Kamera unter Wasser befindet.
+- **Flüssigkeits-Physik & Auftrieb (`PhysicsEngine`)**: Unterwasser-Dämpfung, verringerte Gravitation & Schwimmen (`Space`).
+- **Unterwasser-Nebelschader (`block.frag`)**: Tiefblauer Unterwasser-Nebel & Farbtönung (`u_IsUnderwater`).
 
 ### ☀️ Dynamischer Tag/Nacht-Zyklus (`TimeManager`)
-- **24.000 Ticks Tageszyklus**:
-  - Dynamische **Sonnen- und Mondstandsberechnung** (360-Grad Lichtquellenrotation).
-  - Himmelsfarb-Interpolation: Morgenrot, Taghimmel (`Sky Blue`), Abendrot & tiefblaue Nacht.
-  - **`F4` Taste**: Tageszeit umschalten | **`T` Taste**: Zeit vorspulen.
+- **24.000 Ticks Tageszyklus**: Sonnen-/Mondstandsrotation, kontinuierliche Himmelsfarb-Interpolation & Tasten `F4`/`T`.
 
 ### 🎒 Inventar-System, Item-Stacks & 2x2 Crafting (`E` Taste)
 - **36-Slot Spieler-Inventar (`Inventory`)**: 9 Hotbar-Slots + 27 Hauptinventar-Slots.
-- **`E` Taste**: Öffnen und Schließen des Inventar-GUI Screens.
-- **Crafting Rezept-Manager (`CraftingManager`)**: Holzstämme -> Bretter -> Werkbank & Stöcke.
+- **Crafting Rezept-Manager (`CraftingManager`)**: Eichenholz -> Bretter -> Werkbank & Stöcke.
 
 ### 💾 Welt-Speichersystem (Save / Load Persistence)
-- **Binäre Chunk-Serialisierung (`SaveSystem`)**: Modifizierte Chunks werden beim Beenden in `world_saves/chunk_X_Z.bin` gespeichert und beim Start geladen.
+- Binäre Chunk-Serialisierung (`SaveSystem`) in `world_saves/chunk_X_Z.bin`.
 
 ### 🏔️ 3D Höhlensysteme, Erze & Unterwelt
-- **3D Noise Caves**: Unterirdische Tunnelgänge, Grotten und tief liegende Lava-Seen (Y < 10).
-- **Voxel-Erzadern**: Diamant-, Gold-, Eisen- und Kohle-Erzadern in tiefen Steinschichten.
+- 3D Noise Caves, Lava-Seen & Erzadern (Diamant, Gold, Eisen, Kohle).
 
 ### 💡 Smooth Lighting & Ambient Occlusion (AO)
-- Weiche Eck- und Kanten-Schatten an angrenzenden Voxel-Blöcken für plastischen Tiefeneffekt.
+- Weiche Eck- und Kanten-Schatten an angrenzenden Voxel-Blöcken.
 
 ---
 

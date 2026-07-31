@@ -1,6 +1,7 @@
 #include "Chunk.hpp"
 #include "ChunkMesh.hpp"
 #include "SaveSystem.hpp"
+#include "Biome.hpp"
 #include "../vendor/FastNoiseLite.h"
 #include <cmath>
 
@@ -11,7 +12,6 @@ Chunk::Chunk(int chunkX, int chunkZ)
 {
     m_Mesh = std::make_unique<ChunkMesh>();
 
-    // Load chunk from save file if present, otherwise generate procedurally
     if (!SaveSystem::loadChunk(*this)) {
         generateTerrain();
         SaveSystem::saveChunk(*this);
@@ -40,6 +40,12 @@ void Chunk::generateTerrain() {
     heightNoise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
     heightNoise.SetFrequency(0.015f);
 
+    FastNoiseLite tempNoise(5555);
+    tempNoise.SetFrequency(0.005f);
+
+    FastNoiseLite moistureNoise(7777);
+    moistureNoise.SetFrequency(0.005f);
+
     FastNoiseLite caveNoise(4242);
     caveNoise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
     caveNoise.SetFrequency(0.04f);
@@ -53,24 +59,30 @@ void Chunk::generateTerrain() {
             float worldX = static_cast<float>(m_ChunkX * CHUNK_SIZE_X + x);
             float worldZ = static_cast<float>(m_ChunkZ * CHUNK_SIZE_Z + z);
 
+            float temp = tempNoise.GetNoise(worldX, worldZ);
+            float moisture = moistureNoise.GetNoise(worldX, worldZ);
+            BiomeType biome = Biome::getBiome(temp, moisture);
+
             float n = heightNoise.GetNoise(worldX, worldZ);
-            int height = static_cast<int>(55 + n * 20.0f);
+            float heightMultiplier = (biome == BiomeType::Mountains) ? 35.0f : 20.0f;
+            int height = static_cast<int>(55 + n * heightMultiplier);
             if (height >= CHUNK_SIZE_Y - 10) height = CHUNK_SIZE_Y - 10;
+
+            BlockType topBlock = Biome::getSurfaceBlock(biome, height);
+            BlockType subBlock = Biome::getSubSurfaceBlock(biome);
 
             for (int y = 0; y < CHUNK_SIZE_Y; ++y) {
                 if (y == 0) {
                     m_Blocks[x][y][z] = BlockType::Bedrock;
                 } else if (y < height - 4) {
-                    // 3D Cave Carving
                     float caveVal = caveNoise.GetNoise(worldX, static_cast<float>(y), worldZ);
                     if (caveVal > 0.42f) {
                         if (y < 10) {
-                            m_Blocks[x][y][z] = BlockType::Lava; // Lava pool in deep caves
+                            m_Blocks[x][y][z] = BlockType::Lava;
                         } else {
                             m_Blocks[x][y][z] = BlockType::Air;
                         }
                     } else {
-                        // Ore Veins in Stone
                         float oreVal = oreNoise.GetNoise(worldX + y, static_cast<float>(y), worldZ);
                         if (y <= 16 && oreVal > 0.75f) {
                             m_Blocks[x][y][z] = BlockType::DiamondOre;
@@ -85,21 +97,29 @@ void Chunk::generateTerrain() {
                         }
                     }
                 } else if (y < height) {
-                    m_Blocks[x][y][z] = BlockType::Dirt;
+                    m_Blocks[x][y][z] = subBlock;
                 } else if (y == height) {
-                    m_Blocks[x][y][z] = BlockType::Grass;
+                    m_Blocks[x][y][z] = topBlock;
                 } else {
                     m_Blocks[x][y][z] = BlockType::Air;
                 }
             }
 
-            // Procedural Oak Trees
+            // Biome Structure Decorators
             if (x > 2 && x < CHUNK_SIZE_X - 2 && z > 2 && z < CHUNK_SIZE_Z - 2) {
                 float treeChance = std::abs(heightNoise.GetNoise(worldX * 5.0f, worldZ * 5.0f));
-                if (treeChance > 0.65f && height > 45 && m_Blocks[x][height][z] == BlockType::Grass) {
+
+                if (biome == BiomeType::Desert && treeChance > 0.75f) {
+                    // Cactus Structure
+                    for (int ch = 1; ch <= 3; ++ch) {
+                        m_Blocks[x][height + ch][z] = BlockType::Cactus;
+                    }
+                } else if ((biome == BiomeType::Forest || biome == BiomeType::Plains) && treeChance > 0.60f) {
+                    // Oak or Birch Trees
+                    BlockType logType = (biome == BiomeType::Forest && treeChance > 0.8f) ? BlockType::BirchLog : BlockType::OakLog;
                     int trunkHeight = 5;
                     for (int th = 1; th <= trunkHeight; ++th) {
-                        m_Blocks[x][height + th][z] = BlockType::OakLog;
+                        m_Blocks[x][height + th][z] = logType;
                     }
                     for (int lx = -2; lx <= 2; ++lx) {
                         for (int lz = -2; lz <= 2; ++lz) {
