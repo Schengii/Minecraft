@@ -45,6 +45,8 @@ set(SOURCES
     src/core/Application.cpp
     src/renderer/Shader.cpp
     src/renderer/Camera.cpp
+    src/renderer/ParticleEngine.cpp
+    src/renderer/FrustumCuller.cpp
     src/world/Chunk.cpp
     src/world/ChunkMesh.cpp
     src/world/World.cpp
@@ -54,11 +56,14 @@ set(SOURCES
     src/world/FluidEngine.cpp
     src/world/Biome.cpp
     src/world/RedstoneEngine.cpp
+    src/world/ToolSystem.cpp
+    src/world/ExplosionEngine.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp
     src/inventory/Inventory.cpp
     src/crafting/CraftingManager.cpp
+    src/ecs/MobEngine.cpp
     src/audio/AudioManager.cpp
 )
 
@@ -89,6 +94,8 @@ set(TEST_SOURCES
     src/core/Application.cpp
     src/renderer/Shader.cpp
     src/renderer/Camera.cpp
+    src/renderer/ParticleEngine.cpp
+    src/renderer/FrustumCuller.cpp
     src/world/Chunk.cpp
     src/world/ChunkMesh.cpp
     src/world/World.cpp
@@ -98,11 +105,14 @@ set(TEST_SOURCES
     src/world/FluidEngine.cpp
     src/world/Biome.cpp
     src/world/RedstoneEngine.cpp
+    src/world/ToolSystem.cpp
+    src/world/ExplosionEngine.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp
     src/inventory/Inventory.cpp
     src/crafting/CraftingManager.cpp
+    src/ecs/MobEngine.cpp
     src/audio/AudioManager.cpp
 )
 add_executable(TestEngine ${TEST_SOURCES})

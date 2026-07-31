@@ -3,6 +3,7 @@
 #include "Block.hpp"
 #include <vector>
 #include <cmath>
+#include <algorithm>
 
 namespace Minecraft {
 
@@ -52,8 +53,15 @@ void FluidEngine::updateFluids(World& world, const glm::vec3& playerPos) {
         }
     }
 
+    // Sort changes by distance to playerPos so nearby fluids update first
+    std::sort(changes.begin(), changes.end(), [&playerPos](const FluidChange& a, const FluidChange& b) {
+        float distA = glm::distance(playerPos, glm::vec3(a.x, a.y, a.z));
+        float distB = glm::distance(playerPos, glm::vec3(b.x, b.y, b.z));
+        return distA < distB;
+    });
+
     // Apply changes (limit batch size for smooth performance)
-    size_t applyCount = std::min(changes.size(), static_cast<size_t>(16));
+    size_t applyCount = std::min(changes.size(), static_cast<size_t>(128));
     for (size_t i = 0; i < applyCount; ++i) {
         world.setBlock(changes[i].x, changes[i].y, changes[i].z, changes[i].type);
     }

@@ -10,6 +10,9 @@
 #include "../gui/HUD.hpp"
 #include "../gui/InventoryGUI.hpp"
 #include "../inventory/Inventory.hpp"
+#include "../ecs/MobEngine.hpp"
+#include "../renderer/ParticleEngine.hpp"
+#include "../renderer/FrustumCuller.hpp"
 #include <memory>
 
 namespace Minecraft {
@@ -34,6 +37,9 @@ private:
     std::unique_ptr<HUD> m_HUD;
     std::unique_ptr<InventoryGUI> m_InventoryGUI;
     std::unique_ptr<Inventory> m_Inventory;
+    std::unique_ptr<MobEngine> m_MobEngine;
+    std::unique_ptr<ParticleEngine> m_ParticleEngine;
+    std::unique_ptr<FrustumCuller> m_FrustumCuller;
 
     bool m_IsRunning = true;
     bool m_IsFlying = true;

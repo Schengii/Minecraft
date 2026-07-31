@@ -3,6 +3,8 @@
 #include "../world/Raycast.hpp"
 #include "../world/RedstoneEngine.hpp"
 #include "../world/FluidEngine.hpp"
+#include "../world/ExplosionEngine.hpp"
+#include "../world/ToolSystem.hpp"
 #include "../physics/PhysicsEngine.hpp"
 #include "../audio/AudioManager.hpp"
 #include <iostream>
@@ -21,6 +23,14 @@ Application::Application() {
     m_HUD = std::make_unique<HUD>(m_Window->getWidth(), m_Window->getHeight());
     m_InventoryGUI = std::make_unique<InventoryGUI>(m_Window->getWidth(), m_Window->getHeight());
     m_Inventory = std::make_unique<Inventory>();
+
+    m_MobEngine = std::make_unique<MobEngine>();
+    m_ParticleEngine = std::make_unique<ParticleEngine>();
+    m_FrustumCuller = std::make_unique<FrustumCuller>();
+
+    // Spawn initial interactive test mobs
+    m_MobEngine->spawnMob(MobType::Zombie, glm::vec3(5.0f, 65.0f, 5.0f));
+    m_MobEngine->spawnMob(MobType::Pig, glm::vec3(-5.0f, 65.0f, 3.0f));
 }
 
 Application::~Application() = default;
@@ -166,28 +176,39 @@ void Application::processInput(float deltaTime) {
     }
     Input::updateMouseDelta();
 
-    // Raycast Block Interaktionen (Abbauen / Platzieren & Redstone Hebel Schalten)
+    // Raycast Block & Mob Interaktionen
     bool leftMouseNow = Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
     bool rightMouseNow = Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT);
 
     if ((leftMouseNow && !m_LeftMousePressedLast) || (rightMouseNow && !m_RightMousePressedLast)) {
-        RaycastResult hit = Raycast::raycast(*m_World, m_Camera->getPosition(), m_Camera->getFront(), 6.0f);
-        if (hit.hit) {
-            BlockType hitType = m_World->getBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
-            if (rightMouseNow && !m_RightMousePressedLast && hitType == BlockType::Lever) {
-                // Interaktiver Redstone-Hebel
-                RedstoneEngine::updateRedstoneNetwork(*m_World, hit.blockPos);
-                AudioManager::playSound(SoundEffect::BlockPlace);
-            } else if (leftMouseNow && !m_LeftMousePressedLast) {
-                m_World->setBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, BlockType::Air);
-                m_Inventory->addItem(hitType, 1);
-                AudioManager::playSound(SoundEffect::BlockBreak);
-            } else if (rightMouseNow && !m_RightMousePressedLast) {
-                BlockType toPlace = m_SelectedBlock;
-                if (toPlace != BlockType::Air) {
-                    m_World->setBlock(hit.previousPos.x, hit.previousPos.y, hit.previousPos.z, toPlace);
-                    RedstoneEngine::updateRedstoneNetwork(*m_World, hit.previousPos);
+        int damage = ToolSystem::getDamageDealt(m_SelectedBlock);
+        bool mobHit = m_MobEngine->checkPlayerAttack(m_Camera->getPosition(), m_Camera->getFront(), 4.5f, damage);
+
+        if (!mobHit) {
+            RaycastResult hit = Raycast::raycast(*m_World, m_Camera->getPosition(), m_Camera->getFront(), 6.0f);
+            if (hit.hit) {
+                BlockType hitType = m_World->getBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
+                if (rightMouseNow && !m_RightMousePressedLast && hitType == BlockType::Lever) {
+                    // Interaktiver Redstone-Hebel
+                    RedstoneEngine::updateRedstoneNetwork(*m_World, hit.blockPos);
                     AudioManager::playSound(SoundEffect::BlockPlace);
+                } else if (rightMouseNow && !m_RightMousePressedLast && hitType == BlockType::TNT) {
+                    // TNT Zündung!
+                    ExplosionEngine::createExplosion(*m_World, glm::vec3(hit.blockPos) + glm::vec3(0.5f), 4.0f, &m_PlayerVelocity, &m_Camera->getPosition());
+                } else if (leftMouseNow && !m_LeftMousePressedLast) {
+                    if (ToolSystem::canHarvest(hitType, m_SelectedBlock)) {
+                        m_Inventory->addItem(hitType, 1);
+                    }
+                    m_ParticleEngine->spawnBlockBreak(glm::vec3(hit.blockPos));
+                    m_World->setBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, BlockType::Air);
+                    AudioManager::playSound(SoundEffect::BlockBreak);
+                } else if (rightMouseNow && !m_RightMousePressedLast) {
+                    BlockType toPlace = m_SelectedBlock;
+                    if (toPlace != BlockType::Air) {
+                        m_World->setBlock(hit.previousPos.x, hit.previousPos.y, hit.previousPos.z, toPlace);
+                        RedstoneEngine::updateRedstoneNetwork(*m_World, hit.previousPos);
+                        AudioManager::playSound(SoundEffect::BlockPlace);
+                    }
                 }
             }
         }
@@ -209,6 +230,16 @@ void Application::update(float deltaTime) {
         
         // Fluid simulation step around player
         FluidEngine::updateFluids(*m_World, currentPos);
+
+        // Mob Engine update & AI pathfinding
+        if (m_MobEngine) {
+            m_MobEngine->update(*m_World, currentPos, deltaTime);
+        }
+
+        // Particle Engine update
+        if (m_ParticleEngine) {
+            m_ParticleEngine->update(deltaTime);
+        }
 
         Camera tempCam(currentPos, glm::vec3(0, 1, 0));
         *m_Camera = tempCam;

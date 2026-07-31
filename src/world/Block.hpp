@@ -31,7 +31,16 @@ enum class BlockType : uint8_t {
     RedstoneWire,
     RedstoneTorch,
     Lever,
-    RedstoneLamp
+    RedstoneLamp,
+    TNT,
+    Chest,
+    WoodPickaxe,
+    StonePickaxe,
+    IronPickaxe,
+    DiamondPickaxe,
+    WoodAxe,
+    IronSword,
+    DiamondSword
 };
 
 enum Direction {
