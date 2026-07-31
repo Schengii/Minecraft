@@ -50,6 +50,7 @@ set(SOURCES
     src/world/World.cpp
     src/world/Raycast.cpp
     src/world/SaveSystem.cpp
+    src/world/TimeManager.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp

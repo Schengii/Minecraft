@@ -15,6 +15,7 @@ Application::Application() {
     m_Camera = std::make_unique<Camera>(glm::vec3(0.0f, 65.0f, 0.0f));
     m_BlockShader = std::make_unique<Shader>("assets/shaders/block.vert", "assets/shaders/block.frag");
     m_World = std::make_unique<World>(4);
+    m_TimeManager = std::make_unique<TimeManager>();
     m_HUD = std::make_unique<HUD>(m_Window->getWidth(), m_Window->getHeight());
     m_InventoryGUI = std::make_unique<InventoryGUI>(m_Window->getWidth(), m_Window->getHeight());
     m_Inventory = std::make_unique<Inventory>();
@@ -85,6 +86,23 @@ void Application::processInput(float deltaTime) {
     }
     m_F3PressedLast = f3PressedNow;
 
+    // F4 Key: Cycle Time of Day (Noon -> Sunset -> Night -> Sunrise)
+    bool f4PressedNow = Input::isKeyPressed(GLFW_KEY_F4);
+    if (f4PressedNow && !m_F4PressedLast) {
+        float currentTicks = m_TimeManager->getTimeTicks();
+        if (currentTicks < 6000.0f) m_TimeManager->setTimeOfDay(6000.0f); // Noon
+        else if (currentTicks < 12000.0f) m_TimeManager->setTimeOfDay(12000.0f); // Sunset
+        else if (currentTicks < 18000.0f) m_TimeManager->setTimeOfDay(18000.0f); // Night
+        else m_TimeManager->setTimeOfDay(0.0f); // Sunrise
+        std::cout << "[TimeManager] Advanced time to " << m_TimeManager->getTimeTicks() << " ticks." << std::endl;
+    }
+    m_F4PressedLast = f4PressedNow;
+
+    // 'T' Key: Fast forward time
+    if (Input::isKeyPressed(GLFW_KEY_T)) {
+        m_TimeManager->advanceTime(100.0f);
+    }
+
     // Hotbar Block selection (1-9)
     if (Input::isKeyPressed(GLFW_KEY_1)) { m_SelectedSlot = 0; m_SelectedBlock = m_Inventory->getSlot(0).type; }
     if (Input::isKeyPressed(GLFW_KEY_2)) { m_SelectedSlot = 1; m_SelectedBlock = m_Inventory->getSlot(1).type; }
@@ -96,7 +114,6 @@ void Application::processInput(float deltaTime) {
     if (Input::isKeyPressed(GLFW_KEY_8)) { m_SelectedSlot = 7; m_SelectedBlock = m_Inventory->getSlot(7).type; }
     if (Input::isKeyPressed(GLFW_KEY_9)) { m_SelectedSlot = 8; m_SelectedBlock = m_Inventory->getSlot(8).type; }
 
-    // Disable 3D movement & raycasting while inventory screen is open
     if (m_IsInventoryOpen) {
         bool leftMouseNow = Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
         if (leftMouseNow && !m_LeftMousePressedLast) {
@@ -168,6 +185,10 @@ void Application::processInput(float deltaTime) {
 }
 
 void Application::update(float deltaTime) {
+    if (m_TimeManager) {
+        m_TimeManager->update(deltaTime);
+    }
+
     if (m_World && m_Camera) {
         glm::vec3 currentPos = m_Camera->getPosition();
         PhysicsEngine::updatePlayer(*m_World, currentPos, m_PlayerVelocity, m_IsGrounded, m_IsFlying, deltaTime);
@@ -180,11 +201,12 @@ void Application::update(float deltaTime) {
 }
 
 void Application::render() {
-    glClearColor(0.53f, 0.81f, 0.98f, 1.0f);
+    glm::vec3 skyColor = m_TimeManager->getSkyColor();
+    glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // 1. Render 3D World
-    if (m_BlockShader && m_Camera && m_World) {
+    if (m_BlockShader && m_Camera && m_World && m_TimeManager) {
         m_BlockShader->use();
         
         glm::mat4 projection = m_Camera->getProjectionMatrix(m_Window->getAspectRatio());
@@ -195,9 +217,10 @@ void Application::render() {
         m_BlockShader->setMat4("u_View", view);
         m_BlockShader->setMat4("u_Model", model);
 
-        m_BlockShader->setVec3("u_SunDirection", glm::vec3(0.5f, 1.0f, 0.3f));
-        m_BlockShader->setVec3("u_SunColor", glm::vec3(1.0f, 0.95f, 0.8f));
-        m_BlockShader->setVec3("u_SkyColor", glm::vec3(0.53f, 0.81f, 0.98f));
+        m_BlockShader->setVec3("u_SunDirection", m_TimeManager->getSunDirection());
+        m_BlockShader->setVec3("u_SunColor", m_TimeManager->getSunColor());
+        m_BlockShader->setVec3("u_SkyColor", skyColor);
+        m_BlockShader->setFloat("u_AmbientLight", m_TimeManager->getAmbientLight());
 
         m_World->render();
     }

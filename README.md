@@ -8,14 +8,18 @@ Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vo
 
 ## Feature-Übersicht & Stand
 
+### ☀️ Dynamischer Tag/Nacht-Zyklus (`TimeManager`)
+- **24.000 Ticks Tageszyklus**:
+  - Dynamische **Sonnen- und Mondstandsberechnung** (360-Grad Lichtquellenrotation im Raum).
+  - Continuous **Himmelsfarb-Interpolation**: Morgenrot, Taghimmel (`Sky Blue`), Abendrot & tiefblaue Nacht.
+  - **Dynamisches Umgebungslicht (`u_AmbientLight`)**: Helles Tageslicht (`0.5f`) & sanftes Mondlicht (`0.10f`).
+  - **`F4` Taste**: Schnell-Umschaltung zwischen Tag, Dämmerung & Nacht.
+  - **`T` Taste**: Zeitraffer / Zeitvorspulen.
+
 ### 🎒 Inventar-System, Item-Stacks & 2x2 Crafting (`E` Taste)
 - **36-Slot Spieler-Inventar (`Inventory`)**: 9 Hotbar-Slots + 27 Hauptinventar-Slots.
-- **`E` Taste**: Öffnen und Schließen des Inventar-GUI Screens inkl. Mauszustandssteuerung (Cursor-Freigabe).
-- **Abbau-Item Drops**: Beim Abbauen von Blöcken wandern die Blöcke automatisch in das Inventar des Spielers.
-- **Crafting Rezept-Manager (`CraftingManager`)**:
-  - 🪵 **Eichenholz-Stamm** (`OakLog`) -> 4x **Holzbretter** (`Planks`)
-  - 🧱 4x **Holzbretter** (`Planks`) -> 1x **Werkbank / Crafting Table** (`CraftingTable`)
-  - 🥢 2x **Holzbretter** (`Planks`) -> 4x **Stöcke** (`Stick`)
+- **`E` Taste**: Öffnen und Schließen des Inventar-GUI Screens.
+- **Crafting Rezept-Manager (`CraftingManager`)**: Eichenholz -> Holzbretter -> Werkbank & Stöcke.
 
 ### 💾 Welt-Speichersystem (Save / Load Persistence)
 - **Binäre Chunk-Serialisierung (`SaveSystem`)**: Modifizierte Chunks werden beim Beenden in `world_saves/chunk_X_Z.bin` gespeichert und beim Start geladen.
@@ -25,13 +29,7 @@ Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vo
 - **Voxel-Erzadern**: Diamant-, Gold-, Eisen- und Kohle-Erzadern in tiefen Steinschichten.
 
 ### 💡 Smooth Lighting & Ambient Occlusion (AO)
-- **Vertex Ambient Occlusion**: Weiche Eck- und Kanten-Schatten an angrenzenden Voxel-Blöcken für plastischen Tiefeneffekt.
-
-### 🔊 Audio Subsystem & Sound Effects
-- Audio-Trigger für Block-Abbau, Block-Platzieren und Sprung-Aktionen.
-
-### 🎮 Gameplay, Raycasting & GUI
-- Voxel Raycasting (Linksklick abbauen, Rechtsklick platzieren), 2D Hotbar, Crosshair und `F3` Debug Overlay.
+- Weiche Eck- und Kanten-Schatten an angrenzenden Voxel-Blöcken für plastischen Tiefeneffekt.
 
 ---
 
@@ -40,6 +38,8 @@ Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vo
 | Taste / Eingabe | Aktion |
 |-----------------|--------|
 | `E` | Inventar- & Crafting-GUI öffnen / schließen |
+| `F4` | Tageszeit umschalten (Tag -> Dämmerung -> Nacht -> Morgenrot) |
+| `T` | Zeit im Spiel vorspulen (Zeitraffer) |
 | `W / A / S / D` | Vorwärts, links, rückwärts, rechts bewegen |
 | `Space` | Springen (im Laufmodus) / Nach oben fliegen (im Flugmodus) |
 | `L-Shift` | Nach unten fliegen (im Flugmodus) |

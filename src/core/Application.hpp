@@ -6,6 +6,7 @@
 #include "../renderer/Camera.hpp"
 #include "../world/World.hpp"
 #include "../world/Block.hpp"
+#include "../world/TimeManager.hpp"
 #include "../gui/HUD.hpp"
 #include "../gui/InventoryGUI.hpp"
 #include "../inventory/Inventory.hpp"
@@ -29,6 +30,7 @@ private:
     std::unique_ptr<Shader> m_BlockShader;
     std::unique_ptr<Camera> m_Camera;
     std::unique_ptr<World> m_World;
+    std::unique_ptr<TimeManager> m_TimeManager;
     std::unique_ptr<HUD> m_HUD;
     std::unique_ptr<InventoryGUI> m_InventoryGUI;
     std::unique_ptr<Inventory> m_Inventory;
@@ -45,12 +47,13 @@ private:
 
     glm::vec3 m_PlayerVelocity{ 0.0f };
     BlockType m_SelectedBlock = BlockType::Grass;
-    int m_SelectedSlot = 0; // 0 to 8
+    int m_SelectedSlot = 0;
 
     bool m_LeftMousePressedLast = false;
     bool m_RightMousePressedLast = false;
     bool m_FPressedLast = false;
     bool m_F3PressedLast = false;
+    bool m_F4PressedLast = false;
     bool m_EPressedLast = false;
 };
 
