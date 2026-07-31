@@ -55,9 +55,6 @@ void testFluids() {
     
     BlockType b1 = world.getBlock(5, 70, 5);
     BlockType b2 = world.getBlock(6, 70, 5);
-    std::cout << "  - (5,70,5) is: " << static_cast<int>(b1) << " (Water=" << static_cast<int>(BlockType::Water) << ", Stone=" << static_cast<int>(BlockType::Stone) << ")" << std::endl;
-    std::cout << "  - (6,70,5) is: " << static_cast<int>(b2) << " (Lava=" << static_cast<int>(BlockType::Lava) << ", Stone=" << static_cast<int>(BlockType::Stone) << ")" << std::endl;
-
     assert(b1 == BlockType::Stone || b2 == BlockType::Stone);
     
     std::cout << "  -> FluidEngine tests PASSED!" << std::endl;
@@ -130,13 +127,7 @@ void testMobEngine() {
     
     // Test Combat attack
     glm::vec3 playerPos(10.0f, 60.0f, 10.0f);
-    glm::vec3 mobPos = mobEngine.getMobs()[0].position;
-    std::cout << "  - Mob pos: (" << mobPos.x << ", " << mobPos.y << ", " << mobPos.z << ")" << std::endl;
-    float dist = glm::distance(playerPos, mobPos);
-    std::cout << "  - Dist: " << dist << std::endl;
-    
     bool hit = mobEngine.checkPlayerAttack(playerPos, glm::vec3(-1.0f, 0.0f, 0.0f), 5.0f, 7);
-    std::cout << "  - Hit result: " << (hit ? "TRUE" : "FALSE") << std::endl;
     assert(hit == true);
     
     std::cout << "  -> MobEngine tests PASSED!" << std::endl;
@@ -157,8 +148,6 @@ void testParticleAndFrustum() {
     
     std::cout << "  -> ParticleEngine & FrustumCuller tests PASSED!" << std::endl;
 }
-
-#include <filesystem>
 
 int main() {
     std::cout << "========================================" << std::endl;

@@ -30,3 +30,6 @@ CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
+
+# Saved World Data
+world_saves/

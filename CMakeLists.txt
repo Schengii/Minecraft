@@ -87,7 +87,7 @@ endif()
 
 # Test Engine Target
 set(TEST_SOURCES
-    src/test_engine.cpp
+    tests/test_engine.cpp
     src/vendor/glad/glad.c
     src/core/Window.cpp
     src/core/Input.cpp
