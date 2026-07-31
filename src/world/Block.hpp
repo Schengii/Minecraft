@@ -27,7 +27,11 @@ enum class BlockType : uint8_t {
     Stick,
     Cactus,
     Snow,
-    BirchLog
+    BirchLog,
+    RedstoneWire,
+    RedstoneTorch,
+    Lever,
+    RedstoneLamp
 };
 
 enum Direction {
@@ -43,11 +47,11 @@ struct BlockData {
     BlockType type = BlockType::Air;
 
     static bool isOpaque(BlockType type) {
-        return type != BlockType::Air && type != BlockType::Glass && type != BlockType::Water && type != BlockType::Lava;
+        return type != BlockType::Air && type != BlockType::Glass && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch;
     }
 
     static bool isSolid(BlockType type) {
-        return type != BlockType::Air && type != BlockType::Water && type != BlockType::Lava;
+        return type != BlockType::Air && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch;
     }
 
     static glm::vec2 getTextureUV(BlockType type, Direction face) {
@@ -113,6 +117,18 @@ struct BlockData {
                 break;
             case BlockType::BirchLog:
                 tileIndex = 5;
+                break;
+            case BlockType::RedstoneWire:
+                tileIndex = 11;
+                break;
+            case BlockType::RedstoneTorch:
+                tileIndex = 13;
+                break;
+            case BlockType::Lever:
+                tileIndex = 9;
+                break;
+            case BlockType::RedstoneLamp:
+                tileIndex = 14;
                 break;
             default:
                 tileIndex = 2;

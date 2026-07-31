@@ -8,23 +8,24 @@ Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vo
 
 ## Feature-Übersicht & Stand
 
+### 🔴 Redstone Logik & Schaltungen (`RedstoneEngine`)
+- **Signal-Ausbreitung & Interaktion**:
+  - 🔴 **Redstone-Leitung (`RedstoneWire`)**: Transportiert Redstone-Signale über Voxel-Blöcke.
+  - 🕯️ **Redstone-Fackel (`RedstoneTorch`)**: Ständige Energiequelle & Signal-Inverter.
+  - 🎛️ **Hebel / Schalter (`Lever`)**: Interaktives Ein- und Ausschalten von Schaltungen per Rechtsklick.
+  - 💡 **Redstone-Lampe (`RedstoneLamp`)**: Leuchtet automatisch bei anliegendem Redstone-Signal auf.
+
 ### 🌍 Multi-Biome System & Prozedurale Strukturen (`Biome`)
-- **Dynamisches Biome-Noise (Temperatur & Feuchtigkeit)**:
-  - 🌾 **Plains (Grasebenen)**: Sanfte Hügellandschaften mit Gras & Eichenbäumen.
-  - 🏜️ **Desert (Wüste)**: Sand-Terrain, Sandstein & **Kakteen-Strukturen (`Cactus`)**.
-  - 🌲 **Forest (Dichter Wald)**: Hohe Baumdichte mit Eichen- und **Birkenstämmen (`BirchLog`)**.
-  - 🏔️ **Mountains (Berge)**: Hohe Felsgipfel mit **Schnee-Oberflächen (`Snow`)**.
+- Dynamisches Biome-Noise (Ebenen, Wüste mit Kakteen, Waldbiome mit Birken, Verschneite Berggipfel).
 
 ### 🌊 Wasser-Physik, Schwimmen & Unterwasser-Nebel
-- **Flüssigkeits-Physik & Auftrieb (`PhysicsEngine`)**: Unterwasser-Dämpfung, verringerte Gravitation & Schwimmen (`Space`).
-- **Unterwasser-Nebelschader (`block.frag`)**: Tiefblauer Unterwasser-Nebel & Farbtönung (`u_IsUnderwater`).
+- Flüssigkeits-Physik, Auftrieb, Schwimmen (`Space`) & Unterwasser-Nebelschader.
 
 ### ☀️ Dynamischer Tag/Nacht-Zyklus (`TimeManager`)
-- **24.000 Ticks Tageszyklus**: Sonnen-/Mondstandsrotation, kontinuierliche Himmelsfarb-Interpolation & Tasten `F4`/`T`.
+- 24.000 Ticks Tageszyklus mit flüssiger Himmelsfarb-Interpolation & Tasten `F4`/`T`.
 
 ### 🎒 Inventar-System, Item-Stacks & 2x2 Crafting (`E` Taste)
-- **36-Slot Spieler-Inventar (`Inventory`)**: 9 Hotbar-Slots + 27 Hauptinventar-Slots.
-- **Crafting Rezept-Manager (`CraftingManager`)**: Eichenholz -> Bretter -> Werkbank & Stöcke.
+- 36-Slot Spieler-Inventar, Abbau-Item Drops & Crafting Rezept-Manager.
 
 ### 💾 Welt-Speichersystem (Save / Load Persistence)
 - Binäre Chunk-Serialisierung (`SaveSystem`) in `world_saves/chunk_X_Z.bin`.
@@ -33,7 +34,7 @@ Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vo
 - 3D Noise Caves, Lava-Seen & Erzadern (Diamant, Gold, Eisen, Kohle).
 
 ### 💡 Smooth Lighting & Ambient Occlusion (AO)
-- Weiche Eck- und Kanten-Schatten an angrenzenden Voxel-Blöcken.
+- Weiche Eck- und Kanten-Schatten an angrenzenden Voxel-Blöcken für plastischen Tiefeneffekt.
 
 ---
 
@@ -49,9 +50,9 @@ Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vo
 | `L-Shift` | Sinken / Nach unten fliegen (im Flugmodus) |
 | `F` | Umschalten zwischen Flugmodus & Voxel-Physik |
 | `F3` | Debug-Bildschirm (FPS, Koordinaten, Facing) ein-/ausblenden |
-| `1 - 9` | Hotbar Slot wählen |
+| `1 - 9` | Hotbar Slot wählen (inkl. Redstone-Staub, Fackeln, Hebel & Lampen) |
 | `Linksklick` | Block unter Fadenkreuz abbauen / Item im Inventar bewegen |
-| `Rechtsklick` | Ausgewählten Block platzieren |
+| `Rechtsklick` | Ausgewählten Block platzieren / Hebel umschalten |
 | `Maus bewegen` | Umsehen (Pitch / Yaw) |
 | `Escape` | Inventar schließen oder Spiel beenden |
 

@@ -53,6 +53,7 @@ set(SOURCES
     src/world/TimeManager.cpp
     src/world/FluidEngine.cpp
     src/world/Biome.cpp
+    src/world/RedstoneEngine.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp

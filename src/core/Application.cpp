@@ -1,6 +1,7 @@
 #include "Application.hpp"
 #include "Input.hpp"
 #include "../world/Raycast.hpp"
+#include "../world/RedstoneEngine.hpp"
 #include "../physics/PhysicsEngine.hpp"
 #include "../audio/AudioManager.hpp"
 #include <iostream>
@@ -106,12 +107,12 @@ void Application::processInput(float deltaTime) {
     if (Input::isKeyPressed(GLFW_KEY_1)) { m_SelectedSlot = 0; m_SelectedBlock = m_Inventory->getSlot(0).type; }
     if (Input::isKeyPressed(GLFW_KEY_2)) { m_SelectedSlot = 1; m_SelectedBlock = m_Inventory->getSlot(1).type; }
     if (Input::isKeyPressed(GLFW_KEY_3)) { m_SelectedSlot = 2; m_SelectedBlock = m_Inventory->getSlot(2).type; }
-    if (Input::isKeyPressed(GLFW_KEY_4)) { m_SelectedSlot = 3; m_SelectedBlock = m_Inventory->getSlot(3).type; }
-    if (Input::isKeyPressed(GLFW_KEY_5)) { m_SelectedSlot = 4; m_SelectedBlock = m_Inventory->getSlot(5).type; }
-    if (Input::isKeyPressed(GLFW_KEY_6)) { m_SelectedSlot = 5; m_SelectedBlock = m_Inventory->getSlot(6).type; }
-    if (Input::isKeyPressed(GLFW_KEY_7)) { m_SelectedSlot = 7; m_SelectedBlock = BlockType::Water; }
-    if (Input::isKeyPressed(GLFW_KEY_8)) { m_SelectedSlot = 7; m_SelectedBlock = m_Inventory->getSlot(7).type; }
-    if (Input::isKeyPressed(GLFW_KEY_9)) { m_SelectedSlot = 8; m_SelectedBlock = m_Inventory->getSlot(8).type; }
+    if (Input::isKeyPressed(GLFW_KEY_4)) { m_SelectedSlot = 3; m_SelectedBlock = BlockType::RedstoneWire; }
+    if (Input::isKeyPressed(GLFW_KEY_5)) { m_SelectedSlot = 4; m_SelectedBlock = BlockType::RedstoneTorch; }
+    if (Input::isKeyPressed(GLFW_KEY_6)) { m_SelectedSlot = 5; m_SelectedBlock = BlockType::Lever; }
+    if (Input::isKeyPressed(GLFW_KEY_7)) { m_SelectedSlot = 6; m_SelectedBlock = BlockType::RedstoneLamp; }
+    if (Input::isKeyPressed(GLFW_KEY_8)) { m_SelectedSlot = 7; m_SelectedBlock = BlockType::Water; }
+    if (Input::isKeyPressed(GLFW_KEY_9)) { m_SelectedSlot = 8; m_SelectedBlock = BlockType::Bedrock; }
 
     if (m_IsInventoryOpen) {
         bool leftMouseNow = Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
@@ -143,7 +144,7 @@ void Application::processInput(float deltaTime) {
         if (Input::isKeyPressed(GLFW_KEY_LEFT_SHIFT)) m_PlayerVelocity.y -= speed;
     } else if (m_InWater) {
         if (Input::isKeyPressed(GLFW_KEY_SPACE)) {
-            m_PlayerVelocity.y += 6.0f * deltaTime; // Swim up
+            m_PlayerVelocity.y += 6.0f * deltaTime;
         }
     } else {
         if (Input::isKeyPressed(GLFW_KEY_SPACE) && m_IsGrounded) {
@@ -161,22 +162,27 @@ void Application::processInput(float deltaTime) {
     }
     Input::updateMouseDelta();
 
-    // Raycast Block Interaktionen (Abbauen / Platzieren)
+    // Raycast Block Interaktionen (Abbauen / Platzieren & Redstone Hebel Schalten)
     bool leftMouseNow = Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
     bool rightMouseNow = Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT);
 
     if ((leftMouseNow && !m_LeftMousePressedLast) || (rightMouseNow && !m_RightMousePressedLast)) {
         RaycastResult hit = Raycast::raycast(*m_World, m_Camera->getPosition(), m_Camera->getFront(), 6.0f);
         if (hit.hit) {
-            if (leftMouseNow && !m_LeftMousePressedLast) {
-                BlockType brokenType = m_World->getBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
+            BlockType hitType = m_World->getBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
+            if (rightMouseNow && !m_RightMousePressedLast && hitType == BlockType::Lever) {
+                // Interaktiver Redstone-Hebel
+                RedstoneEngine::updateRedstoneNetwork(*m_World, hit.blockPos);
+                AudioManager::playSound(SoundEffect::BlockPlace);
+            } else if (leftMouseNow && !m_LeftMousePressedLast) {
                 m_World->setBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, BlockType::Air);
-                m_Inventory->addItem(brokenType, 1);
+                m_Inventory->addItem(hitType, 1);
                 AudioManager::playSound(SoundEffect::BlockBreak);
             } else if (rightMouseNow && !m_RightMousePressedLast) {
-                BlockType toPlace = m_Inventory->getSlot(m_SelectedSlot).type;
+                BlockType toPlace = m_SelectedBlock;
                 if (toPlace != BlockType::Air) {
                     m_World->setBlock(hit.previousPos.x, hit.previousPos.y, hit.previousPos.z, toPlace);
+                    RedstoneEngine::updateRedstoneNetwork(*m_World, hit.previousPos);
                     AudioManager::playSound(SoundEffect::BlockPlace);
                 }
             }
