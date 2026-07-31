@@ -17,7 +17,12 @@ enum class BlockType : uint8_t {
     Glass,
     Water,
     Sand,
-    Planks
+    Planks,
+    CoalOre,
+    IronOre,
+    GoldOre,
+    DiamondOre,
+    Lava
 };
 
 enum Direction {
@@ -33,11 +38,11 @@ struct BlockData {
     BlockType type = BlockType::Air;
 
     static bool isOpaque(BlockType type) {
-        return type != BlockType::Air && type != BlockType::Glass && type != BlockType::Water;
+        return type != BlockType::Air && type != BlockType::Glass && type != BlockType::Water && type != BlockType::Lava;
     }
 
     static bool isSolid(BlockType type) {
-        return type != BlockType::Air && type != BlockType::Water;
+        return type != BlockType::Air && type != BlockType::Water && type != BlockType::Lava;
     }
 
     static glm::vec2 getTextureUV(BlockType type, Direction face) {
@@ -74,12 +79,26 @@ struct BlockData {
             case BlockType::Glass:
                 tileIndex = 10;
                 break;
+            case BlockType::CoalOre:
+                tileIndex = 11;
+                break;
+            case BlockType::IronOre:
+                tileIndex = 12;
+                break;
+            case BlockType::GoldOre:
+                tileIndex = 13;
+                break;
+            case BlockType::DiamondOre:
+                tileIndex = 14;
+                break;
+            case BlockType::Lava:
+                tileIndex = 15;
+                break;
             default:
                 tileIndex = 2;
                 break;
         }
 
-        // Assuming a 16x16 tile atlas (each tile 1/16th of atlas width)
         float tileWidth = 1.0f / 16.0f;
         float u = (tileIndex % 16) * tileWidth;
         float v = (tileIndex / 16) * tileWidth;

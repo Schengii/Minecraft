@@ -1,5 +1,6 @@
 #include "Chunk.hpp"
 #include "ChunkMesh.hpp"
+#include "SaveSystem.hpp"
 #include "../vendor/FastNoiseLite.h"
 #include <cmath>
 
@@ -9,10 +10,17 @@ Chunk::Chunk(int chunkX, int chunkZ)
     : m_ChunkX(chunkX), m_ChunkZ(chunkZ)
 {
     m_Mesh = std::make_unique<ChunkMesh>();
-    generateTerrain();
+
+    // Load chunk from save file if present, otherwise generate procedurally
+    if (!SaveSystem::loadChunk(*this)) {
+        generateTerrain();
+        SaveSystem::saveChunk(*this);
+    }
 }
 
-Chunk::~Chunk() = default;
+Chunk::~Chunk() {
+    SaveSystem::saveChunk(*this);
+}
 
 BlockType Chunk::getBlock(int x, int y, int z) const {
     if (x < 0 || x >= CHUNK_SIZE_X || y < 0 || y >= CHUNK_SIZE_Y || z < 0 || z >= CHUNK_SIZE_Z) {
@@ -28,16 +36,24 @@ void Chunk::setBlock(int x, int y, int z, BlockType type) {
 }
 
 void Chunk::generateTerrain() {
-    FastNoiseLite noise(1337);
-    noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
-    noise.SetFrequency(0.015f);
+    FastNoiseLite heightNoise(1337);
+    heightNoise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+    heightNoise.SetFrequency(0.015f);
+
+    FastNoiseLite caveNoise(4242);
+    caveNoise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+    caveNoise.SetFrequency(0.04f);
+
+    FastNoiseLite oreNoise(9999);
+    oreNoise.SetNoiseType(FastNoiseLite::NoiseType_Cellular);
+    oreNoise.SetFrequency(0.1f);
 
     for (int x = 0; x < CHUNK_SIZE_X; ++x) {
         for (int z = 0; z < CHUNK_SIZE_Z; ++z) {
             float worldX = static_cast<float>(m_ChunkX * CHUNK_SIZE_X + x);
             float worldZ = static_cast<float>(m_ChunkZ * CHUNK_SIZE_Z + z);
 
-            float n = noise.GetNoise(worldX, worldZ);
+            float n = heightNoise.GetNoise(worldX, worldZ);
             int height = static_cast<int>(55 + n * 20.0f);
             if (height >= CHUNK_SIZE_Y - 10) height = CHUNK_SIZE_Y - 10;
 
@@ -45,7 +61,29 @@ void Chunk::generateTerrain() {
                 if (y == 0) {
                     m_Blocks[x][y][z] = BlockType::Bedrock;
                 } else if (y < height - 4) {
-                    m_Blocks[x][y][z] = BlockType::Stone;
+                    // 3D Cave Carving
+                    float caveVal = caveNoise.GetNoise(worldX, static_cast<float>(y), worldZ);
+                    if (caveVal > 0.42f) {
+                        if (y < 10) {
+                            m_Blocks[x][y][z] = BlockType::Lava; // Lava pool in deep caves
+                        } else {
+                            m_Blocks[x][y][z] = BlockType::Air;
+                        }
+                    } else {
+                        // Ore Veins in Stone
+                        float oreVal = oreNoise.GetNoise(worldX + y, static_cast<float>(y), worldZ);
+                        if (y <= 16 && oreVal > 0.75f) {
+                            m_Blocks[x][y][z] = BlockType::DiamondOre;
+                        } else if (y <= 30 && oreVal > 0.68f) {
+                            m_Blocks[x][y][z] = BlockType::GoldOre;
+                        } else if (y <= 45 && oreVal > 0.60f) {
+                            m_Blocks[x][y][z] = BlockType::IronOre;
+                        } else if (y <= 60 && oreVal > 0.52f) {
+                            m_Blocks[x][y][z] = BlockType::CoalOre;
+                        } else {
+                            m_Blocks[x][y][z] = BlockType::Stone;
+                        }
+                    }
                 } else if (y < height) {
                     m_Blocks[x][y][z] = BlockType::Dirt;
                 } else if (y == height) {
@@ -55,10 +93,10 @@ void Chunk::generateTerrain() {
                 }
             }
 
-            // Simple Oak Tree Generation
+            // Procedural Oak Trees
             if (x > 2 && x < CHUNK_SIZE_X - 2 && z > 2 && z < CHUNK_SIZE_Z - 2) {
-                float treeChance = std::abs(noise.GetNoise(worldX * 5.0f, worldZ * 5.0f));
-                if (treeChance > 0.65f && height > 45) {
+                float treeChance = std::abs(heightNoise.GetNoise(worldX * 5.0f, worldZ * 5.0f));
+                if (treeChance > 0.65f && height > 45 && m_Blocks[x][height][z] == BlockType::Grass) {
                     int trunkHeight = 5;
                     for (int th = 1; th <= trunkHeight; ++th) {
                         m_Blocks[x][height + th][z] = BlockType::OakLog;

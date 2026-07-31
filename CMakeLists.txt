@@ -49,8 +49,10 @@ set(SOURCES
     src/world/ChunkMesh.cpp
     src/world/World.cpp
     src/world/Raycast.cpp
+    src/world/SaveSystem.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
+    src/audio/AudioManager.cpp
 )
 
 add_executable(Minecraft ${SOURCES})

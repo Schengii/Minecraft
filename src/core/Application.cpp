@@ -2,6 +2,7 @@
 #include "Input.hpp"
 #include "../world/Raycast.hpp"
 #include "../physics/PhysicsEngine.hpp"
+#include "../audio/AudioManager.hpp"
 #include <iostream>
 
 namespace Minecraft {
@@ -9,6 +10,7 @@ namespace Minecraft {
 Application::Application() {
     m_Window = std::make_unique<Window>(1280, 720, "Minecraft C++ OpenGL 1:1 Engine");
     Input::init(m_Window->getNativeWindow());
+    AudioManager::init();
 
     m_Camera = std::make_unique<Camera>(glm::vec3(0.0f, 65.0f, 0.0f));
     m_BlockShader = std::make_unique<Shader>("assets/shaders/block.vert", "assets/shaders/block.frag");
@@ -100,6 +102,7 @@ void Application::processInput(float deltaTime) {
         if (Input::isKeyPressed(GLFW_KEY_SPACE) && m_IsGrounded) {
             m_PlayerVelocity.y = 8.5f; // Jump impulse
             m_IsGrounded = false;
+            AudioManager::playSound(SoundEffect::Jump);
         }
     }
 
@@ -120,8 +123,10 @@ void Application::processInput(float deltaTime) {
         if (hit.hit) {
             if (leftMouseNow && !m_LeftMousePressedLast) {
                 m_World->setBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, BlockType::Air);
+                AudioManager::playSound(SoundEffect::BlockBreak);
             } else if (rightMouseNow && !m_RightMousePressedLast) {
                 m_World->setBlock(hit.previousPos.x, hit.previousPos.y, hit.previousPos.z, m_SelectedBlock);
+                AudioManager::playSound(SoundEffect::BlockPlace);
             }
         }
     }

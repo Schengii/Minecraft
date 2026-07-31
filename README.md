@@ -8,30 +8,30 @@ Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vo
 
 ## Feature-Übersicht & Stand
 
-### 🎮 Gameplay & Interaktionen
-- **Voxel Raycasting (DDA Algorithm)**:
-  - **Linksklick**: Abbauen des angeblickten Blocks unter dem Fadenkreuz (`BlockType::Air`).
-  - **Rechtsklick**: Platzieren eines neuen Blocks an der angrenzenden Blockfläche.
-  - **Hotbar Slot-Auswahl (`1-9`)**: Schnellzugriff auf Gras, Erde, Stein, Holzstamm, Blätter, Holzbretter, Glas, Sand und Bedrock.
+### 💾 Welt-Speichersystem (Save / Load Persistence)
+- **Binäre Chunk-Serialisierung (`SaveSystem`)**: Modifizierte Chunks werden beim Beenden automatisch in `world_saves/chunk_X_Z.bin` gespeichert und beim Start geladen. Gebaute und abgebaute Strukturen bleiben dauerhaft erhalten!
+
+### 🏔️ 3D Höhlensysteme, Erze & Unterwelt
+- **3D Noise Caves**: Unterirdische Tunnelgänge, Grotten und tief liegende Lava-Seen (Y < 10).
+- **Voxel-Erzadern in Steinschichten**:
+  - 💎 **Diamant-Erz** (`DiamondOre`, Y: 1 bis 16)
+  - 🟡 **Gold-Erz** (`GoldOre`, Y: 5 bis 30)
+  - ⚪ **Eisen-Erz** (`IronOre`, Y: 5 bis 45)
+  - ⬛ **Kohle-Erz** (`CoalOre`, Y: 5 bis 60)
+
+### 💡 Smooth Lighting & Ambient Occlusion (AO)
+- **Vertex Ambient Occlusion**: Weiche Eck- und Kanten-Schatten an angrenzenden Voxel-Blöcken für plastischen Tiefeneffekt.
+
+### 🔊 Audio Subsystem & Sound Effects
+- **Synthesizer & Audio Feedback**: Soundeffekt-Trigger beim Abbauen/Platzieren von Blöcken und Springen.
+
+### 🎮 Gameplay & Raycasting
+- **Voxel Raycasting (DDA Algorithm)**: Linksklick zum Abbauen, Rechtsklick zum Platzieren von Blöcken.
+- **Hotbar Slot-Auswahl (`1-9`)**: Schnellzugriff auf Gras, Erde, Stein, Holzstamm, Blätter, Bretter, Glas, Sand, Bedrock & Erze.
 
 ### 🖥️ GUI, HUD & F3 Debug Screen
-- **Zentriertes Fadenkreuz (Crosshair)**: Dynamisches UI-Overlay in Bildschirmmitte.
-- **2D Hotbar**: 9-Slot Auswahlleiste mit visueller Hervorhebung des aktiven Slots.
-- **`F3` Debug Overlay**: Ein- und Ausblendung von Live-Engine-Daten:
-  - Framerate (FPS) & Frametime.
-  - Spieler-Position (`XYZ`) & Chunk-Koordinaten.
-  - Blickrichtung (Pitch / Yaw).
-  - Flug- vs. Physik-Laufmodus Indicator.
-
-### 🏔️ Weltgenerierung & Meshing
-- **FastNoiseLite Integration**: Simplex Noise für Höhenlandschaften, Hügel und prozedurale **Eichenbäume** (Holzstamm + Blätterdach).
-- **Culled Face Meshing**: Entfernung verdeckter Block-Innenflächen zur Reduktion der Polycount um >80%.
-- **Textur-Atlas Mapping**: Dynamic Pro-Face UV-Berechnung für Gras (Oben/Seite/Unten), Erde, Stein, Holz, Blätter, Sand, Bretter, Glas & Bedrock.
-
-### ⚡ Physik & Steuerung
-- **AABB-Kollisionsabfrage**: Bounding-Box Kollision zwischen Spieler (0.6 x 1.8 m) und Voxel-Welt.
-- **Gravitation & Springen**: Realistische Schwerkraft & Sprungimpuls (`Space`).
-- **`F`-Taste**: Umschalten zwischen **Flugmodus** (freie 3D-Kamera) und **Laufmodus** (Voxel-Physik).
+- **Fadenkreuz (Crosshair)** & **2D Hotbar** mit visueller Slot-Hervorhebung.
+- **`F3` Debug Screen**: Live-Anzeige von FPS, Frametime, XYZ-Position, Chunk-Koordinaten & Flug-/Physik-Status.
 
 ---
 
@@ -44,19 +44,15 @@ Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vo
 | `L-Shift` | Nach unten fliegen (im Flugmodus) |
 | `F` | Umschalten zwischen Flugmodus & Voxel-Physik |
 | `F3` | Debug-Bildschirm (FPS, Koordinaten, Facing) ein-/ausblenden |
-| `1 - 9` | Hotbar Slot wählen (Gras, Erde, Stein, Holz, Blätter, Bretter, Glas, Sand, Bedrock) |
-| `Linksklick` | Block unter Fadenkreuz abbauen |
-| `Rechtsklick` | Ausgewählten Block platzieren |
+| `1 - 9` | Hotbar Slot wählen |
+| `Linksklick` | Block unter Fadenkreuz abbauen (inkl. Sound) |
+| `Rechtsklick` | Ausgewählten Block platzieren (inkl. Sound) |
 | `Maus bewegen` | Umsehen (Pitch / Yaw) |
-| `Escape` | Spiel beenden |
+| `Escape` | Spiel beenden (Automatisches Speichern der Welt) |
 
 ---
 
 ## Build & Ausführung
-
-### Voraussetzungen
-- C++20 fähiger Compiler (MSVC / GCC / Clang)
-- CMake >= 3.20
 
 ### Kompilieren (PowerShell / Terminal)
 
@@ -71,6 +67,6 @@ cmake --build build --config Release
 .\build\Release\Minecraft.exe
 ```
 
-## Dokumentation & Entwicklungs-Plan
+## Architektur
 
-- [`docs/ARCHITECTURE.md`](file:///c:/Users/sche-/Desktop/Programmieren%20Projekte/Minecraft/docs/ARCHITECTURE.md): Detaillierte Systemarchitektur & Erweiterungspunkte.
+Vollständige Dokumentation der C++ Engine-Module befindet sich in [`docs/ARCHITECTURE.md`](file:///c:/Users/sche-/Desktop/Programmieren%20Projekte/Minecraft/docs/ARCHITECTURE.md).
