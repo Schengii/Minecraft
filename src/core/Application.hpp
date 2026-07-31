@@ -6,6 +6,7 @@
 #include "../renderer/Camera.hpp"
 #include "../world/World.hpp"
 #include "../world/Block.hpp"
+#include "../gui/HUD.hpp"
 #include <memory>
 
 namespace Minecraft {
@@ -26,16 +27,24 @@ private:
     std::unique_ptr<Shader> m_BlockShader;
     std::unique_ptr<Camera> m_Camera;
     std::unique_ptr<World> m_World;
+    std::unique_ptr<HUD> m_HUD;
 
     bool m_IsRunning = true;
     bool m_IsFlying = true;
     bool m_IsGrounded = false;
+    bool m_ShowDebugInfo = false;
+    float m_FPS = 0.0f;
+    float m_FrameCounter = 0;
+    float m_FpsTimer = 0.0f;
+
     glm::vec3 m_PlayerVelocity{ 0.0f };
     BlockType m_SelectedBlock = BlockType::Grass;
+    int m_SelectedSlot = 0; // 0 to 8
 
     bool m_LeftMousePressedLast = false;
     bool m_RightMousePressedLast = false;
     bool m_FPressedLast = false;
+    bool m_F3PressedLast = false;
 };
 
 }

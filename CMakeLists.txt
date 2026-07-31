@@ -50,6 +50,7 @@ set(SOURCES
     src/world/World.cpp
     src/world/Raycast.cpp
     src/physics/PhysicsEngine.cpp
+    src/gui/HUD.cpp
 )
 
 add_executable(Minecraft ${SOURCES})
