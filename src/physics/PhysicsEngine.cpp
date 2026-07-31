@@ -12,13 +12,18 @@ bool PhysicsEngine::isPointInWater(World& world, const glm::vec3& point) {
     return type == BlockType::Water;
 }
 
-void PhysicsEngine::updatePlayer(World& world, glm::vec3& position, glm::vec3& velocity, bool& isGrounded, bool& inWater, bool isFlying, float deltaTime) {
+void PhysicsEngine::updatePlayer(World& world, glm::vec3& position, glm::vec3& velocity, bool& isGrounded, bool& inWater, bool isFlying, bool isSneaking, float deltaTime) {
     if (isFlying) {
         position += velocity * deltaTime;
         velocity *= 0.85f;
         isGrounded = false;
         inWater = false;
         return;
+    }
+
+    if (isSneaking) {
+        velocity.x *= 0.35f;
+        velocity.z *= 0.35f;
     }
 
     inWater = isPointInWater(world, position + glm::vec3(0.0f, 0.9f, 0.0f));
@@ -40,19 +45,34 @@ void PhysicsEngine::updatePlayer(World& world, glm::vec3& position, glm::vec3& v
     velocity.y -= 25.0f * deltaTime;
 
     // Movement X
-    position.x += velocity.x * deltaTime;
-    AABB boxX(position - glm::vec3(0.3f, 0.0f, 0.3f), position + glm::vec3(0.3f, 1.8f, 0.3f));
-    if (checkCollision(world, boxX)) {
-        position.x -= velocity.x * deltaTime;
+    glm::vec3 nextPosX = position;
+    nextPosX.x += velocity.x * deltaTime;
+    AABB boxX(nextPosX - glm::vec3(0.3f, 0.0f, 0.3f), nextPosX + glm::vec3(0.3f, 1.8f, 0.3f));
+    bool collideX = checkCollision(world, boxX);
+    if (isSneaking && isGrounded && !collideX) {
+        // Check if foot ground below next position is solid
+        AABB footCheck(nextPosX - glm::vec3(0.3f, 0.1f, 0.3f), nextPosX + glm::vec3(0.3f, 0.0f, 0.3f));
+        if (!checkCollision(world, footCheck)) collideX = true;
+    }
+    if (collideX) {
         velocity.x = 0.0f;
+    } else {
+        position.x = nextPosX.x;
     }
 
     // Movement Z
-    position.z += velocity.z * deltaTime;
-    AABB boxZ(position - glm::vec3(0.3f, 0.0f, 0.3f), position + glm::vec3(0.3f, 1.8f, 0.3f));
-    if (checkCollision(world, boxZ)) {
-        position.z -= velocity.z * deltaTime;
+    glm::vec3 nextPosZ = position;
+    nextPosZ.z += velocity.z * deltaTime;
+    AABB boxZ(nextPosZ - glm::vec3(0.3f, 0.0f, 0.3f), nextPosZ + glm::vec3(0.3f, 1.8f, 0.3f));
+    bool collideZ = checkCollision(world, boxZ);
+    if (isSneaking && isGrounded && !collideZ) {
+        AABB footCheck(nextPosZ - glm::vec3(0.3f, 0.1f, 0.3f), nextPosZ + glm::vec3(0.3f, 0.0f, 0.3f));
+        if (!checkCollision(world, footCheck)) collideZ = true;
+    }
+    if (collideZ) {
         velocity.z = 0.0f;
+    } else {
+        position.z = nextPosZ.z;
     }
 
     // Movement Y

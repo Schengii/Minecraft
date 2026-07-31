@@ -42,6 +42,7 @@ PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = NULL;
 PFNGLUNIFORM1IPROC glUniform1i = NULL;
 PFNGLUNIFORM1FPROC glUniform1f = NULL;
 PFNGLUNIFORM3FPROC glUniform3f = NULL;
+PFNGLUNIFORM4FPROC glUniform4f = NULL;
 PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv = NULL;
 
 PFNGLGENTEXTURESPROC glGenTextures = NULL;
@@ -113,6 +114,7 @@ int gladLoadGLLoader(GLADloadproc loadproc) {
     glUniform1i = (PFNGLUNIFORM1IPROC)load(loadproc, "glUniform1i");
     glUniform1f = (PFNGLUNIFORM1FPROC)load(loadproc, "glUniform1f");
     glUniform3f = (PFNGLUNIFORM3FPROC)load(loadproc, "glUniform3f");
+    glUniform4f = (PFNGLUNIFORM4FPROC)load(loadproc, "glUniform4f");
     glUniformMatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC)load(loadproc, "glUniformMatrix4fv");
 
     glGenTextures = (PFNGLGENTEXTURESPROC)load(loadproc, "glGenTextures");

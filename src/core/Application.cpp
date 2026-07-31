@@ -2,6 +2,7 @@
 #include "Input.hpp"
 #include "../world/Raycast.hpp"
 #include "../world/RedstoneEngine.hpp"
+#include "../world/FluidEngine.hpp"
 #include "../physics/PhysicsEngine.hpp"
 #include "../audio/AudioManager.hpp"
 #include <iostream>
@@ -127,12 +128,15 @@ void Application::processInput(float deltaTime) {
     glm::vec3 front = m_Camera->getFront();
     glm::vec3 right = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
 
+    bool isSneaking = !m_IsFlying && Input::isKeyPressed(GLFW_KEY_LEFT_SHIFT);
+    bool isSprinting = Input::isKeyPressed(GLFW_KEY_LEFT_CONTROL);
+
     if (!m_IsFlying && !m_InWater) {
         front.y = 0.0f;
         front = glm::normalize(front);
     }
 
-    float speed = m_IsFlying ? 15.0f : (m_InWater ? 4.0f : 6.0f);
+    float speed = m_IsFlying ? 15.0f : (m_InWater ? 4.0f : (isSprinting ? 9.0f : 6.0f));
 
     if (Input::isKeyPressed(GLFW_KEY_W)) m_PlayerVelocity += front * speed;
     if (Input::isKeyPressed(GLFW_KEY_S)) m_PlayerVelocity -= front * speed;
@@ -200,8 +204,12 @@ void Application::update(float deltaTime) {
 
     if (m_World && m_Camera) {
         glm::vec3 currentPos = m_Camera->getPosition();
-        PhysicsEngine::updatePlayer(*m_World, currentPos, m_PlayerVelocity, m_IsGrounded, m_InWater, m_IsFlying, deltaTime);
+        bool isSneaking = !m_IsFlying && Input::isKeyPressed(GLFW_KEY_LEFT_SHIFT);
+        PhysicsEngine::updatePlayer(*m_World, currentPos, m_PlayerVelocity, m_IsGrounded, m_InWater, m_IsFlying, isSneaking, deltaTime);
         
+        // Fluid simulation step around player
+        FluidEngine::updateFluids(*m_World, currentPos);
+
         Camera tempCam(currentPos, glm::vec3(0, 1, 0));
         *m_Camera = tempCam;
 

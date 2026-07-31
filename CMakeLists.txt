@@ -74,11 +74,47 @@ target_include_directories(Minecraft PRIVATE
 target_link_libraries(Minecraft PRIVATE
     glfw
     glm::glm
-    entt::entt
 )
 
 if(WIN32)
     target_link_libraries(Minecraft PRIVATE opengl32)
+endif()
+
+# Test Engine Target
+set(TEST_SOURCES
+    src/test_engine.cpp
+    src/vendor/glad/glad.c
+    src/core/Window.cpp
+    src/core/Input.cpp
+    src/core/Application.cpp
+    src/renderer/Shader.cpp
+    src/renderer/Camera.cpp
+    src/world/Chunk.cpp
+    src/world/ChunkMesh.cpp
+    src/world/World.cpp
+    src/world/Raycast.cpp
+    src/world/SaveSystem.cpp
+    src/world/TimeManager.cpp
+    src/world/FluidEngine.cpp
+    src/world/Biome.cpp
+    src/world/RedstoneEngine.cpp
+    src/physics/PhysicsEngine.cpp
+    src/gui/HUD.cpp
+    src/gui/InventoryGUI.cpp
+    src/inventory/Inventory.cpp
+    src/crafting/CraftingManager.cpp
+    src/audio/AudioManager.cpp
+)
+add_executable(TestEngine ${TEST_SOURCES})
+target_include_directories(TestEngine PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vendor
+    ${glm_SOURCE_DIR}
+    ${entt_SOURCE_DIR}/single_include
+)
+target_link_libraries(TestEngine PRIVATE glfw glm::glm)
+if(WIN32)
+    target_link_libraries(TestEngine PRIVATE opengl32)
 endif()
 
 # Copy assets folder to output executable directory

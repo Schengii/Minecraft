@@ -105,9 +105,17 @@ void InventoryGUI::render(Inventory& inventory, bool isOpen) {
     float craftY = winY + 25.0f;
     for (int r = 0; r < 2; ++r) {
         for (int c = 0; c < 2; ++c) {
+            int craftIdx = r * 2 + c;
             float x = craftX + c * (slotSize + padding);
             float y = craftY + r * (slotSize + padding);
-            renderQuad(glm::vec2(x, y), glm::vec2(slotSize, slotSize), glm::vec4(0.4f, 0.4f, 0.4f, 0.9f));
+
+            glm::vec4 slotColor = (craftIdx + 100 == m_SelectedSlotIndex) ? glm::vec4(1.0f, 0.84f, 0.0f, 0.9f) : glm::vec4(0.4f, 0.4f, 0.4f, 0.9f);
+            renderQuad(glm::vec2(x, y), glm::vec2(slotSize, slotSize), slotColor);
+
+            const ItemStack& craftStack = inventory.getCraftingInput(craftIdx);
+            if (!craftStack.isEmpty()) {
+                renderQuad(glm::vec2(x + 4.0f, y + 4.0f), glm::vec2(slotSize - 8.0f, slotSize - 8.0f), glm::vec4(0.8f, 0.6f, 0.2f, 0.9f));
+            }
         }
     }
 
@@ -115,6 +123,11 @@ void InventoryGUI::render(Inventory& inventory, bool isOpen) {
     float resultX = craftX + 2 * (slotSize + padding) + 25.0f;
     float resultY = craftY + (slotSize + padding) / 2.0f;
     renderQuad(glm::vec2(resultX, resultY), glm::vec2(slotSize + 8.0f, slotSize + 8.0f), glm::vec4(0.8f, 0.7f, 0.2f, 0.9f));
+
+    const ItemStack& outputStack = inventory.getCraftingOutput();
+    if (!outputStack.isEmpty()) {
+        renderQuad(glm::vec2(resultX + 4.0f, resultY + 4.0f), glm::vec2(slotSize, slotSize), glm::vec4(0.2f, 0.8f, 0.4f, 0.95f));
+    }
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
@@ -154,7 +167,47 @@ void InventoryGUI::handleMouseClick(Inventory& inventory, double mouseX, double 
         }
     }
 
-    if (clickedSlot != -1) {
+    // Check 2x2 Crafting Grid
+    float craftX = winX + 220.0f;
+    float craftY = winY + 25.0f;
+    int clickedCraftSlot = -1;
+    for (int r = 0; r < 2; ++r) {
+        for (int c = 0; c < 2; ++c) {
+            float x = craftX + c * (slotSize + padding);
+            float y = craftY + r * (slotSize + padding);
+            if (mouseX >= x && mouseX <= x + slotSize && mouseY >= y && mouseY <= y + slotSize) {
+                clickedCraftSlot = r * 2 + c;
+            }
+        }
+    }
+
+    // Check Crafting Output Slot
+    float resultX = craftX + 2 * (slotSize + padding) + 25.0f;
+    float resultY = craftY + (slotSize + padding) / 2.0f;
+    bool clickedResult = (mouseX >= resultX && mouseX <= resultX + slotSize + 8.0f && mouseY >= resultY && mouseY <= resultY + slotSize + 8.0f);
+
+    if (clickedCraftSlot != -1) {
+        if (m_SelectedSlotIndex >= 0 && m_SelectedSlotIndex < 36) {
+            std::swap(inventory.getSlot(m_SelectedSlotIndex), inventory.getCraftingInput(clickedCraftSlot));
+            inventory.updateCraftingRecipe();
+            m_SelectedSlotIndex = -1;
+        }
+    } else if (clickedResult) {
+        ItemStack output = inventory.getCraftingOutput();
+        if (!output.isEmpty()) {
+            if (inventory.addItem(output.type, output.count)) {
+                // Consume 1 item from each crafting input slot
+                for (int i = 0; i < 4; ++i) {
+                    ItemStack& input = inventory.getCraftingInput(i);
+                    if (!input.isEmpty()) {
+                        input.count--;
+                        if (input.count <= 0) input.clear();
+                    }
+                }
+                inventory.updateCraftingRecipe();
+            }
+        }
+    } else if (clickedSlot != -1) {
         if (m_SelectedSlotIndex == -1) {
             m_SelectedSlotIndex = clickedSlot;
         } else {
@@ -163,6 +216,7 @@ void InventoryGUI::handleMouseClick(Inventory& inventory, double mouseX, double 
         }
     }
 }
+
 
 void InventoryGUI::renderQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color) {
     m_UIShader->use();

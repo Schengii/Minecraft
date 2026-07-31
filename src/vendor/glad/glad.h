@@ -146,6 +146,7 @@ typedef GLint (GLAD_API_PTR *PFNGLGETUNIFORMLOCATIONPROC)(GLuint program, const 
 typedef void (GLAD_API_PTR *PFNGLUNIFORM1IPROC)(GLint location, GLint v0);
 typedef void (GLAD_API_PTR *PFNGLUNIFORM1FPROC)(GLint location, GLfloat v0);
 typedef void (GLAD_API_PTR *PFNGLUNIFORM3FPROC)(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
+typedef void (GLAD_API_PTR *PFNGLUNIFORM4FPROC)(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
 typedef void (GLAD_API_PTR *PFNGLUNIFORMMATRIX4FVPROC)(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 
 typedef void (GLAD_API_PTR *PFNGLGENTEXTURESPROC)(GLsizei n, GLuint *textures);
@@ -199,6 +200,7 @@ GLAD_GLAPI PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 GLAD_GLAPI PFNGLUNIFORM1IPROC glUniform1i;
 GLAD_GLAPI PFNGLUNIFORM1FPROC glUniform1f;
 GLAD_GLAPI PFNGLUNIFORM3FPROC glUniform3f;
+GLAD_GLAPI PFNGLUNIFORM4FPROC glUniform4f;
 GLAD_GLAPI PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 
 GLAD_GLAPI PFNGLGENTEXTURESPROC glGenTextures;

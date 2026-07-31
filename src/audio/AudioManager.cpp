@@ -1,26 +1,37 @@
 #include "AudioManager.hpp"
+#include <thread>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace Minecraft {
 
 void AudioManager::init() {
-    std::cout << "[AudioManager] Audio System Initialized." << std::endl;
+    std::cout << "[AudioManager] Win32 Sound System Initialized." << std::endl;
 }
 
 void AudioManager::playSound(SoundEffect effect) {
-    switch (effect) {
-        case SoundEffect::BlockBreak:
-            std::cout << "[Audio] Play Sound: Block Break" << std::endl;
-            break;
-        case SoundEffect::BlockPlace:
-            std::cout << "[Audio] Play Sound: Block Place" << std::endl;
-            break;
-        case SoundEffect::Footstep:
-            // High frequency audio feedback
-            break;
-        case SoundEffect::Jump:
-            std::cout << "[Audio] Play Sound: Jump" << std::endl;
-            break;
-    }
+    std::thread([effect]() {
+#ifdef _WIN32
+        switch (effect) {
+            case SoundEffect::BlockBreak:
+                Beep(160, 35);
+                break;
+            case SoundEffect::BlockPlace:
+                Beep(420, 30);
+                break;
+            case SoundEffect::Footstep:
+                Beep(240, 20);
+                break;
+            case SoundEffect::Jump:
+                Beep(580, 45);
+                break;
+        }
+#else
+        (void)effect;
+#endif
+    }).detach();
 }
 
 }
+

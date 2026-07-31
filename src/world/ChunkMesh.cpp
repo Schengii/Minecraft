@@ -4,16 +4,16 @@
 namespace Minecraft {
 
 ChunkMesh::ChunkMesh() {
-    glGenVertexArrays(1, &m_VAO);
-    glGenBuffers(1, &m_VBO);
-    glGenBuffers(1, &m_EBO);
+    if (glGenVertexArrays) glGenVertexArrays(1, &m_VAO);
+    if (glGenBuffers) glGenBuffers(1, &m_VBO);
+    if (glGenBuffers) glGenBuffers(1, &m_EBO);
 }
 
 ChunkMesh::~ChunkMesh() {
     clear();
-    if (m_VAO) glDeleteVertexArrays(1, &m_VAO);
-    if (m_VBO) glDeleteBuffers(1, &m_VBO);
-    if (m_EBO) glDeleteBuffers(1, &m_EBO);
+    if (m_VAO && glDeleteVertexArrays) glDeleteVertexArrays(1, &m_VAO);
+    if (m_VBO && glDeleteBuffers) glDeleteBuffers(1, &m_VBO);
+    if (m_EBO && glDeleteBuffers) glDeleteBuffers(1, &m_EBO);
 }
 
 void ChunkMesh::clear() {
@@ -63,7 +63,7 @@ void ChunkMesh::generate(const Chunk& chunk) {
     }
 
     m_IndexCount = indices.size();
-    if (m_IndexCount == 0) return;
+    if (m_IndexCount == 0 || !glBindVertexArray) return;
 
     glBindVertexArray(m_VAO);
 
@@ -93,7 +93,7 @@ void ChunkMesh::generate(const Chunk& chunk) {
 }
 
 void ChunkMesh::render() const {
-    if (m_IndexCount == 0) return;
+    if (m_IndexCount == 0 || !glBindVertexArray) return;
     glBindVertexArray(m_VAO);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_IndexCount), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);

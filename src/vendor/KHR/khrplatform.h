@@ -23,6 +23,12 @@
 #define KHRONOS_APIATTRIBUTES
 
 #include <stdint.h>
+#include <stddef.h>
+typedef intptr_t                khronos_intptr_t;
+typedef uintptr_t               khronos_uintptr_t;
+typedef ptrdiff_t               khronos_intptrdiff_t;
+typedef size_t                  khronos_uintptrdiff_t;
+typedef ptrdiff_t               khronos_sizei_t;
 typedef int32_t                 khronos_int32_t;
 typedef uint32_t                khronos_uint32_t;
 typedef int64_t                 khronos_int64_t;

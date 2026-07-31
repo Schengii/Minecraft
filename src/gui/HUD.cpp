@@ -119,6 +119,19 @@ void HUD::renderHotbar(int selectedSlot) {
     float startX = (m_Width - totalWidth) / 2.0f;
     float startY = m_Height - slotSize - 15.0f;
 
+    // 1. Health Bar (10 Red Hearts)
+    float heartY = startY - 20.0f;
+    for (int h = 0; h < 10; ++h) {
+        float hx = startX + h * 16.0f;
+        renderQuad(glm::vec2(hx, heartY), glm::vec2(12.0f, 12.0f), glm::vec4(0.9f, 0.15f, 0.15f, 0.95f));
+    }
+
+    // 2. Hunger Bar (10 Food Drumsticks)
+    for (int f = 0; f < 10; ++f) {
+        float fx = startX + totalWidth - (f + 1) * 16.0f;
+        renderQuad(glm::vec2(fx, heartY), glm::vec2(12.0f, 12.0f), glm::vec4(0.75f, 0.45f, 0.15f, 0.95f));
+    }
+
     // Hotbar background container
     renderQuad(glm::vec2(startX - 6.0f, startY - 6.0f), glm::vec2(totalWidth + 12.0f, slotSize + 12.0f), glm::vec4(0.1f, 0.1f, 0.1f, 0.7f));
 
