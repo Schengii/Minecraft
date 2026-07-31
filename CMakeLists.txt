@@ -48,6 +48,8 @@ set(SOURCES
     src/world/Chunk.cpp
     src/world/ChunkMesh.cpp
     src/world/World.cpp
+    src/world/Raycast.cpp
+    src/physics/PhysicsEngine.cpp
 )
 
 add_executable(Minecraft ${SOURCES})

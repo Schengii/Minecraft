@@ -36,27 +36,27 @@ void ChunkMesh::generate(const Chunk& chunk) {
                 glm::vec3 blockPos(worldChunkX + x, y, worldChunkZ + z);
 
                 // Top (+Y)
-                if (y + 1 >= CHUNK_SIZE_Y || chunk.getBlock(x, y + 1, z) == BlockType::Air)
+                if (y + 1 >= CHUNK_SIZE_Y || !BlockData::isOpaque(chunk.getBlock(x, y + 1, z)))
                     addFace(blockPos, TOP, type, vertices, indices);
 
                 // Bottom (-Y)
-                if (y - 1 < 0 || chunk.getBlock(x, y - 1, z) == BlockType::Air)
+                if (y - 1 < 0 || !BlockData::isOpaque(chunk.getBlock(x, y - 1, z)))
                     addFace(blockPos, BOTTOM, type, vertices, indices);
 
                 // North (+Z)
-                if (z + 1 >= CHUNK_SIZE_Z || chunk.getBlock(x, y, z + 1) == BlockType::Air)
+                if (z + 1 >= CHUNK_SIZE_Z || !BlockData::isOpaque(chunk.getBlock(x, y, z + 1)))
                     addFace(blockPos, NORTH, type, vertices, indices);
 
                 // South (-Z)
-                if (z - 1 < 0 || chunk.getBlock(x, y, z - 1) == BlockType::Air)
+                if (z - 1 < 0 || !BlockData::isOpaque(chunk.getBlock(x, y, z - 1)))
                     addFace(blockPos, SOUTH, type, vertices, indices);
 
                 // East (+X)
-                if (x + 1 >= CHUNK_SIZE_X || chunk.getBlock(x + 1, y, z) == BlockType::Air)
+                if (x + 1 >= CHUNK_SIZE_X || !BlockData::isOpaque(chunk.getBlock(x + 1, y, z)))
                     addFace(blockPos, EAST, type, vertices, indices);
 
                 // West (-X)
-                if (x - 1 < 0 || chunk.getBlock(x - 1, y, z) == BlockType::Air)
+                if (x - 1 < 0 || !BlockData::isOpaque(chunk.getBlock(x - 1, y, z)))
                     addFace(blockPos, WEST, type, vertices, indices);
             }
         }
@@ -73,19 +73,19 @@ void ChunkMesh::generate(const Chunk& chunk) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-    // Position attribute
+    // Position
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
 
-    // TexCoord attribute
+    // TexCoord
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
 
-    // Normal attribute
+    // Normal
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
-    // Light attribute
+    // Light
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, light));
 
@@ -100,54 +100,60 @@ void ChunkMesh::render() const {
 }
 
 void ChunkMesh::addFace(const glm::vec3& p, Direction dir, BlockType type, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices) {
-    (void)type;
     unsigned int startIndex = static_cast<unsigned int>(vertices.size());
 
     float light = 1.0f;
     glm::vec3 normal(0.0f);
+    glm::vec2 baseUV = BlockData::getTextureUV(type, dir);
+    float tw = 1.0f / 16.0f; // Tile width in atlas
+
+    glm::vec2 uv0 = baseUV;
+    glm::vec2 uv1 = baseUV + glm::vec2(tw, 0.0f);
+    glm::vec2 uv2 = baseUV + glm::vec2(tw, tw);
+    glm::vec2 uv3 = baseUV + glm::vec2(0.0f, tw);
 
     switch (dir) {
         case TOP:
             normal = glm::vec3(0, 1, 0); light = 1.0f;
-            vertices.push_back({ p + glm::vec3(0, 1, 0), glm::vec2(0, 0), normal, light });
-            vertices.push_back({ p + glm::vec3(1, 1, 0), glm::vec2(1, 0), normal, light });
-            vertices.push_back({ p + glm::vec3(1, 1, 1), glm::vec2(1, 1), normal, light });
-            vertices.push_back({ p + glm::vec3(0, 1, 1), glm::vec2(0, 1), normal, light });
+            vertices.push_back({ p + glm::vec3(0, 1, 0), uv0, normal, light });
+            vertices.push_back({ p + glm::vec3(1, 1, 0), uv1, normal, light });
+            vertices.push_back({ p + glm::vec3(1, 1, 1), uv2, normal, light });
+            vertices.push_back({ p + glm::vec3(0, 1, 1), uv3, normal, light });
             break;
         case BOTTOM:
             normal = glm::vec3(0, -1, 0); light = 0.5f;
-            vertices.push_back({ p + glm::vec3(0, 0, 1), glm::vec2(0, 0), normal, light });
-            vertices.push_back({ p + glm::vec3(1, 0, 1), glm::vec2(1, 0), normal, light });
-            vertices.push_back({ p + glm::vec3(1, 0, 0), glm::vec2(1, 1), normal, light });
-            vertices.push_back({ p + glm::vec3(0, 0, 0), glm::vec2(0, 1), normal, light });
+            vertices.push_back({ p + glm::vec3(0, 0, 1), uv0, normal, light });
+            vertices.push_back({ p + glm::vec3(1, 0, 1), uv1, normal, light });
+            vertices.push_back({ p + glm::vec3(1, 0, 0), uv2, normal, light });
+            vertices.push_back({ p + glm::vec3(0, 0, 0), uv3, normal, light });
             break;
         case NORTH:
             normal = glm::vec3(0, 0, 1); light = 0.8f;
-            vertices.push_back({ p + glm::vec3(0, 0, 1), glm::vec2(0, 0), normal, light });
-            vertices.push_back({ p + glm::vec3(1, 0, 1), glm::vec2(1, 0), normal, light });
-            vertices.push_back({ p + glm::vec3(1, 1, 1), glm::vec2(1, 1), normal, light });
-            vertices.push_back({ p + glm::vec3(0, 1, 1), glm::vec2(0, 1), normal, light });
+            vertices.push_back({ p + glm::vec3(0, 0, 1), uv0, normal, light });
+            vertices.push_back({ p + glm::vec3(1, 0, 1), uv1, normal, light });
+            vertices.push_back({ p + glm::vec3(1, 1, 1), uv2, normal, light });
+            vertices.push_back({ p + glm::vec3(0, 1, 1), uv3, normal, light });
             break;
         case SOUTH:
             normal = glm::vec3(0, 0, -1); light = 0.8f;
-            vertices.push_back({ p + glm::vec3(1, 0, 0), glm::vec2(0, 0), normal, light });
-            vertices.push_back({ p + glm::vec3(0, 0, 0), glm::vec2(1, 0), normal, light });
-            vertices.push_back({ p + glm::vec3(0, 1, 0), glm::vec2(1, 1), normal, light });
-            vertices.push_back({ p + glm::vec3(1, 1, 0), glm::vec2(0, 1), normal, light });
+            vertices.push_back({ p + glm::vec3(1, 0, 0), uv0, normal, light });
+            vertices.push_back({ p + glm::vec3(0, 0, 0), uv1, normal, light });
+            vertices.push_back({ p + glm::vec3(0, 1, 0), uv2, normal, light });
+            vertices.push_back({ p + glm::vec3(1, 1, 0), uv3, normal, light });
             break;
         case EAST:
             normal = glm::vec3(1, 0, 0); light = 0.7f;
-            vertices.push_back({ p + glm::vec3(1, 0, 1), glm::vec2(0, 0), normal, light });
-            vertices.push_back({ p + glm::vec3(1, 0, 0), glm::vec2(1, 0), normal, light });
-            vertices.push_back({ p + glm::vec3(1, 1, 0), glm::vec2(1, 1), normal, light });
-            vertices.push_back({ p + glm::vec3(1, 1, 1), glm::vec2(0, 1), normal, light });
+            vertices.push_back({ p + glm::vec3(1, 0, 1), uv0, normal, light });
+            vertices.push_back({ p + glm::vec3(1, 0, 0), uv1, normal, light });
+            vertices.push_back({ p + glm::vec3(1, 1, 0), uv2, normal, light });
+            vertices.push_back({ p + glm::vec3(1, 1, 1), uv3, normal, light });
             break;
         case WEST:
             normal = glm::vec3(-1, 0, 0); light = 0.7f;
-            vertices.push_back({ p + glm::vec3(0, 0, 0), glm::vec2(0, 0), normal, light });
-            vertices.push_back({ p + glm::vec3(0, 0, 1), glm::vec2(1, 0), normal, light });
-            vertices.push_back({ p + glm::vec3(0, 1, 1), glm::vec2(1, 1), normal, light });
-            vertices.push_back({ p + glm::vec3(0, 1, 0), glm::vec2(0, 1), normal, light });
+            vertices.push_back({ p + glm::vec3(0, 0, 0), uv0, normal, light });
+            vertices.push_back({ p + glm::vec3(0, 0, 1), uv1, normal, light });
+            vertices.push_back({ p + glm::vec3(0, 1, 1), uv2, normal, light });
+            vertices.push_back({ p + glm::vec3(0, 1, 0), uv3, normal, light });
             break;
     }
 
