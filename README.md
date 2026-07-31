@@ -8,18 +8,22 @@ Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vo
 
 ## Feature-Übersicht & Stand
 
+### 🌊 Wasser-Physik, Schwimmen & Unterwasser-Nebel
+- **Flüssigkeits-Physik & Auftrieb (`PhysicsEngine`)**:
+  - Unterwasser-Dämpfung (erhöhter Bewegungswiderstand) & verringerte Gravitation.
+  - **Schwimmen (`Space` Taste im Wasser)**: Auftauchen und Aufsteigen im Wasser.
+- **Unterwasser-Nebelschader (`block.frag`)**: Automatisches Aktivieren von tiefblauem Unterwasser-Nebel und Farbtönung (`u_IsUnderwater`), wenn sich die Kamera unter Wasser befindet.
+
 ### ☀️ Dynamischer Tag/Nacht-Zyklus (`TimeManager`)
 - **24.000 Ticks Tageszyklus**:
-  - Dynamische **Sonnen- und Mondstandsberechnung** (360-Grad Lichtquellenrotation im Raum).
-  - Continuous **Himmelsfarb-Interpolation**: Morgenrot, Taghimmel (`Sky Blue`), Abendrot & tiefblaue Nacht.
-  - **Dynamisches Umgebungslicht (`u_AmbientLight`)**: Helles Tageslicht (`0.5f`) & sanftes Mondlicht (`0.10f`).
-  - **`F4` Taste**: Schnell-Umschaltung zwischen Tag, Dämmerung & Nacht.
-  - **`T` Taste**: Zeitraffer / Zeitvorspulen.
+  - Dynamische **Sonnen- und Mondstandsberechnung** (360-Grad Lichtquellenrotation).
+  - Himmelsfarb-Interpolation: Morgenrot, Taghimmel (`Sky Blue`), Abendrot & tiefblaue Nacht.
+  - **`F4` Taste**: Tageszeit umschalten | **`T` Taste**: Zeit vorspulen.
 
 ### 🎒 Inventar-System, Item-Stacks & 2x2 Crafting (`E` Taste)
 - **36-Slot Spieler-Inventar (`Inventory`)**: 9 Hotbar-Slots + 27 Hauptinventar-Slots.
 - **`E` Taste**: Öffnen und Schließen des Inventar-GUI Screens.
-- **Crafting Rezept-Manager (`CraftingManager`)**: Eichenholz -> Holzbretter -> Werkbank & Stöcke.
+- **Crafting Rezept-Manager (`CraftingManager`)**: Holzstämme -> Bretter -> Werkbank & Stöcke.
 
 ### 💾 Welt-Speichersystem (Save / Load Persistence)
 - **Binäre Chunk-Serialisierung (`SaveSystem`)**: Modifizierte Chunks werden beim Beenden in `world_saves/chunk_X_Z.bin` gespeichert und beim Start geladen.
@@ -41,8 +45,8 @@ Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vo
 | `F4` | Tageszeit umschalten (Tag -> Dämmerung -> Nacht -> Morgenrot) |
 | `T` | Zeit im Spiel vorspulen (Zeitraffer) |
 | `W / A / S / D` | Vorwärts, links, rückwärts, rechts bewegen |
-| `Space` | Springen (im Laufmodus) / Nach oben fliegen (im Flugmodus) |
-| `L-Shift` | Nach unten fliegen (im Flugmodus) |
+| `Space` | Springen (am Land) / Nach oben schwimmen (im Wasser) / Steigen (im Flugmodus) |
+| `L-Shift` | Sinken / Nach unten fliegen (im Flugmodus) |
 | `F` | Umschalten zwischen Flugmodus & Voxel-Physik |
 | `F3` | Debug-Bildschirm (FPS, Koordinaten, Facing) ein-/ausblenden |
 | `1 - 9` | Hotbar Slot wählen |

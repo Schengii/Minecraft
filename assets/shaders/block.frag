@@ -12,6 +12,7 @@ uniform vec3 u_SunDirection;
 uniform vec3 u_SunColor;
 uniform vec3 u_SkyColor;
 uniform float u_AmbientLight;
+uniform bool u_IsUnderwater;
 
 void main() {
     vec3 norm = normalize(Normal);
@@ -24,13 +25,22 @@ void main() {
 
     vec4 texColor = texture(u_Texture, TexCoord);
     
+    vec3 baseColor;
     if (texColor.a < 0.1) {
-        vec3 color = vec3(0.45, 0.7, 0.25);
-        if (norm.y < -0.5) color = vec3(0.4, 0.3, 0.2);
-        else if (abs(norm.x) > 0.5 || abs(norm.z) > 0.5) color = vec3(0.5, 0.4, 0.3);
-        
-        FragColor = vec4(color * lighting, 1.0);
+        baseColor = vec3(0.45, 0.7, 0.25);
+        if (norm.y < -0.5) baseColor = vec3(0.4, 0.3, 0.2);
+        else if (abs(norm.x) > 0.5 || abs(norm.z) > 0.5) baseColor = vec3(0.5, 0.4, 0.3);
     } else {
-        FragColor = vec4(texColor.rgb * lighting, texColor.a);
+        baseColor = texColor.rgb;
     }
+
+    vec3 finalColor = baseColor * lighting;
+
+    // Underwater Fog & Tint Effect
+    if (u_IsUnderwater) {
+        vec3 waterTint = vec3(0.1, 0.3, 0.7);
+        finalColor = mix(finalColor, waterTint, 0.55);
+    }
+
+    FragColor = vec4(finalColor, texColor.a < 0.1 ? 1.0 : texColor.a);
 }

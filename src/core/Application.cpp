@@ -86,15 +86,14 @@ void Application::processInput(float deltaTime) {
     }
     m_F3PressedLast = f3PressedNow;
 
-    // F4 Key: Cycle Time of Day (Noon -> Sunset -> Night -> Sunrise)
+    // F4 Key: Cycle Time of Day
     bool f4PressedNow = Input::isKeyPressed(GLFW_KEY_F4);
     if (f4PressedNow && !m_F4PressedLast) {
         float currentTicks = m_TimeManager->getTimeTicks();
-        if (currentTicks < 6000.0f) m_TimeManager->setTimeOfDay(6000.0f); // Noon
-        else if (currentTicks < 12000.0f) m_TimeManager->setTimeOfDay(12000.0f); // Sunset
-        else if (currentTicks < 18000.0f) m_TimeManager->setTimeOfDay(18000.0f); // Night
-        else m_TimeManager->setTimeOfDay(0.0f); // Sunrise
-        std::cout << "[TimeManager] Advanced time to " << m_TimeManager->getTimeTicks() << " ticks." << std::endl;
+        if (currentTicks < 6000.0f) m_TimeManager->setTimeOfDay(6000.0f);
+        else if (currentTicks < 12000.0f) m_TimeManager->setTimeOfDay(12000.0f);
+        else if (currentTicks < 18000.0f) m_TimeManager->setTimeOfDay(18000.0f);
+        else m_TimeManager->setTimeOfDay(0.0f);
     }
     m_F4PressedLast = f4PressedNow;
 
@@ -108,9 +107,9 @@ void Application::processInput(float deltaTime) {
     if (Input::isKeyPressed(GLFW_KEY_2)) { m_SelectedSlot = 1; m_SelectedBlock = m_Inventory->getSlot(1).type; }
     if (Input::isKeyPressed(GLFW_KEY_3)) { m_SelectedSlot = 2; m_SelectedBlock = m_Inventory->getSlot(2).type; }
     if (Input::isKeyPressed(GLFW_KEY_4)) { m_SelectedSlot = 3; m_SelectedBlock = m_Inventory->getSlot(3).type; }
-    if (Input::isKeyPressed(GLFW_KEY_5)) { m_SelectedSlot = 4; m_SelectedBlock = m_Inventory->getSlot(4).type; }
-    if (Input::isKeyPressed(GLFW_KEY_6)) { m_SelectedSlot = 5; m_SelectedBlock = m_Inventory->getSlot(5).type; }
-    if (Input::isKeyPressed(GLFW_KEY_7)) { m_SelectedSlot = 6; m_SelectedBlock = m_Inventory->getSlot(6).type; }
+    if (Input::isKeyPressed(GLFW_KEY_5)) { m_SelectedSlot = 4; m_SelectedBlock = m_Inventory->getSlot(5).type; }
+    if (Input::isKeyPressed(GLFW_KEY_6)) { m_SelectedSlot = 5; m_SelectedBlock = m_Inventory->getSlot(6).type; }
+    if (Input::isKeyPressed(GLFW_KEY_7)) { m_SelectedSlot = 7; m_SelectedBlock = BlockType::Water; }
     if (Input::isKeyPressed(GLFW_KEY_8)) { m_SelectedSlot = 7; m_SelectedBlock = m_Inventory->getSlot(7).type; }
     if (Input::isKeyPressed(GLFW_KEY_9)) { m_SelectedSlot = 8; m_SelectedBlock = m_Inventory->getSlot(8).type; }
 
@@ -127,12 +126,12 @@ void Application::processInput(float deltaTime) {
     glm::vec3 front = m_Camera->getFront();
     glm::vec3 right = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
 
-    if (!m_IsFlying) {
+    if (!m_IsFlying && !m_InWater) {
         front.y = 0.0f;
         front = glm::normalize(front);
     }
 
-    float speed = m_IsFlying ? 15.0f : 6.0f;
+    float speed = m_IsFlying ? 15.0f : (m_InWater ? 4.0f : 6.0f);
 
     if (Input::isKeyPressed(GLFW_KEY_W)) m_PlayerVelocity += front * speed;
     if (Input::isKeyPressed(GLFW_KEY_S)) m_PlayerVelocity -= front * speed;
@@ -142,6 +141,10 @@ void Application::processInput(float deltaTime) {
     if (m_IsFlying) {
         if (Input::isKeyPressed(GLFW_KEY_SPACE)) m_PlayerVelocity.y += speed;
         if (Input::isKeyPressed(GLFW_KEY_LEFT_SHIFT)) m_PlayerVelocity.y -= speed;
+    } else if (m_InWater) {
+        if (Input::isKeyPressed(GLFW_KEY_SPACE)) {
+            m_PlayerVelocity.y += 6.0f * deltaTime; // Swim up
+        }
     } else {
         if (Input::isKeyPressed(GLFW_KEY_SPACE) && m_IsGrounded) {
             m_PlayerVelocity.y = 8.5f;
@@ -191,7 +194,7 @@ void Application::update(float deltaTime) {
 
     if (m_World && m_Camera) {
         glm::vec3 currentPos = m_Camera->getPosition();
-        PhysicsEngine::updatePlayer(*m_World, currentPos, m_PlayerVelocity, m_IsGrounded, m_IsFlying, deltaTime);
+        PhysicsEngine::updatePlayer(*m_World, currentPos, m_PlayerVelocity, m_IsGrounded, m_InWater, m_IsFlying, deltaTime);
         
         Camera tempCam(currentPos, glm::vec3(0, 1, 0));
         *m_Camera = tempCam;
@@ -221,6 +224,7 @@ void Application::render() {
         m_BlockShader->setVec3("u_SunColor", m_TimeManager->getSunColor());
         m_BlockShader->setVec3("u_SkyColor", skyColor);
         m_BlockShader->setFloat("u_AmbientLight", m_TimeManager->getAmbientLight());
+        m_BlockShader->setBool("u_IsUnderwater", m_InWater);
 
         m_World->render();
     }

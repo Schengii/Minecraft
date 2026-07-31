@@ -10,7 +10,8 @@ class World;
 
 class PhysicsEngine {
 public:
-    static void updatePlayer(World& world, glm::vec3& position, glm::vec3& velocity, bool& isGrounded, bool isFlying, float deltaTime);
+    static void updatePlayer(World& world, glm::vec3& position, glm::vec3& velocity, bool& isGrounded, bool& inWater, bool isFlying, float deltaTime);
+    static bool isPointInWater(World& world, const glm::vec3& point);
 
 private:
     static bool checkCollision(World& world, const AABB& playerBox);

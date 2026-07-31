@@ -38,6 +38,7 @@ private:
     bool m_IsRunning = true;
     bool m_IsFlying = true;
     bool m_IsGrounded = false;
+    bool m_InWater = false;
     bool m_ShowDebugInfo = false;
     bool m_IsInventoryOpen = false;
 
