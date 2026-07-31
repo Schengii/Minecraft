@@ -22,7 +22,9 @@ enum class BlockType : uint8_t {
     IronOre,
     GoldOre,
     DiamondOre,
-    Lava
+    Lava,
+    CraftingTable,
+    Stick
 };
 
 enum Direction {
@@ -93,6 +95,12 @@ struct BlockData {
                 break;
             case BlockType::Lava:
                 tileIndex = 15;
+                break;
+            case BlockType::CraftingTable:
+                tileIndex = 6;
+                break;
+            case BlockType::Stick:
+                tileIndex = 9;
                 break;
             default:
                 tileIndex = 2;

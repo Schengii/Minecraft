@@ -7,6 +7,8 @@
 #include "../world/World.hpp"
 #include "../world/Block.hpp"
 #include "../gui/HUD.hpp"
+#include "../gui/InventoryGUI.hpp"
+#include "../inventory/Inventory.hpp"
 #include <memory>
 
 namespace Minecraft {
@@ -28,11 +30,15 @@ private:
     std::unique_ptr<Camera> m_Camera;
     std::unique_ptr<World> m_World;
     std::unique_ptr<HUD> m_HUD;
+    std::unique_ptr<InventoryGUI> m_InventoryGUI;
+    std::unique_ptr<Inventory> m_Inventory;
 
     bool m_IsRunning = true;
     bool m_IsFlying = true;
     bool m_IsGrounded = false;
     bool m_ShowDebugInfo = false;
+    bool m_IsInventoryOpen = false;
+
     float m_FPS = 0.0f;
     float m_FrameCounter = 0;
     float m_FpsTimer = 0.0f;
@@ -45,6 +51,7 @@ private:
     bool m_RightMousePressedLast = false;
     bool m_FPressedLast = false;
     bool m_F3PressedLast = false;
+    bool m_EPressedLast = false;
 };
 
 }

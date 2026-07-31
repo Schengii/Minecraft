@@ -52,6 +52,9 @@ set(SOURCES
     src/world/SaveSystem.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
+    src/gui/InventoryGUI.cpp
+    src/inventory/Inventory.cpp
+    src/crafting/CraftingManager.cpp
     src/audio/AudioManager.cpp
 )
 

@@ -16,6 +16,8 @@ Application::Application() {
     m_BlockShader = std::make_unique<Shader>("assets/shaders/block.vert", "assets/shaders/block.frag");
     m_World = std::make_unique<World>(4);
     m_HUD = std::make_unique<HUD>(m_Window->getWidth(), m_Window->getHeight());
+    m_InventoryGUI = std::make_unique<InventoryGUI>(m_Window->getWidth(), m_Window->getHeight());
+    m_Inventory = std::make_unique<Inventory>();
 }
 
 Application::~Application() = default;
@@ -39,6 +41,7 @@ void Application::run() {
 
         m_Window->pollEvents();
         m_HUD->resize(m_Window->getWidth(), m_Window->getHeight());
+        m_InventoryGUI->resize(m_Window->getWidth(), m_Window->getHeight());
 
         processInput(deltaTime);
         update(deltaTime);
@@ -49,8 +52,22 @@ void Application::run() {
 
 void Application::processInput(float deltaTime) {
     if (Input::isKeyPressed(GLFW_KEY_ESCAPE)) {
-        m_IsRunning = false;
+        if (m_IsInventoryOpen) {
+            m_IsInventoryOpen = false;
+            m_Window->setCursorCaptured(true);
+        } else {
+            m_IsRunning = false;
+        }
     }
+
+    // Toggle Inventory with 'E' key
+    bool ePressedNow = Input::isKeyPressed(GLFW_KEY_E);
+    if (ePressedNow && !m_EPressedLast) {
+        m_IsInventoryOpen = !m_IsInventoryOpen;
+        m_Window->setCursorCaptured(!m_IsInventoryOpen);
+        std::cout << "[GUI] Inventory: " << (m_IsInventoryOpen ? "OPENED" : "CLOSED") << std::endl;
+    }
+    m_EPressedLast = ePressedNow;
 
     // Toggle Flying mode with 'F' key
     bool fPressedNow = Input::isKeyPressed(GLFW_KEY_F);
@@ -69,15 +86,25 @@ void Application::processInput(float deltaTime) {
     m_F3PressedLast = f3PressedNow;
 
     // Hotbar Block selection (1-9)
-    if (Input::isKeyPressed(GLFW_KEY_1)) { m_SelectedSlot = 0; m_SelectedBlock = BlockType::Grass; }
-    if (Input::isKeyPressed(GLFW_KEY_2)) { m_SelectedSlot = 1; m_SelectedBlock = BlockType::Dirt; }
-    if (Input::isKeyPressed(GLFW_KEY_3)) { m_SelectedSlot = 2; m_SelectedBlock = BlockType::Stone; }
-    if (Input::isKeyPressed(GLFW_KEY_4)) { m_SelectedSlot = 3; m_SelectedBlock = BlockType::OakLog; }
-    if (Input::isKeyPressed(GLFW_KEY_5)) { m_SelectedSlot = 4; m_SelectedBlock = BlockType::Leaves; }
-    if (Input::isKeyPressed(GLFW_KEY_6)) { m_SelectedSlot = 5; m_SelectedBlock = BlockType::Planks; }
-    if (Input::isKeyPressed(GLFW_KEY_7)) { m_SelectedSlot = 6; m_SelectedBlock = BlockType::Glass; }
-    if (Input::isKeyPressed(GLFW_KEY_8)) { m_SelectedSlot = 7; m_SelectedBlock = BlockType::Sand; }
-    if (Input::isKeyPressed(GLFW_KEY_9)) { m_SelectedSlot = 8; m_SelectedBlock = BlockType::Bedrock; }
+    if (Input::isKeyPressed(GLFW_KEY_1)) { m_SelectedSlot = 0; m_SelectedBlock = m_Inventory->getSlot(0).type; }
+    if (Input::isKeyPressed(GLFW_KEY_2)) { m_SelectedSlot = 1; m_SelectedBlock = m_Inventory->getSlot(1).type; }
+    if (Input::isKeyPressed(GLFW_KEY_3)) { m_SelectedSlot = 2; m_SelectedBlock = m_Inventory->getSlot(2).type; }
+    if (Input::isKeyPressed(GLFW_KEY_4)) { m_SelectedSlot = 3; m_SelectedBlock = m_Inventory->getSlot(3).type; }
+    if (Input::isKeyPressed(GLFW_KEY_5)) { m_SelectedSlot = 4; m_SelectedBlock = m_Inventory->getSlot(4).type; }
+    if (Input::isKeyPressed(GLFW_KEY_6)) { m_SelectedSlot = 5; m_SelectedBlock = m_Inventory->getSlot(5).type; }
+    if (Input::isKeyPressed(GLFW_KEY_7)) { m_SelectedSlot = 6; m_SelectedBlock = m_Inventory->getSlot(6).type; }
+    if (Input::isKeyPressed(GLFW_KEY_8)) { m_SelectedSlot = 7; m_SelectedBlock = m_Inventory->getSlot(7).type; }
+    if (Input::isKeyPressed(GLFW_KEY_9)) { m_SelectedSlot = 8; m_SelectedBlock = m_Inventory->getSlot(8).type; }
+
+    // Disable 3D movement & raycasting while inventory screen is open
+    if (m_IsInventoryOpen) {
+        bool leftMouseNow = Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
+        if (leftMouseNow && !m_LeftMousePressedLast) {
+            m_InventoryGUI->handleMouseClick(*m_Inventory, Input::getMouseX(), Input::getMouseY(), GLFW_MOUSE_BUTTON_LEFT);
+        }
+        m_LeftMousePressedLast = leftMouseNow;
+        return;
+    }
 
     // Movement Controls
     glm::vec3 front = m_Camera->getFront();
@@ -100,7 +127,7 @@ void Application::processInput(float deltaTime) {
         if (Input::isKeyPressed(GLFW_KEY_LEFT_SHIFT)) m_PlayerVelocity.y -= speed;
     } else {
         if (Input::isKeyPressed(GLFW_KEY_SPACE) && m_IsGrounded) {
-            m_PlayerVelocity.y = 8.5f; // Jump impulse
+            m_PlayerVelocity.y = 8.5f;
             m_IsGrounded = false;
             AudioManager::playSound(SoundEffect::Jump);
         }
@@ -122,11 +149,16 @@ void Application::processInput(float deltaTime) {
         RaycastResult hit = Raycast::raycast(*m_World, m_Camera->getPosition(), m_Camera->getFront(), 6.0f);
         if (hit.hit) {
             if (leftMouseNow && !m_LeftMousePressedLast) {
+                BlockType brokenType = m_World->getBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
                 m_World->setBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, BlockType::Air);
+                m_Inventory->addItem(brokenType, 1);
                 AudioManager::playSound(SoundEffect::BlockBreak);
             } else if (rightMouseNow && !m_RightMousePressedLast) {
-                m_World->setBlock(hit.previousPos.x, hit.previousPos.y, hit.previousPos.z, m_SelectedBlock);
-                AudioManager::playSound(SoundEffect::BlockPlace);
+                BlockType toPlace = m_Inventory->getSlot(m_SelectedSlot).type;
+                if (toPlace != BlockType::Air) {
+                    m_World->setBlock(hit.previousPos.x, hit.previousPos.y, hit.previousPos.z, toPlace);
+                    AudioManager::playSound(SoundEffect::BlockPlace);
+                }
             }
         }
     }
@@ -170,9 +202,14 @@ void Application::render() {
         m_World->render();
     }
 
-    // 2. Render 2D HUD Layer (Crosshair, Hotbar, F3 Debug Overlay)
-    if (m_HUD && m_Camera) {
+    // 2. Render 2D HUD Layer
+    if (m_HUD && m_Camera && !m_IsInventoryOpen) {
         m_HUD->render(m_SelectedSlot, m_ShowDebugInfo, m_FPS, m_Camera->getPosition(), m_Camera->getFront(), m_IsFlying);
+    }
+
+    // 3. Render 2D Inventory GUI Layer
+    if (m_InventoryGUI && m_Inventory) {
+        m_InventoryGUI->render(*m_Inventory, m_IsInventoryOpen);
     }
 }
 

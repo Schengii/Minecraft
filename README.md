@@ -8,30 +8,30 @@ Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vo
 
 ## Feature-Übersicht & Stand
 
+### 🎒 Inventar-System, Item-Stacks & 2x2 Crafting (`E` Taste)
+- **36-Slot Spieler-Inventar (`Inventory`)**: 9 Hotbar-Slots + 27 Hauptinventar-Slots.
+- **`E` Taste**: Öffnen und Schließen des Inventar-GUI Screens inkl. Mauszustandssteuerung (Cursor-Freigabe).
+- **Abbau-Item Drops**: Beim Abbauen von Blöcken wandern die Blöcke automatisch in das Inventar des Spielers.
+- **Crafting Rezept-Manager (`CraftingManager`)**:
+  - 🪵 **Eichenholz-Stamm** (`OakLog`) -> 4x **Holzbretter** (`Planks`)
+  - 🧱 4x **Holzbretter** (`Planks`) -> 1x **Werkbank / Crafting Table** (`CraftingTable`)
+  - 🥢 2x **Holzbretter** (`Planks`) -> 4x **Stöcke** (`Stick`)
+
 ### 💾 Welt-Speichersystem (Save / Load Persistence)
-- **Binäre Chunk-Serialisierung (`SaveSystem`)**: Modifizierte Chunks werden beim Beenden automatisch in `world_saves/chunk_X_Z.bin` gespeichert und beim Start geladen. Gebaute und abgebaute Strukturen bleiben dauerhaft erhalten!
+- **Binäre Chunk-Serialisierung (`SaveSystem`)**: Modifizierte Chunks werden beim Beenden in `world_saves/chunk_X_Z.bin` gespeichert und beim Start geladen.
 
 ### 🏔️ 3D Höhlensysteme, Erze & Unterwelt
 - **3D Noise Caves**: Unterirdische Tunnelgänge, Grotten und tief liegende Lava-Seen (Y < 10).
-- **Voxel-Erzadern in Steinschichten**:
-  - 💎 **Diamant-Erz** (`DiamondOre`, Y: 1 bis 16)
-  - 🟡 **Gold-Erz** (`GoldOre`, Y: 5 bis 30)
-  - ⚪ **Eisen-Erz** (`IronOre`, Y: 5 bis 45)
-  - ⬛ **Kohle-Erz** (`CoalOre`, Y: 5 bis 60)
+- **Voxel-Erzadern**: Diamant-, Gold-, Eisen- und Kohle-Erzadern in tiefen Steinschichten.
 
 ### 💡 Smooth Lighting & Ambient Occlusion (AO)
 - **Vertex Ambient Occlusion**: Weiche Eck- und Kanten-Schatten an angrenzenden Voxel-Blöcken für plastischen Tiefeneffekt.
 
 ### 🔊 Audio Subsystem & Sound Effects
-- **Synthesizer & Audio Feedback**: Soundeffekt-Trigger beim Abbauen/Platzieren von Blöcken und Springen.
+- Audio-Trigger für Block-Abbau, Block-Platzieren und Sprung-Aktionen.
 
-### 🎮 Gameplay & Raycasting
-- **Voxel Raycasting (DDA Algorithm)**: Linksklick zum Abbauen, Rechtsklick zum Platzieren von Blöcken.
-- **Hotbar Slot-Auswahl (`1-9`)**: Schnellzugriff auf Gras, Erde, Stein, Holzstamm, Blätter, Bretter, Glas, Sand, Bedrock & Erze.
-
-### 🖥️ GUI, HUD & F3 Debug Screen
-- **Fadenkreuz (Crosshair)** & **2D Hotbar** mit visueller Slot-Hervorhebung.
-- **`F3` Debug Screen**: Live-Anzeige von FPS, Frametime, XYZ-Position, Chunk-Koordinaten & Flug-/Physik-Status.
+### 🎮 Gameplay, Raycasting & GUI
+- Voxel Raycasting (Linksklick abbauen, Rechtsklick platzieren), 2D Hotbar, Crosshair und `F3` Debug Overlay.
 
 ---
 
@@ -39,16 +39,17 @@ Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vo
 
 | Taste / Eingabe | Aktion |
 |-----------------|--------|
+| `E` | Inventar- & Crafting-GUI öffnen / schließen |
 | `W / A / S / D` | Vorwärts, links, rückwärts, rechts bewegen |
 | `Space` | Springen (im Laufmodus) / Nach oben fliegen (im Flugmodus) |
 | `L-Shift` | Nach unten fliegen (im Flugmodus) |
 | `F` | Umschalten zwischen Flugmodus & Voxel-Physik |
 | `F3` | Debug-Bildschirm (FPS, Koordinaten, Facing) ein-/ausblenden |
 | `1 - 9` | Hotbar Slot wählen |
-| `Linksklick` | Block unter Fadenkreuz abbauen (inkl. Sound) |
-| `Rechtsklick` | Ausgewählten Block platzieren (inkl. Sound) |
+| `Linksklick` | Block unter Fadenkreuz abbauen / Item im Inventar bewegen |
+| `Rechtsklick` | Ausgewählten Block platzieren |
 | `Maus bewegen` | Umsehen (Pitch / Yaw) |
-| `Escape` | Spiel beenden (Automatisches Speichern der Welt) |
+| `Escape` | Inventar schließen oder Spiel beenden |
 
 ---
 
