@@ -10,7 +10,10 @@ class World;
 
 enum class MobType {
     Pig,
-    Zombie
+    Cow,
+    Zombie,
+    Skeleton,
+    Creeper
 };
 
 struct Mob {
@@ -20,6 +23,14 @@ struct Mob {
     float maxHealth = 20.0f;
     MobType type = MobType::Zombie;
     bool isGrounded = false;
+    float fuseTimer = 0.0f;
+    float attackCooldown = 0.0f;
+};
+
+struct ArrowEntity {
+    glm::vec3 position;
+    glm::vec3 velocity;
+    bool active = true;
 };
 
 class MobEngine {
@@ -27,13 +38,15 @@ public:
     MobEngine();
 
     void spawnMob(MobType type, const glm::vec3& position);
-    void update(World& world, const glm::vec3& playerPos, float deltaTime);
+    void update(World& world, glm::vec3& playerPos, glm::vec3& playerVel, float& playerHealth, float deltaTime);
     bool checkPlayerAttack(const glm::vec3& playerPos, const glm::vec3& playerDir, float reach, int damage);
 
     const std::vector<Mob>& getMobs() const { return m_Mobs; }
+    const std::vector<ArrowEntity>& getArrows() const { return m_Arrows; }
 
 private:
     std::vector<Mob> m_Mobs;
+    std::vector<ArrowEntity> m_Arrows;
 };
 
 }

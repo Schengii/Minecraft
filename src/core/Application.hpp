@@ -2,15 +2,22 @@
 #define APPLICATION_HPP
 
 #include "Window.hpp"
+#include "ThreadPool.hpp"
 #include "../renderer/Shader.hpp"
 #include "../renderer/Camera.hpp"
+#include "../renderer/ShadowMap.hpp"
+#include "../renderer/PostProcessing.hpp"
 #include "../world/World.hpp"
 #include "../world/Block.hpp"
 #include "../world/TimeManager.hpp"
+#include "../world/ChestBlock.hpp"
+#include "../world/FurnaceBlock.hpp"
+#include "../world/DimensionManager.hpp"
 #include "../gui/HUD.hpp"
 #include "../gui/InventoryGUI.hpp"
 #include "../inventory/Inventory.hpp"
 #include "../ecs/MobEngine.hpp"
+#include "../ecs/ItemEntity.hpp"
 #include "../renderer/ParticleEngine.hpp"
 #include "../renderer/FrustumCuller.hpp"
 #include <memory>
@@ -30,14 +37,21 @@ private:
     void render();
 
     std::unique_ptr<Window> m_Window;
+    std::unique_ptr<ThreadPool> m_ThreadPool;
     std::unique_ptr<Shader> m_BlockShader;
+    std::unique_ptr<Shader> m_ShadowShader;
+    std::unique_ptr<ShadowMap> m_ShadowMap;
+    std::unique_ptr<PostProcessing> m_PostProcessing;
     std::unique_ptr<Camera> m_Camera;
-    std::unique_ptr<World> m_World;
+    std::unique_ptr<DimensionManager> m_DimensionManager;
     std::unique_ptr<TimeManager> m_TimeManager;
     std::unique_ptr<HUD> m_HUD;
     std::unique_ptr<InventoryGUI> m_InventoryGUI;
     std::unique_ptr<Inventory> m_Inventory;
     std::unique_ptr<MobEngine> m_MobEngine;
+    std::unique_ptr<ItemEntityManager> m_ItemEntityManager;
+    std::unique_ptr<ChestManager> m_ChestManager;
+    std::unique_ptr<FurnaceManager> m_FurnaceManager;
     std::unique_ptr<ParticleEngine> m_ParticleEngine;
     std::unique_ptr<FrustumCuller> m_FrustumCuller;
 
@@ -51,6 +65,7 @@ private:
     float m_FPS = 0.0f;
     float m_FrameCounter = 0;
     float m_FpsTimer = 0.0f;
+    float m_PlayerHealth = 20.0f;
 
     glm::vec3 m_PlayerVelocity{ 0.0f };
     BlockType m_SelectedBlock = BlockType::Grass;

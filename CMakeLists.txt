@@ -43,10 +43,13 @@ set(SOURCES
     src/core/Window.cpp
     src/core/Input.cpp
     src/core/Application.cpp
+    src/core/ThreadPool.cpp
     src/renderer/Shader.cpp
     src/renderer/Camera.cpp
     src/renderer/ParticleEngine.cpp
     src/renderer/FrustumCuller.cpp
+    src/renderer/ShadowMap.cpp
+    src/renderer/PostProcessing.cpp
     src/world/Chunk.cpp
     src/world/ChunkMesh.cpp
     src/world/World.cpp
@@ -58,12 +61,18 @@ set(SOURCES
     src/world/RedstoneEngine.cpp
     src/world/ToolSystem.cpp
     src/world/ExplosionEngine.cpp
+    src/world/ChestBlock.cpp
+    src/world/FurnaceBlock.cpp
+    src/world/StructureGenerator.cpp
+    src/world/DimensionManager.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp
+    src/gui/DebugGUI.cpp
     src/inventory/Inventory.cpp
     src/crafting/CraftingManager.cpp
     src/ecs/MobEngine.cpp
+    src/ecs/ItemEntity.cpp
     src/audio/AudioManager.cpp
 )
 
@@ -92,10 +101,13 @@ set(TEST_SOURCES
     src/core/Window.cpp
     src/core/Input.cpp
     src/core/Application.cpp
+    src/core/ThreadPool.cpp
     src/renderer/Shader.cpp
     src/renderer/Camera.cpp
     src/renderer/ParticleEngine.cpp
     src/renderer/FrustumCuller.cpp
+    src/renderer/ShadowMap.cpp
+    src/renderer/PostProcessing.cpp
     src/world/Chunk.cpp
     src/world/ChunkMesh.cpp
     src/world/World.cpp
@@ -107,12 +119,18 @@ set(TEST_SOURCES
     src/world/RedstoneEngine.cpp
     src/world/ToolSystem.cpp
     src/world/ExplosionEngine.cpp
+    src/world/ChestBlock.cpp
+    src/world/FurnaceBlock.cpp
+    src/world/StructureGenerator.cpp
+    src/world/DimensionManager.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp
+    src/gui/DebugGUI.cpp
     src/inventory/Inventory.cpp
     src/crafting/CraftingManager.cpp
     src/ecs/MobEngine.cpp
+    src/ecs/ItemEntity.cpp
     src/audio/AudioManager.cpp
 )
 add_executable(TestEngine ${TEST_SOURCES})

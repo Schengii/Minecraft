@@ -34,6 +34,16 @@ enum class BlockType : uint8_t {
     RedstoneLamp,
     TNT,
     Chest,
+    Furnace,
+    Piston,
+    StickyPiston,
+    Repeater,
+    Netherrack,
+    SoulSand,
+    Glowstone,
+    NetherPortal,
+    Obsidian,
+    ItemDrop,
     WoodPickaxe,
     StonePickaxe,
     IronPickaxe,
@@ -56,11 +66,11 @@ struct BlockData {
     BlockType type = BlockType::Air;
 
     static bool isOpaque(BlockType type) {
-        return type != BlockType::Air && type != BlockType::Glass && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch;
+        return type != BlockType::Air && type != BlockType::Glass && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::ItemDrop;
     }
 
     static bool isSolid(BlockType type) {
-        return type != BlockType::Air && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch;
+        return type != BlockType::Air && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::ItemDrop;
     }
 
     static glm::vec2 getTextureUV(BlockType type, Direction face) {
@@ -138,6 +148,34 @@ struct BlockData {
                 break;
             case BlockType::RedstoneLamp:
                 tileIndex = 14;
+                break;
+            case BlockType::Chest:
+                tileIndex = 6;
+                break;
+            case BlockType::Furnace:
+                tileIndex = 3;
+                break;
+            case BlockType::Piston:
+            case BlockType::StickyPiston:
+                tileIndex = 6;
+                break;
+            case BlockType::Repeater:
+                tileIndex = 11;
+                break;
+            case BlockType::Netherrack:
+                tileIndex = 15;
+                break;
+            case BlockType::SoulSand:
+                tileIndex = 2;
+                break;
+            case BlockType::Glowstone:
+                tileIndex = 14;
+                break;
+            case BlockType::NetherPortal:
+                tileIndex = 15;
+                break;
+            case BlockType::Obsidian:
+                tileIndex = 4;
                 break;
             default:
                 tileIndex = 2;

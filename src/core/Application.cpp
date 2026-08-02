@@ -5,6 +5,7 @@
 #include "../world/FluidEngine.hpp"
 #include "../world/ExplosionEngine.hpp"
 #include "../world/ToolSystem.hpp"
+#include "../world/StructureGenerator.hpp"
 #include "../physics/PhysicsEngine.hpp"
 #include "../audio/AudioManager.hpp"
 #include <iostream>
@@ -16,21 +17,37 @@ Application::Application() {
     Input::init(m_Window->getNativeWindow());
     AudioManager::init();
 
+    m_ThreadPool = std::make_unique<ThreadPool>(4);
     m_Camera = std::make_unique<Camera>(glm::vec3(0.0f, 65.0f, 0.0f));
     m_BlockShader = std::make_unique<Shader>("assets/shaders/block.vert", "assets/shaders/block.frag");
-    m_World = std::make_unique<World>(4);
+    m_ShadowShader = std::make_unique<Shader>("assets/shaders/shadow.vert", "assets/shaders/shadow.frag");
+    m_ShadowMap = std::make_unique<ShadowMap>(2048, 2048);
+    m_PostProcessing = std::make_unique<PostProcessing>(m_Window->getWidth(), m_Window->getHeight());
+
+    m_DimensionManager = std::make_unique<DimensionManager>();
     m_TimeManager = std::make_unique<TimeManager>();
     m_HUD = std::make_unique<HUD>(m_Window->getWidth(), m_Window->getHeight());
     m_InventoryGUI = std::make_unique<InventoryGUI>(m_Window->getWidth(), m_Window->getHeight());
     m_Inventory = std::make_unique<Inventory>();
 
     m_MobEngine = std::make_unique<MobEngine>();
+    m_ItemEntityManager = std::make_unique<ItemEntityManager>();
+    m_ChestManager = std::make_unique<ChestManager>();
+    m_FurnaceManager = std::make_unique<FurnaceManager>();
     m_ParticleEngine = std::make_unique<ParticleEngine>();
     m_FrustumCuller = std::make_unique<FrustumCuller>();
 
-    // Spawn initial interactive test mobs
+    // Spawn initial interactive test mobs & structures
     m_MobEngine->spawnMob(MobType::Zombie, glm::vec3(5.0f, 65.0f, 5.0f));
+    m_MobEngine->spawnMob(MobType::Skeleton, glm::vec3(12.0f, 65.0f, -8.0f));
+    m_MobEngine->spawnMob(MobType::Creeper, glm::vec3(-10.0f, 65.0f, 10.0f));
     m_MobEngine->spawnMob(MobType::Pig, glm::vec3(-5.0f, 65.0f, 3.0f));
+
+    World* world = m_DimensionManager->getCurrentWorld();
+    if (world) {
+        StructureGenerator::generateTree(*world, 8, 65, 8);
+        StructureGenerator::generateNetherPortalFrame(*world, -3, 65, -3);
+    }
 }
 
 Application::~Application() = default;
@@ -55,6 +72,9 @@ void Application::run() {
         m_Window->pollEvents();
         m_HUD->resize(m_Window->getWidth(), m_Window->getHeight());
         m_InventoryGUI->resize(m_Window->getWidth(), m_Window->getHeight());
+        if (m_PostProcessing) {
+            m_PostProcessing->resize(m_Window->getWidth(), m_Window->getHeight());
+        }
 
         processInput(deltaTime);
         update(deltaTime);
@@ -123,7 +143,7 @@ void Application::processInput(float deltaTime) {
     if (Input::isKeyPressed(GLFW_KEY_6)) { m_SelectedSlot = 5; m_SelectedBlock = BlockType::Lever; }
     if (Input::isKeyPressed(GLFW_KEY_7)) { m_SelectedSlot = 6; m_SelectedBlock = BlockType::RedstoneLamp; }
     if (Input::isKeyPressed(GLFW_KEY_8)) { m_SelectedSlot = 7; m_SelectedBlock = BlockType::Water; }
-    if (Input::isKeyPressed(GLFW_KEY_9)) { m_SelectedSlot = 8; m_SelectedBlock = BlockType::Bedrock; }
+    if (Input::isKeyPressed(GLFW_KEY_9)) { m_SelectedSlot = 8; m_SelectedBlock = BlockType::Chest; }
 
     if (m_IsInventoryOpen) {
         bool leftMouseNow = Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
@@ -177,37 +197,36 @@ void Application::processInput(float deltaTime) {
     Input::updateMouseDelta();
 
     // Raycast Block & Mob Interaktionen
+    World* world = m_DimensionManager->getCurrentWorld();
     bool leftMouseNow = Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
     bool rightMouseNow = Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT);
 
-    if ((leftMouseNow && !m_LeftMousePressedLast) || (rightMouseNow && !m_RightMousePressedLast)) {
+    if (world && ((leftMouseNow && !m_LeftMousePressedLast) || (rightMouseNow && !m_RightMousePressedLast))) {
         int damage = ToolSystem::getDamageDealt(m_SelectedBlock);
         bool mobHit = m_MobEngine->checkPlayerAttack(m_Camera->getPosition(), m_Camera->getFront(), 4.5f, damage);
 
         if (!mobHit) {
-            RaycastResult hit = Raycast::raycast(*m_World, m_Camera->getPosition(), m_Camera->getFront(), 6.0f);
+            RaycastResult hit = Raycast::raycast(*world, m_Camera->getPosition(), m_Camera->getFront(), 6.0f);
             if (hit.hit) {
-                BlockType hitType = m_World->getBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
+                BlockType hitType = world->getBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
                 if (rightMouseNow && !m_RightMousePressedLast && hitType == BlockType::Lever) {
-                    // Interaktiver Redstone-Hebel
-                    RedstoneEngine::updateRedstoneNetwork(*m_World, hit.blockPos);
-                    AudioManager::playSound(SoundEffect::BlockPlace);
+                    RedstoneEngine::updateRedstoneNetwork(*world, hit.blockPos);
+                    AudioManager::playSound3D(SoundEffect::BlockPlace, glm::vec3(hit.blockPos), m_Camera->getPosition(), m_Camera->getFront());
                 } else if (rightMouseNow && !m_RightMousePressedLast && hitType == BlockType::TNT) {
-                    // TNT Zündung!
-                    ExplosionEngine::createExplosion(*m_World, glm::vec3(hit.blockPos) + glm::vec3(0.5f), 4.0f, &m_PlayerVelocity, &m_Camera->getPosition());
+                    ExplosionEngine::createExplosion(*world, glm::vec3(hit.blockPos) + glm::vec3(0.5f), 4.0f, &m_PlayerVelocity, &m_Camera->getPosition());
                 } else if (leftMouseNow && !m_LeftMousePressedLast) {
                     if (ToolSystem::canHarvest(hitType, m_SelectedBlock)) {
-                        m_Inventory->addItem(hitType, 1);
+                        m_ItemEntityManager->spawnItemDrop(hitType, 1, glm::vec3(hit.blockPos));
                     }
                     m_ParticleEngine->spawnBlockBreak(glm::vec3(hit.blockPos));
-                    m_World->setBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, BlockType::Air);
-                    AudioManager::playSound(SoundEffect::BlockBreak);
+                    world->setBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, BlockType::Air);
+                    AudioManager::playSound3D(SoundEffect::BlockBreak, glm::vec3(hit.blockPos), m_Camera->getPosition(), m_Camera->getFront());
                 } else if (rightMouseNow && !m_RightMousePressedLast) {
                     BlockType toPlace = m_SelectedBlock;
                     if (toPlace != BlockType::Air) {
-                        m_World->setBlock(hit.previousPos.x, hit.previousPos.y, hit.previousPos.z, toPlace);
-                        RedstoneEngine::updateRedstoneNetwork(*m_World, hit.previousPos);
-                        AudioManager::playSound(SoundEffect::BlockPlace);
+                        world->setBlock(hit.previousPos.x, hit.previousPos.y, hit.previousPos.z, toPlace);
+                        RedstoneEngine::updateRedstoneNetwork(*world, hit.previousPos);
+                        AudioManager::playSound3D(SoundEffect::BlockPlace, glm::vec3(hit.previousPos), m_Camera->getPosition(), m_Camera->getFront());
                     }
                 }
             }
@@ -223,17 +242,38 @@ void Application::update(float deltaTime) {
         m_TimeManager->update(deltaTime);
     }
 
-    if (m_World && m_Camera) {
+    if (m_FurnaceManager) {
+        m_FurnaceManager->update(deltaTime);
+    }
+
+    World* world = m_DimensionManager->getCurrentWorld();
+
+    if (world && m_Camera) {
         glm::vec3 currentPos = m_Camera->getPosition();
         bool isSneaking = !m_IsFlying && Input::isKeyPressed(GLFW_KEY_LEFT_SHIFT);
-        PhysicsEngine::updatePlayer(*m_World, currentPos, m_PlayerVelocity, m_IsGrounded, m_InWater, m_IsFlying, isSneaking, deltaTime);
+        PhysicsEngine::updatePlayer(*world, currentPos, m_PlayerVelocity, m_IsGrounded, m_InWater, m_IsFlying, isSneaking, deltaTime);
         
-        // Fluid simulation step around player
-        FluidEngine::updateFluids(*m_World, currentPos);
+        // Fluid simulation step
+        FluidEngine::updateFluids(*world, currentPos);
 
-        // Mob Engine update & AI pathfinding
+        // Mob Engine update & AI
         if (m_MobEngine) {
-            m_MobEngine->update(*m_World, currentPos, deltaTime);
+            m_MobEngine->update(*world, currentPos, m_PlayerVelocity, m_PlayerHealth, deltaTime);
+        }
+
+        // Dropped Items update
+        if (m_ItemEntityManager) {
+            std::vector<std::pair<BlockType, int>> pickedUp;
+            m_ItemEntityManager->update(*world, currentPos, pickedUp, deltaTime);
+            for (auto& [type, count] : pickedUp) {
+                m_Inventory->addItem(type, count);
+            }
+        }
+
+        // Nether portal teleport check
+        glm::vec3 telePos;
+        if (m_DimensionManager->checkPortalTeleport(currentPos, telePos)) {
+            currentPos = telePos;
         }
 
         // Particle Engine update
@@ -244,17 +284,39 @@ void Application::update(float deltaTime) {
         Camera tempCam(currentPos, glm::vec3(0, 1, 0));
         *m_Camera = tempCam;
 
-        m_World->update(currentPos);
+        m_DimensionManager->update(currentPos, deltaTime);
     }
 }
 
 void Application::render() {
+    World* world = m_DimensionManager->getCurrentWorld();
     glm::vec3 skyColor = m_TimeManager->getSkyColor();
+
+    if (m_DimensionManager->getCurrentDimension() == DimensionType::Nether) {
+        skyColor = glm::vec3(0.18f, 0.04f, 0.04f);
+    }
+
+    // 1. Shadow Map Pass
+    if (m_ShadowMap && m_ShadowShader && world) {
+        m_ShadowMap->bindForWriting();
+        m_ShadowShader->use();
+        glm::mat4 lightSpaceMatrix = m_ShadowMap->getLightSpaceMatrix(m_TimeManager->getSunDirection(), m_Camera->getPosition());
+        m_ShadowShader->setMat4("u_LightSpaceMatrix", lightSpaceMatrix);
+        m_ShadowShader->setMat4("u_Model", glm::mat4(1.0f));
+        world->render();
+        m_ShadowMap->unbind(m_Window->getWidth(), m_Window->getHeight());
+    }
+
+    // 2. Offscreen Framebuffer Pass (Post Processing)
+    if (m_PostProcessing) {
+        m_PostProcessing->bindForWriting();
+    }
+
     glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // 1. Render 3D World
-    if (m_BlockShader && m_Camera && m_World && m_TimeManager) {
+    // 3. Render 3D World
+    if (m_BlockShader && m_Camera && world && m_TimeManager) {
         m_BlockShader->use();
         
         glm::mat4 projection = m_Camera->getProjectionMatrix(m_Window->getAspectRatio());
@@ -271,15 +333,28 @@ void Application::render() {
         m_BlockShader->setFloat("u_AmbientLight", m_TimeManager->getAmbientLight());
         m_BlockShader->setBool("u_IsUnderwater", m_InWater);
 
-        m_World->render();
+        if (m_ShadowMap) {
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, m_ShadowMap->getDepthMapTexture());
+            m_BlockShader->setInt("u_ShadowMap", 1);
+            glm::mat4 lightSpaceMatrix = m_ShadowMap->getLightSpaceMatrix(m_TimeManager->getSunDirection(), m_Camera->getPosition());
+            m_BlockShader->setMat4("u_LightSpaceMatrix", lightSpaceMatrix);
+        }
+
+        world->render();
     }
 
-    // 2. Render 2D HUD Layer
+    // Render screen quad with Post-Processing
+    if (m_PostProcessing) {
+        m_PostProcessing->unbindAndRender(m_InWater);
+    }
+
+    // 4. Render 2D HUD Layer
     if (m_HUD && m_Camera && !m_IsInventoryOpen) {
         m_HUD->render(m_SelectedSlot, m_ShowDebugInfo, m_FPS, m_Camera->getPosition(), m_Camera->getFront(), m_IsFlying);
     }
 
-    // 3. Render 2D Inventory GUI Layer
+    // 5. Render 2D Inventory GUI Layer
     if (m_InventoryGUI && m_Inventory) {
         m_InventoryGUI->render(*m_Inventory, m_IsInventoryOpen);
     }

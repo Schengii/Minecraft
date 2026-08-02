@@ -23,6 +23,13 @@ void ChunkMesh::clear() {
 void ChunkMesh::generate(const Chunk& chunk) {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
+    buildMeshData(chunk, vertices, indices);
+    uploadMeshData(vertices, indices);
+}
+
+void ChunkMesh::buildMeshData(const Chunk& chunk, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices) {
+    vertices.clear();
+    indices.clear();
 
     int worldChunkX = chunk.getChunkX() * CHUNK_SIZE_X;
     int worldChunkZ = chunk.getChunkZ() * CHUNK_SIZE_Z;
@@ -61,9 +68,15 @@ void ChunkMesh::generate(const Chunk& chunk) {
             }
         }
     }
+}
 
+void ChunkMesh::uploadMeshData(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices) {
     m_IndexCount = indices.size();
     if (m_IndexCount == 0 || !glBindVertexArray) return;
+
+    if (!m_VAO && glGenVertexArrays) glGenVertexArrays(1, &m_VAO);
+    if (!m_VBO && glGenBuffers) glGenBuffers(1, &m_VBO);
+    if (!m_EBO && glGenBuffers) glGenBuffers(1, &m_EBO);
 
     glBindVertexArray(m_VAO);
 

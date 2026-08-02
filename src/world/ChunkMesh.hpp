@@ -23,6 +23,8 @@ public:
     ~ChunkMesh();
 
     void generate(const Chunk& chunk);
+    void buildMeshData(const Chunk& chunk, std::vector<Vertex>& outVertices, std::vector<unsigned int>& outIndices);
+    void uploadMeshData(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
     void render() const;
     void clear();
 

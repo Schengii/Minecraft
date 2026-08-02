@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <glm/glm.hpp>
 
 namespace Minecraft {
 
@@ -10,13 +11,20 @@ enum class SoundEffect {
     BlockBreak,
     BlockPlace,
     Footstep,
-    Jump
+    Jump,
+    Explosion,
+    CreeperFuse,
+    ArrowShoot,
+    MobHit,
+    ChestOpen,
+    WaterSplash
 };
 
 class AudioManager {
 public:
     static void init();
     static void playSound(SoundEffect effect);
+    static void playSound3D(SoundEffect effect, const glm::vec3& soundPos, const glm::vec3& listenerPos, const glm::vec3& listenerFront);
 };
 
 }
