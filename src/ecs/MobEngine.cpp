@@ -9,6 +9,13 @@
 
 namespace Minecraft {
 
+static bool ArrowEntityCollisionCheck(World& world, const glm::vec3& pos) {
+    int x = static_cast<int>(std::floor(pos.x));
+    int y = static_cast<int>(std::floor(pos.y));
+    int z = static_cast<int>(std::floor(pos.z));
+    return BlockData::isSolid(world.getBlock(x, y, z));
+}
+
 MobEngine::MobEngine() = default;
 
 void MobEngine::spawnMob(MobType type, const glm::vec3& position) {
@@ -150,13 +157,6 @@ bool MobEngine::checkPlayerAttack(const glm::vec3& playerPos, const glm::vec3& p
         }
     }
     return false;
-}
-
-static bool ArrowEntityCollisionCheck(World& world, const glm::vec3& pos) {
-    int x = static_cast<int>(std::floor(pos.x));
-    int y = static_cast<int>(std::floor(pos.y));
-    int z = static_cast<int>(std::floor(pos.z));
-    return BlockData::isSolid(world.getBlock(x, y, z));
 }
 
 }

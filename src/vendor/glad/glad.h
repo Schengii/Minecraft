@@ -102,9 +102,21 @@ typedef khronos_sizei_t GLsizeiptr;
 #define GL_LINEAR_MIPMAP_LINEAR 0x2703
 #define GL_REPEAT 0x2901
 #define GL_CLAMP_TO_EDGE 0x812F
+#define GL_CLAMP_TO_BORDER 0x812D
+#define GL_TEXTURE_BORDER_COLOR 0x1004
 #define GL_RGB 0x1907
 #define GL_RGBA 0x1908
+#define GL_RGB16F 0x881B
+#define GL_DEPTH_COMPONENT 0x1902
+#define GL_NONE 0
 #define GL_TEXTURE0 0x84C0
+
+#define GL_FRAMEBUFFER 0x8D40
+#define GL_RENDERBUFFER 0x8D41
+#define GL_COLOR_ATTACHMENT0 0x8CE0
+#define GL_DEPTH_ATTACHMENT 0x8D00
+#define GL_DEPTH_STENCIL_ATTACHMENT 0x821A
+#define GL_DEPTH24_STENCIL8 0x88F0
 
 typedef void (GLAD_API_PTR *PFNGLCLEARPROC)(GLbitfield mask);
 typedef void (GLAD_API_PTR *PFNGLCLEARCOLORPROC)(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
@@ -153,9 +165,24 @@ typedef void (GLAD_API_PTR *PFNGLGENTEXTURESPROC)(GLsizei n, GLuint *textures);
 typedef void (GLAD_API_PTR *PFNGLBINDTEXTUREPROC)(GLenum target, GLuint texture);
 typedef void (GLAD_API_PTR *PFNGLTEXIMAGE2DPROC)(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels);
 typedef void (GLAD_API_PTR *PFNGLTEXPARAMETERIPROC)(GLenum target, GLenum pname, GLint param);
+typedef void (GLAD_API_PTR *PFNGLTEXPARAMETERFVPROC)(GLenum target, GLenum pname, const GLfloat *params);
 typedef void (GLAD_API_PTR *PFNGLGENERATEMIPMAPPROC)(GLenum target);
 typedef void (GLAD_API_PTR *PFNGLACTIVETEXTUREPROC)(GLenum texture);
 typedef void (GLAD_API_PTR *PFNGLDELETETEXTURESPROC)(GLsizei n, const GLuint *textures);
+
+typedef void (GLAD_API_PTR *PFNGLGENFRAMEBUFFERSPROC)(GLsizei n, GLuint *framebuffers);
+typedef void (GLAD_API_PTR *PFNGLBINDFRAMEBUFFERPROC)(GLenum target, GLuint framebuffer);
+typedef void (GLAD_API_PTR *PFNGLFRAMEBUFFERTEXTURE2DPROC)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+typedef void (GLAD_API_PTR *PFNGLDELETEFRAMEBUFFERSPROC)(GLsizei n, const GLuint *framebuffers);
+
+typedef void (GLAD_API_PTR *PFNGLGENRENDERBUFFERSPROC)(GLsizei n, GLuint *renderbuffers);
+typedef void (GLAD_API_PTR *PFNGLBINDRENDERBUFFERPROC)(GLenum target, GLuint renderbuffer);
+typedef void (GLAD_API_PTR *PFNGLRENDERBUFFERSTORAGEPROC)(GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+typedef void (GLAD_API_PTR *PFNGLFRAMEBUFFERRENDERBUFFERPROC)(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
+typedef void (GLAD_API_PTR *PFNGLDELETERENDERBUFFERSPROC)(GLsizei n, const GLuint *renderbuffers);
+
+typedef void (GLAD_API_PTR *PFNGLDRAWBUFFERPROC)(GLenum buf);
+typedef void (GLAD_API_PTR *PFNGLREADBUFFERPROC)(GLenum mode);
 
 typedef void (GLAD_API_PTR *PFNGLDRAWARRAYSPROC)(GLenum mode, GLint first, GLsizei count);
 typedef void (GLAD_API_PTR *PFNGLDRAWELEMENTSPROC)(GLenum mode, GLsizei count, GLenum type, const void *indices);
@@ -207,9 +234,24 @@ GLAD_GLAPI PFNGLGENTEXTURESPROC glGenTextures;
 GLAD_GLAPI PFNGLBINDTEXTUREPROC glBindTexture;
 GLAD_GLAPI PFNGLTEXIMAGE2DPROC glTexImage2D;
 GLAD_GLAPI PFNGLTEXPARAMETERIPROC glTexParameteri;
+GLAD_GLAPI PFNGLTEXPARAMETERFVPROC glTexParameterfv;
 GLAD_GLAPI PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
 GLAD_GLAPI PFNGLACTIVETEXTUREPROC glActiveTexture;
 GLAD_GLAPI PFNGLDELETETEXTURESPROC glDeleteTextures;
+
+GLAD_GLAPI PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
+GLAD_GLAPI PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
+GLAD_GLAPI PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
+GLAD_GLAPI PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
+
+GLAD_GLAPI PFNGLGENRENDERBUFFERSPROC glGenRenderbuffers;
+GLAD_GLAPI PFNGLBINDRENDERBUFFERPROC glBindRenderbuffer;
+GLAD_GLAPI PFNGLRENDERBUFFERSTORAGEPROC glRenderbufferStorage;
+GLAD_GLAPI PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer;
+GLAD_GLAPI PFNGLDELETERENDERBUFFERSPROC glDeleteRenderbuffers;
+
+GLAD_GLAPI PFNGLDRAWBUFFERPROC glDrawBuffer;
+GLAD_GLAPI PFNGLREADBUFFERPROC glReadBuffer;
 
 GLAD_GLAPI PFNGLDRAWARRAYSPROC glDrawArrays;
 GLAD_GLAPI PFNGLDRAWELEMENTSPROC glDrawElements;

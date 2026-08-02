@@ -1,3 +1,4 @@
+#include <glad/glad.h>
 #include "ShadowMap.hpp"
 #include <iostream>
 

@@ -1,3 +1,4 @@
+#include <glad/glad.h>
 #include "Application.hpp"
 #include "Input.hpp"
 #include "../world/Raycast.hpp"
@@ -333,8 +334,8 @@ void Application::render() {
         m_BlockShader->setFloat("u_AmbientLight", m_TimeManager->getAmbientLight());
         m_BlockShader->setBool("u_IsUnderwater", m_InWater);
 
-        if (m_ShadowMap) {
-            glActiveTexture(GL_TEXTURE1);
+        if (m_ShadowMap && glActiveTexture) {
+            glActiveTexture(GL_TEXTURE0 + 1);
             glBindTexture(GL_TEXTURE_2D, m_ShadowMap->getDepthMapTexture());
             m_BlockShader->setInt("u_ShadowMap", 1);
             glm::mat4 lightSpaceMatrix = m_ShadowMap->getLightSpaceMatrix(m_TimeManager->getSunDirection(), m_Camera->getPosition());

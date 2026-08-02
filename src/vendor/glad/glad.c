@@ -49,9 +49,24 @@ PFNGLGENTEXTURESPROC glGenTextures = NULL;
 PFNGLBINDTEXTUREPROC glBindTexture = NULL;
 PFNGLTEXIMAGE2DPROC glTexImage2D = NULL;
 PFNGLTEXPARAMETERIPROC glTexParameteri = NULL;
+PFNGLTEXPARAMETERFVPROC glTexParameterfv = NULL;
 PFNGLGENERATEMIPMAPPROC glGenerateMipmap = NULL;
 PFNGLACTIVETEXTUREPROC glActiveTexture = NULL;
 PFNGLDELETETEXTURESPROC glDeleteTextures = NULL;
+
+PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers = NULL;
+PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer = NULL;
+PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D = NULL;
+PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers = NULL;
+
+PFNGLGENRENDERBUFFERSPROC glGenRenderbuffers = NULL;
+PFNGLBINDRENDERBUFFERPROC glBindRenderbuffer = NULL;
+PFNGLRENDERBUFFERSTORAGEPROC glRenderbufferStorage = NULL;
+PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer = NULL;
+PFNGLDELETERENDERBUFFERSPROC glDeleteRenderbuffers = NULL;
+
+PFNGLDRAWBUFFERPROC glDrawBuffer = NULL;
+PFNGLREADBUFFERPROC glReadBuffer = NULL;
 
 PFNGLDRAWARRAYSPROC glDrawArrays = NULL;
 PFNGLDRAWELEMENTSPROC glDrawElements = NULL;
@@ -121,9 +136,24 @@ int gladLoadGLLoader(GLADloadproc loadproc) {
     glBindTexture = (PFNGLBINDTEXTUREPROC)load(loadproc, "glBindTexture");
     glTexImage2D = (PFNGLTEXIMAGE2DPROC)load(loadproc, "glTexImage2D");
     glTexParameteri = (PFNGLTEXPARAMETERIPROC)load(loadproc, "glTexParameteri");
+    glTexParameterfv = (PFNGLTEXPARAMETERFVPROC)load(loadproc, "glTexParameterfv");
     glGenerateMipmap = (PFNGLGENERATEMIPMAPPROC)load(loadproc, "glGenerateMipmap");
     glActiveTexture = (PFNGLACTIVETEXTUREPROC)load(loadproc, "glActiveTexture");
     glDeleteTextures = (PFNGLDELETETEXTURESPROC)load(loadproc, "glDeleteTextures");
+
+    glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)load(loadproc, "glGenFramebuffers");
+    glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)load(loadproc, "glBindFramebuffer");
+    glFramebufferTexture2D = (PFNGLFRAMEBUFFERTEXTURE2DPROC)load(loadproc, "glFramebufferTexture2D");
+    glDeleteFramebuffers = (PFNGLDELETEFRAMEBUFFERSPROC)load(loadproc, "glDeleteFramebuffers");
+
+    glGenRenderbuffers = (PFNGLGENRENDERBUFFERSPROC)load(loadproc, "glGenRenderbuffers");
+    glBindRenderbuffer = (PFNGLBINDRENDERBUFFERPROC)load(loadproc, "glBindRenderbuffer");
+    glRenderbufferStorage = (PFNGLRENDERBUFFERSTORAGEPROC)load(loadproc, "glRenderbufferStorage");
+    glFramebufferRenderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFERPROC)load(loadproc, "glFramebufferRenderbuffer");
+    glDeleteRenderbuffers = (PFNGLDELETERENDERBUFFERSPROC)load(loadproc, "glDeleteRenderbuffers");
+
+    glDrawBuffer = (PFNGLDRAWBUFFERPROC)load(loadproc, "glDrawBuffer");
+    glReadBuffer = (PFNGLREADBUFFERPROC)load(loadproc, "glReadBuffer");
 
     glDrawArrays = (PFNGLDRAWARRAYSPROC)load(loadproc, "glDrawArrays");
     glDrawElements = (PFNGLDRAWELEMENTSPROC)load(loadproc, "glDrawElements");

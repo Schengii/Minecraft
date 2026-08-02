@@ -135,12 +135,14 @@ void testNetherDimension() {
 void testItemEntities() {
     std::cout << "[TEST] 8. ItemEntityManager Magnet Pickup & Drops..." << std::endl;
     World world(1);
+    world.setBlock(0, 59, 0, BlockType::Stone);
     ItemEntityManager iem;
     iem.spawnItemDrop(BlockType::GoldOre, 3, glm::vec3(0, 60, 0));
     assert(iem.getEntities().size() == 1);
 
     std::vector<std::pair<BlockType, int>> picked;
-    iem.update(world, glm::vec3(0, 60, 0), picked, 1.0f);
+    iem.update(world, glm::vec3(0, 60, 0), picked, 0.6f);
+    iem.update(world, glm::vec3(0, 60, 0), picked, 0.6f);
     assert(picked.size() == 1 && picked[0].first == BlockType::GoldOre);
     std::cout << "  -> ItemEntityManager tests PASSED!" << std::endl;
 }

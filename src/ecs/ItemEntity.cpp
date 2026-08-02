@@ -36,26 +36,31 @@ void ItemEntityManager::update(World& world, const glm::vec3& playerPos, std::ve
         item.velocity.y -= 9.81f * deltaTime;
         item.position += item.velocity * deltaTime;
 
-        // Simple Ground Collision check
+        // Ground Collision check
         int blockX = static_cast<int>(std::floor(item.position.x));
         int blockY = static_cast<int>(std::floor(item.position.y));
         int blockZ = static_cast<int>(std::floor(item.position.z));
 
-        BlockType below = world.getBlock(blockX, blockY, blockZ);
-        if (BlockData::isSolid(below)) {
-            item.position.y = std::floor(item.position.y) + 1.0f;
+        if (BlockData::isSolid(world.getBlock(blockX, blockY, blockZ))) {
+            item.position.y = static_cast<float>(blockY + 1);
             item.velocity = glm::vec3(0.0f);
         }
 
-        // Player magnet pickup
+        // Magnetic Pull towards player when nearby
         float dist = glm::distance(item.position, playerPos);
-        if (item.pickupDelay <= 0.0f && dist < 2.2f) {
-            pickedUpItems.push_back({ item.itemType, item.count });
-            AudioManager::playSound(SoundEffect::BlockPlace);
-            it = m_Items.erase(it);
-        } else {
-            ++it;
+        if (item.pickupDelay <= 0.0f && dist < 3.5f) {
+            float moveStep = 6.0f * deltaTime;
+            if (moveStep >= dist || dist < 1.5f) {
+                pickedUpItems.push_back({ item.itemType, item.count });
+                AudioManager::playSound(SoundEffect::BlockPlace);
+                it = m_Items.erase(it);
+                continue;
+            } else {
+                glm::vec3 pullDir = glm::normalize(playerPos - item.position);
+                item.position += pullDir * moveStep;
+            }
         }
+        ++it;
     }
 }
 
