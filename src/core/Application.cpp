@@ -27,9 +27,12 @@ Application::Application() {
 
     m_DimensionManager = std::make_unique<DimensionManager>();
     m_TimeManager = std::make_unique<TimeManager>();
+    m_WeatherManager = std::make_unique<WeatherManager>();
     m_HUD = std::make_unique<HUD>(m_Window->getWidth(), m_Window->getHeight());
     m_InventoryGUI = std::make_unique<InventoryGUI>(m_Window->getWidth(), m_Window->getHeight());
+    m_ContainerGUI = std::make_unique<ContainerGUI>(m_Window->getWidth(), m_Window->getHeight());
     m_Inventory = std::make_unique<Inventory>();
+    m_PlayerStats = std::make_unique<PlayerStats>();
 
     m_MobEngine = std::make_unique<MobEngine>();
     m_ItemEntityManager = std::make_unique<ItemEntityManager>();
@@ -37,6 +40,7 @@ Application::Application() {
     m_FurnaceManager = std::make_unique<FurnaceManager>();
     m_ParticleEngine = std::make_unique<ParticleEngine>();
     m_FrustumCuller = std::make_unique<FrustumCuller>();
+    m_NetworkManager = std::make_unique<NetworkManager>();
 
     // Spawn initial interactive test mobs & structures
     m_MobEngine->spawnMob(MobType::Zombie, glm::vec3(5.0f, 65.0f, 5.0f));
@@ -257,9 +261,16 @@ void Application::update(float deltaTime) {
         // Fluid simulation step
         FluidEngine::updateFluids(*world, currentPos);
 
+        // Weather Manager update
+        if (m_WeatherManager) {
+            m_WeatherManager->update(currentPos, deltaTime);
+        }
+
         // Mob Engine update & AI
         if (m_MobEngine) {
-            m_MobEngine->update(*world, currentPos, m_PlayerVelocity, m_PlayerHealth, deltaTime);
+            float playerHp = m_PlayerStats ? m_PlayerStats->getHealth() : 20.0f;
+            m_MobEngine->update(*world, currentPos, m_PlayerVelocity, playerHp, deltaTime);
+            if (m_PlayerStats) m_PlayerStats->setHealth(playerHp);
         }
 
         // Dropped Items update

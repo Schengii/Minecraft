@@ -5,6 +5,8 @@
 #include "world/ExplosionEngine.hpp"
 #include "world/ToolSystem.hpp"
 #include "world/TimeManager.hpp"
+#include "world/WeatherManager.hpp"
+#include "world/CaveDecorator.hpp"
 #include "world/Raycast.hpp"
 #include "world/ChestBlock.hpp"
 #include "world/FurnaceBlock.hpp"
@@ -12,6 +14,8 @@
 #include "world/DimensionManager.hpp"
 #include "core/ThreadPool.hpp"
 #include "inventory/Inventory.hpp"
+#include "inventory/PlayerStats.hpp"
+#include "gui/ContainerGUI.hpp"
 #include "crafting/CraftingManager.hpp"
 #include "physics/PhysicsEngine.hpp"
 #include "ecs/MobEngine.hpp"
@@ -19,6 +23,7 @@
 #include "renderer/ParticleEngine.hpp"
 #include "renderer/FrustumCuller.hpp"
 #include "audio/AudioManager.hpp"
+#include "net/NetworkManager.hpp"
 #include <iostream>
 #include <cassert>
 #include <filesystem>
@@ -165,6 +170,66 @@ void testMobEngineAdvanced() {
     std::cout << "  -> Advanced Mob AI tests PASSED!" << std::endl;
 }
 
+void testPlayerStatsAndArmor() {
+    std::cout << "[TEST] 10. PlayerStats Armor Points & Damage Reduction..." << std::endl;
+    PlayerStats stats;
+    stats.getArmorSlot(0) = { BlockType::DiamondPickaxe, 1, 1, 100, 100 };
+    stats.getArmorSlot(1) = { BlockType::IronPickaxe, 1, 1, 100, 100 };
+    assert(stats.getTotalArmorPoints() == 8);
+    float finalDmg = stats.applyDamageReduction(10.0f);
+    assert(finalDmg < 10.0f);
+    std::cout << "  -> PlayerStats & Armor tests PASSED!" << std::endl;
+}
+
+void testWeatherManager() {
+    std::cout << "[TEST] 11. WeatherManager Rain, Snow & Thunderstorms..." << std::endl;
+    WeatherManager wm;
+    wm.setWeather(WeatherState::Thunderstorm);
+    assert(wm.isThundering() == true);
+    wm.update(glm::vec3(0, 65, 0), 0.1f);
+    assert(wm.getParticles().size() > 0);
+    std::cout << "  -> WeatherManager tests PASSED!" << std::endl;
+}
+
+void testCaveDecorator() {
+    std::cout << "[TEST] 12. CaveDecorator Stalagmites & Stalactites..." << std::endl;
+    World world(1);
+    world.setBlock(0, 30, 0, BlockType::Stone);
+    world.setBlock(0, 31, 0, BlockType::Air);
+    world.setBlock(0, 32, 0, BlockType::Air);
+    world.setBlock(0, 33, 0, BlockType::Stone);
+
+    CaveDecorator::generateStalagmite(world, 0, 31, 0, 1);
+    assert(world.getBlock(0, 31, 0) == BlockType::Stone);
+    std::cout << "  -> CaveDecorator tests PASSED!" << std::endl;
+}
+
+void testContainerGUI() {
+    std::cout << "[TEST] 13. ContainerGUI Chest & Furnace Slots..." << std::endl;
+    ContainerGUI cgui(1280, 720);
+    std::vector<ItemStack> chestInv(27, ItemStack{ BlockType::IronOre, 5, 64 });
+    cgui.openChest(glm::ivec3(0, 60, 0), &chestInv);
+    assert(cgui.isOpen() == true);
+
+    Inventory playerInv;
+    bool clicked = cgui.handleMouseClick(playerInv, 100.0, 100.0, 0);
+    assert(clicked == true);
+    assert(playerInv.getSlot(9).type == BlockType::IronOre);
+    std::cout << "  -> ContainerGUI tests PASSED!" << std::endl;
+}
+
+void testNetworkManager() {
+    std::cout << "[TEST] 14. NetworkManager Server & Client Packets..." << std::endl;
+    NetworkManager net;
+    assert(net.startServer(25565) == true);
+    assert(net.isServer() == true && net.isConnected() == true);
+    net.sendPlayerPosition(glm::vec3(10, 65, 10), 0.0f, 0.0f);
+    net.sendBlockChange(glm::ivec3(5, 60, 5), BlockType::Stone);
+    net.disconnect();
+    assert(net.isConnected() == false);
+    std::cout << "  -> NetworkManager tests PASSED!" << std::endl;
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << " Running Minecraft Engine Test Suite   " << std::endl;
@@ -181,6 +246,11 @@ int main() {
     testNetherDimension();
     testItemEntities();
     testMobEngineAdvanced();
+    testPlayerStatsAndArmor();
+    testWeatherManager();
+    testCaveDecorator();
+    testContainerGUI();
+    testNetworkManager();
 
     std::cout << "========================================" << std::endl;
     std::cout << " ALL ENGINE TESTS PASSED 100%!          " << std::endl;

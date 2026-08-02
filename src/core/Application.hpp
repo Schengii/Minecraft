@@ -12,14 +12,18 @@
 #include "../world/TimeManager.hpp"
 #include "../world/ChestBlock.hpp"
 #include "../world/FurnaceBlock.hpp"
+#include "../world/WeatherManager.hpp"
 #include "../world/DimensionManager.hpp"
 #include "../gui/HUD.hpp"
 #include "../gui/InventoryGUI.hpp"
+#include "../gui/ContainerGUI.hpp"
 #include "../inventory/Inventory.hpp"
+#include "../inventory/PlayerStats.hpp"
 #include "../ecs/MobEngine.hpp"
 #include "../ecs/ItemEntity.hpp"
 #include "../renderer/ParticleEngine.hpp"
 #include "../renderer/FrustumCuller.hpp"
+#include "../net/NetworkManager.hpp"
 #include <memory>
 
 namespace Minecraft {
@@ -45,15 +49,19 @@ private:
     std::unique_ptr<Camera> m_Camera;
     std::unique_ptr<DimensionManager> m_DimensionManager;
     std::unique_ptr<TimeManager> m_TimeManager;
+    std::unique_ptr<WeatherManager> m_WeatherManager;
     std::unique_ptr<HUD> m_HUD;
     std::unique_ptr<InventoryGUI> m_InventoryGUI;
+    std::unique_ptr<ContainerGUI> m_ContainerGUI;
     std::unique_ptr<Inventory> m_Inventory;
+    std::unique_ptr<PlayerStats> m_PlayerStats;
     std::unique_ptr<MobEngine> m_MobEngine;
     std::unique_ptr<ItemEntityManager> m_ItemEntityManager;
     std::unique_ptr<ChestManager> m_ChestManager;
     std::unique_ptr<FurnaceManager> m_FurnaceManager;
     std::unique_ptr<ParticleEngine> m_ParticleEngine;
     std::unique_ptr<FrustumCuller> m_FrustumCuller;
+    std::unique_ptr<NetworkManager> m_NetworkManager;
 
     bool m_IsRunning = true;
     bool m_IsFlying = true;
@@ -65,7 +73,6 @@ private:
     float m_FPS = 0.0f;
     float m_FrameCounter = 0;
     float m_FpsTimer = 0.0f;
-    float m_PlayerHealth = 20.0f;
 
     glm::vec3 m_PlayerVelocity{ 0.0f };
     BlockType m_SelectedBlock = BlockType::Grass;

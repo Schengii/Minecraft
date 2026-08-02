@@ -9,6 +9,8 @@ struct ItemStack {
     BlockType type = BlockType::Air;
     int count = 0;
     int maxStackSize = 64;
+    int durability = -1; // -1 means no durability limit
+    int maxDurability = -1;
 
     bool isEmpty() const {
         return type == BlockType::Air || count <= 0;
@@ -17,6 +19,8 @@ struct ItemStack {
     void clear() {
         type = BlockType::Air;
         count = 0;
+        durability = -1;
+        maxDurability = -1;
     }
 };
 

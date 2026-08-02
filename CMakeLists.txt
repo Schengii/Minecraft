@@ -56,6 +56,8 @@ set(SOURCES
     src/world/Raycast.cpp
     src/world/SaveSystem.cpp
     src/world/TimeManager.cpp
+    src/world/WeatherManager.cpp
+    src/world/CaveDecorator.cpp
     src/world/FluidEngine.cpp
     src/world/Biome.cpp
     src/world/RedstoneEngine.cpp
@@ -68,12 +70,15 @@ set(SOURCES
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp
+    src/gui/ContainerGUI.cpp
     src/gui/DebugGUI.cpp
     src/inventory/Inventory.cpp
+    src/inventory/PlayerStats.cpp
     src/crafting/CraftingManager.cpp
     src/ecs/MobEngine.cpp
     src/ecs/ItemEntity.cpp
     src/audio/AudioManager.cpp
+    src/net/NetworkManager.cpp
 )
 
 add_executable(Minecraft ${SOURCES})
@@ -114,6 +119,8 @@ set(TEST_SOURCES
     src/world/Raycast.cpp
     src/world/SaveSystem.cpp
     src/world/TimeManager.cpp
+    src/world/WeatherManager.cpp
+    src/world/CaveDecorator.cpp
     src/world/FluidEngine.cpp
     src/world/Biome.cpp
     src/world/RedstoneEngine.cpp
@@ -126,12 +133,15 @@ set(TEST_SOURCES
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp
+    src/gui/ContainerGUI.cpp
     src/gui/DebugGUI.cpp
     src/inventory/Inventory.cpp
+    src/inventory/PlayerStats.cpp
     src/crafting/CraftingManager.cpp
     src/ecs/MobEngine.cpp
     src/ecs/ItemEntity.cpp
     src/audio/AudioManager.cpp
+    src/net/NetworkManager.cpp
 )
 add_executable(TestEngine ${TEST_SOURCES})
 target_include_directories(TestEngine PRIVATE
