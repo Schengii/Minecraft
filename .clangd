@@ -1,0 +1,10 @@
+CompileFlags:
+  CompilationDatabase: "build"
+  Add:
+    - "-IC:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.50.35717/include"
+    - "-IC:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt"
+    - "-IC:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um"
+    - "-IC:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/shared"
+    - "-Ic:/Users/sche-/Desktop/Programmieren Projekte/Minecraft/src"
+    - "-Ic:/Users/sche-/Desktop/Programmieren Projekte/Minecraft/src/vendor"
+    - "-std=c++20"

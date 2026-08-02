@@ -3,6 +3,7 @@ project(Minecraft CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(FetchContent)
 
@@ -160,5 +161,8 @@ add_custom_command(TARGET Minecraft POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/assets
     $<TARGET_FILE_DIR:Minecraft>/assets
-    COMMENT "[Minecraft Build] Copying assets to build output directory..."
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json
+    ${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json
+    COMMENT "[Minecraft Build] Copying assets & compile_commands.json to project directory..."
 )

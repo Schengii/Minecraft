@@ -1,6 +1,9 @@
 #ifndef APPLICATION_HPP
 #define APPLICATION_HPP
 
+#include <memory>
+#include <glm/glm.hpp>
+#include "../vendor/glad/glad.h"
 #include "Window.hpp"
 #include "ThreadPool.hpp"
 #include "../renderer/Shader.hpp"
@@ -24,7 +27,6 @@
 #include "../renderer/ParticleEngine.hpp"
 #include "../renderer/FrustumCuller.hpp"
 #include "../net/NetworkManager.hpp"
-#include <memory>
 
 namespace Minecraft {
 
