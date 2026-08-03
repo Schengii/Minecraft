@@ -1,6 +1,7 @@
 #include "SaveSystem.hpp"
 #include "Chunk.hpp"
 #include "World.hpp"
+#include "RegionFile.hpp"
 #include <fstream>
 #include <filesystem>
 #include <iostream>
@@ -21,26 +22,27 @@ void SaveSystem::createDirectoryIfNotExists(const std::string& dir) {
 
 bool SaveSystem::saveChunk(const Chunk& chunk, const std::string& saveDir) {
     createDirectoryIfNotExists(saveDir);
-    std::string filePath = getChunkFilePath(chunk.getChunkX(), chunk.getChunkZ(), saveDir);
-
-    std::ofstream outFile(filePath, std::ios::binary);
-    if (!outFile.is_open()) return false;
-
-    // Write chunk blocks array (16x256x16)
-    for (int x = 0; x < CHUNK_SIZE_X; ++x) {
-        for (int y = 0; y < CHUNK_SIZE_Y; ++y) {
-            for (int z = 0; z < CHUNK_SIZE_Z; ++z) {
-                BlockType type = chunk.getBlock(x, y, z);
-                outFile.write(reinterpret_cast<const char*>(&type), sizeof(BlockType));
-            }
-        }
-    }
-
-    outFile.close();
-    return true;
+    return RegionManager::getInstance().saveChunk(chunk.getChunkX(), chunk.getChunkZ(), chunk.getBlocks(), chunk.getLight(), saveDir);
 }
 
 bool SaveSystem::loadChunk(Chunk& chunk, const std::string& saveDir) {
+    // 1. Try loading from Anvil .mca Region Files
+    BlockType tempBlocks[16][256][16];
+    uint8_t tempLight[16][256][16];
+    if (RegionManager::getInstance().loadChunk(chunk.getChunkX(), chunk.getChunkZ(), tempBlocks, tempLight, saveDir)) {
+        for (int x = 0; x < 16; ++x) {
+            for (int y = 0; y < 256; ++y) {
+                for (int z = 0; z < 16; ++z) {
+                    chunk.setBlock(x, y, z, tempBlocks[x][y][z]);
+                    chunk.setRawLight(x, y, z, tempLight[x][y][z]);
+                }
+            }
+        }
+        chunk.setDirty(true);
+        return true;
+    }
+
+    // 2. Legacy fallback: Single .bin file per chunk
     std::string filePath = getChunkFilePath(chunk.getChunkX(), chunk.getChunkZ(), saveDir);
 
     if (!fs::exists(filePath)) return false;

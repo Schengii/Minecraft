@@ -34,7 +34,7 @@ private:
     GLuint m_EBO = 0;
     size_t m_IndexCount = 0;
 
-    void addFace(const glm::vec3& blockPos, Direction dir, BlockType type, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices);
+    void addFace(const Chunk& chunk, int lx, int ly, int lz, const glm::vec3& blockPos, Direction dir, BlockType type, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices);
 };
 
 }

@@ -56,6 +56,8 @@ set(SOURCES
     src/world/World.cpp
     src/world/Raycast.cpp
     src/world/SaveSystem.cpp
+    src/world/RegionFile.cpp
+    src/world/LightEngine.cpp
     src/world/TimeManager.cpp
     src/world/WeatherManager.cpp
     src/world/CaveDecorator.cpp
@@ -120,6 +122,8 @@ set(TEST_SOURCES
     src/world/World.cpp
     src/world/Raycast.cpp
     src/world/SaveSystem.cpp
+    src/world/RegionFile.cpp
+    src/world/LightEngine.cpp
     src/world/TimeManager.cpp
     src/world/WeatherManager.cpp
     src/world/CaveDecorator.cpp

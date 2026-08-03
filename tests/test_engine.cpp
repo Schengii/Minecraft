@@ -17,6 +17,8 @@
 #include "../src/world/FurnaceBlock.hpp"
 #include "../src/world/StructureGenerator.hpp"
 #include "../src/world/DimensionManager.hpp"
+#include "../src/world/RegionFile.hpp"
+#include "../src/world/LightEngine.hpp"
 #include "../src/core/ThreadPool.hpp"
 #include "../src/inventory/Inventory.hpp"
 #include "../src/inventory/PlayerStats.hpp"
@@ -275,6 +277,54 @@ void testHungerAndFoodSystem() {
     std::cout << "  -> Hunger & Food System tests PASSED!" << std::endl;
 }
 
+void testRegionFileAndChunkStreaming() {
+    std::cout << "[TEST] 16. Anvil .mca RegionFile Persistence & Async Chunk Streaming..." << std::endl;
+    std::filesystem::remove_all("test_saves");
+
+    // 1. Test RegionFile Save & Load
+    BlockType blocks[16][256][16];
+    uint8_t light[16][256][16];
+    std::memset(blocks, static_cast<int>(BlockType::Stone), sizeof(blocks));
+    std::memset(light, 0xFF, sizeof(light));
+    blocks[5][60][5] = BlockType::DiamondOre;
+
+    bool saved = RegionManager::getInstance().saveChunk(10, 10, blocks, light, "test_saves");
+    assert(saved == true);
+
+    BlockType readBlocks[16][256][16];
+    uint8_t readLight[16][256][16];
+    bool loaded = RegionManager::getInstance().loadChunk(10, 10, readBlocks, readLight, "test_saves");
+    assert(loaded == true);
+    assert(readBlocks[5][60][5] == BlockType::DiamondOre);
+
+    // 2. Test Multi-Threaded Chunk Loading
+    World world(2);
+    world.update(glm::vec3(100.0f, 65.0f, 100.0f));
+    assert(world.getLoadedChunkCount() > 0);
+
+    std::filesystem::remove_all("test_saves");
+    std::cout << "  -> Anvil RegionFile & Async Streaming tests PASSED!" << std::endl;
+}
+
+void testLightEnginePropagation() {
+    std::cout << "[TEST] 17. LightEngine 3D BFS Sunlight & Blocklight Propagation..." << std::endl;
+    Chunk chunk(0, 0);
+
+    // Sunlight check top column
+    chunk.setBlock(5, 100, 5, BlockType::Air);
+    LightEngine::calculateSunlight(chunk);
+    assert(chunk.getSunlight(5, 100, 5) == 15);
+
+    // Blocklight check torch emission & decay
+    chunk.setBlock(5, 50, 5, BlockType::RedstoneTorch);
+    LightEngine::calculateBlocklight(chunk);
+    assert(chunk.getBlocklight(5, 50, 5) == 14);
+    assert(chunk.getBlocklight(6, 50, 5) == 13);
+    assert(chunk.getBlocklight(7, 50, 5) == 12);
+
+    std::cout << "  -> LightEngine 3D BFS tests PASSED!" << std::endl;
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << " Running Minecraft Engine Test Suite   " << std::endl;
@@ -297,6 +347,8 @@ int main() {
     testContainerGUI();
     testNetworkManager();
     testHungerAndFoodSystem();
+    testRegionFileAndChunkStreaming();
+    testLightEnginePropagation();
 
     std::cout << "========================================" << std::endl;
     std::cout << " ALL ENGINE TESTS PASSED 100%!          " << std::endl;

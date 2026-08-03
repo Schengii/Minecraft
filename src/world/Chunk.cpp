@@ -1,6 +1,7 @@
 #include "Chunk.hpp"
 #include "ChunkMesh.hpp"
 #include "SaveSystem.hpp"
+#include "LightEngine.hpp"
 #include "Biome.hpp"
 #include "../vendor/FastNoiseLite.h"
 #include <cmath>
@@ -33,6 +34,38 @@ void Chunk::setBlock(int x, int y, int z, BlockType type) {
     if (x < 0 || x >= CHUNK_SIZE_X || y < 0 || y >= CHUNK_SIZE_Y || z < 0 || z >= CHUNK_SIZE_Z) return;
     m_Blocks[x][y][z] = type;
     m_IsDirty = true;
+}
+
+int Chunk::getSunlight(int x, int y, int z) const {
+    if (x < 0 || x >= CHUNK_SIZE_X || y < 0 || y >= CHUNK_SIZE_Y || z < 0 || z >= CHUNK_SIZE_Z) return 15;
+    return (m_Light[x][y][z] >> 4) & 0x0F;
+}
+
+void Chunk::setSunlight(int x, int y, int z, int val) {
+    if (x < 0 || x >= CHUNK_SIZE_X || y < 0 || y >= CHUNK_SIZE_Y || z < 0 || z >= CHUNK_SIZE_Z) return;
+    uint8_t cur = m_Light[x][y][z] & 0x0F;
+    m_Light[x][y][z] = (static_cast<uint8_t>(val & 0x0F) << 4) | cur;
+}
+
+int Chunk::getBlocklight(int x, int y, int z) const {
+    if (x < 0 || x >= CHUNK_SIZE_X || y < 0 || y >= CHUNK_SIZE_Y || z < 0 || z >= CHUNK_SIZE_Z) return 0;
+    return m_Light[x][y][z] & 0x0F;
+}
+
+void Chunk::setBlocklight(int x, int y, int z, int val) {
+    if (x < 0 || x >= CHUNK_SIZE_X || y < 0 || y >= CHUNK_SIZE_Y || z < 0 || z >= CHUNK_SIZE_Z) return;
+    uint8_t sun = m_Light[x][y][z] & 0xF0;
+    m_Light[x][y][z] = sun | static_cast<uint8_t>(val & 0x0F);
+}
+
+uint8_t Chunk::getRawLight(int x, int y, int z) const {
+    if (x < 0 || x >= CHUNK_SIZE_X || y < 0 || y >= CHUNK_SIZE_Y || z < 0 || z >= CHUNK_SIZE_Z) return 0xFF;
+    return m_Light[x][y][z];
+}
+
+void Chunk::setRawLight(int x, int y, int z, uint8_t val) {
+    if (x < 0 || x >= CHUNK_SIZE_X || y < 0 || y >= CHUNK_SIZE_Y || z < 0 || z >= CHUNK_SIZE_Z) return;
+    m_Light[x][y][z] = val;
 }
 
 void Chunk::generateTerrain() {
@@ -134,6 +167,7 @@ void Chunk::generateTerrain() {
             }
         }
     }
+    LightEngine::calculateChunkLighting(*this);
     m_IsDirty = true;
 }
 

@@ -44,27 +44,27 @@ void ChunkMesh::buildMeshData(const Chunk& chunk, std::vector<Vertex>& vertices,
 
                 // Top (+Y)
                 if (y + 1 >= CHUNK_SIZE_Y || !BlockData::isOpaque(chunk.getBlock(x, y + 1, z)))
-                    addFace(blockPos, TOP, type, vertices, indices);
+                    addFace(chunk, x, y, z, blockPos, TOP, type, vertices, indices);
 
                 // Bottom (-Y)
                 if (y - 1 < 0 || !BlockData::isOpaque(chunk.getBlock(x, y - 1, z)))
-                    addFace(blockPos, BOTTOM, type, vertices, indices);
+                    addFace(chunk, x, y, z, blockPos, BOTTOM, type, vertices, indices);
 
                 // North (+Z)
                 if (z + 1 >= CHUNK_SIZE_Z || !BlockData::isOpaque(chunk.getBlock(x, y, z + 1)))
-                    addFace(blockPos, NORTH, type, vertices, indices);
+                    addFace(chunk, x, y, z, blockPos, NORTH, type, vertices, indices);
 
                 // South (-Z)
                 if (z - 1 < 0 || !BlockData::isOpaque(chunk.getBlock(x, y, z - 1)))
-                    addFace(blockPos, SOUTH, type, vertices, indices);
+                    addFace(chunk, x, y, z, blockPos, SOUTH, type, vertices, indices);
 
                 // East (+X)
                 if (x + 1 >= CHUNK_SIZE_X || !BlockData::isOpaque(chunk.getBlock(x + 1, y, z)))
-                    addFace(blockPos, EAST, type, vertices, indices);
+                    addFace(chunk, x, y, z, blockPos, EAST, type, vertices, indices);
 
                 // West (-X)
                 if (x - 1 < 0 || !BlockData::isOpaque(chunk.getBlock(x - 1, y, z)))
-                    addFace(blockPos, WEST, type, vertices, indices);
+                    addFace(chunk, x, y, z, blockPos, WEST, type, vertices, indices);
             }
         }
     }
@@ -112,10 +112,25 @@ void ChunkMesh::render() const {
     glBindVertexArray(0);
 }
 
-void ChunkMesh::addFace(const glm::vec3& p, Direction dir, BlockType type, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices) {
+void ChunkMesh::addFace(const Chunk& chunk, int lx, int ly, int lz, const glm::vec3& p, Direction dir, BlockType type, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices) {
     unsigned int startIndex = static_cast<unsigned int>(vertices.size());
 
-    float baseLight = 1.0f;
+    int nx = lx, ny = ly, nz = lz;
+    switch (dir) {
+        case TOP: ny++; break;
+        case BOTTOM: ny--; break;
+        case NORTH: nz++; break;
+        case SOUTH: nz--; break;
+        case EAST: nx++; break;
+        case WEST: nx--; break;
+    }
+
+    float sunVal = static_cast<float>(chunk.getSunlight(nx, ny, nz)) / 15.0f;
+    float blockVal = static_cast<float>(chunk.getBlocklight(nx, ny, nz)) / 15.0f;
+    float combinedLight = std::max(blockVal, sunVal);
+    combinedLight = std::max(0.12f, combinedLight); // Minimum ambient threshold so terrain is never pitch black in daylight
+
+    float baseLight = combinedLight;
     glm::vec3 normal(0.0f);
     glm::vec2 baseUV = BlockData::getTextureUV(type, dir);
     float tw = 1.0f / 16.0f;
@@ -127,46 +142,46 @@ void ChunkMesh::addFace(const glm::vec3& p, Direction dir, BlockType type, std::
 
     switch (dir) {
         case TOP:
-            normal = glm::vec3(0, 1, 0); baseLight = 1.0f;
+            normal = glm::vec3(0, 1, 0);
             vertices.push_back({ p + glm::vec3(0, 1, 0), uv0, normal, baseLight * 1.00f });
             vertices.push_back({ p + glm::vec3(1, 1, 0), uv1, normal, baseLight * 0.92f });
             vertices.push_back({ p + glm::vec3(1, 1, 1), uv2, normal, baseLight * 0.85f });
             vertices.push_back({ p + glm::vec3(0, 1, 1), uv3, normal, baseLight * 0.92f });
             break;
         case BOTTOM:
-            normal = glm::vec3(0, -1, 0); baseLight = 0.5f;
-            vertices.push_back({ p + glm::vec3(0, 0, 1), uv0, normal, baseLight });
-            vertices.push_back({ p + glm::vec3(1, 0, 1), uv1, normal, baseLight });
-            vertices.push_back({ p + glm::vec3(1, 0, 0), uv2, normal, baseLight });
-            vertices.push_back({ p + glm::vec3(0, 0, 0), uv3, normal, baseLight });
+            normal = glm::vec3(0, -1, 0);
+            vertices.push_back({ p + glm::vec3(0, 0, 1), uv0, normal, baseLight * 0.50f });
+            vertices.push_back({ p + glm::vec3(1, 0, 1), uv1, normal, baseLight * 0.50f });
+            vertices.push_back({ p + glm::vec3(1, 0, 0), uv2, normal, baseLight * 0.50f });
+            vertices.push_back({ p + glm::vec3(0, 0, 0), uv3, normal, baseLight * 0.50f });
             break;
         case NORTH:
-            normal = glm::vec3(0, 0, 1); baseLight = 0.8f;
-            vertices.push_back({ p + glm::vec3(0, 0, 1), uv0, normal, baseLight * 0.95f });
-            vertices.push_back({ p + glm::vec3(1, 0, 1), uv1, normal, baseLight * 0.88f });
-            vertices.push_back({ p + glm::vec3(1, 1, 1), uv2, normal, baseLight * 1.00f });
-            vertices.push_back({ p + glm::vec3(0, 1, 1), uv3, normal, baseLight * 0.95f });
+            normal = glm::vec3(0, 0, 1);
+            vertices.push_back({ p + glm::vec3(0, 0, 1), uv0, normal, baseLight * 0.85f });
+            vertices.push_back({ p + glm::vec3(1, 0, 1), uv1, normal, baseLight * 0.80f });
+            vertices.push_back({ p + glm::vec3(1, 1, 1), uv2, normal, baseLight * 0.90f });
+            vertices.push_back({ p + glm::vec3(0, 1, 1), uv3, normal, baseLight * 0.85f });
             break;
         case SOUTH:
-            normal = glm::vec3(0, 0, -1); baseLight = 0.8f;
-            vertices.push_back({ p + glm::vec3(1, 0, 0), uv0, normal, baseLight * 0.88f });
-            vertices.push_back({ p + glm::vec3(0, 0, 0), uv1, normal, baseLight * 0.95f });
-            vertices.push_back({ p + glm::vec3(0, 1, 0), uv2, normal, baseLight * 1.00f });
-            vertices.push_back({ p + glm::vec3(1, 1, 0), uv3, normal, baseLight * 0.95f });
+            normal = glm::vec3(0, 0, -1);
+            vertices.push_back({ p + glm::vec3(1, 0, 0), uv0, normal, baseLight * 0.80f });
+            vertices.push_back({ p + glm::vec3(0, 0, 0), uv1, normal, baseLight * 0.85f });
+            vertices.push_back({ p + glm::vec3(0, 1, 0), uv2, normal, baseLight * 0.90f });
+            vertices.push_back({ p + glm::vec3(1, 1, 0), uv3, normal, baseLight * 0.85f });
             break;
         case EAST:
-            normal = glm::vec3(1, 0, 0); baseLight = 0.7f;
-            vertices.push_back({ p + glm::vec3(1, 0, 1), uv0, normal, baseLight * 0.90f });
-            vertices.push_back({ p + glm::vec3(1, 0, 0), uv1, normal, baseLight * 0.85f });
-            vertices.push_back({ p + glm::vec3(1, 1, 0), uv2, normal, baseLight * 1.00f });
-            vertices.push_back({ p + glm::vec3(1, 1, 1), uv3, normal, baseLight * 0.95f });
+            normal = glm::vec3(1, 0, 0);
+            vertices.push_back({ p + glm::vec3(1, 0, 1), uv0, normal, baseLight * 0.75f });
+            vertices.push_back({ p + glm::vec3(1, 0, 0), uv1, normal, baseLight * 0.70f });
+            vertices.push_back({ p + glm::vec3(1, 1, 0), uv2, normal, baseLight * 0.80f });
+            vertices.push_back({ p + glm::vec3(1, 1, 1), uv3, normal, baseLight * 0.75f });
             break;
         case WEST:
-            normal = glm::vec3(-1, 0, 0); baseLight = 0.7f;
-            vertices.push_back({ p + glm::vec3(0, 0, 0), uv0, normal, baseLight * 0.85f });
-            vertices.push_back({ p + glm::vec3(0, 0, 1), uv1, normal, baseLight * 0.90f });
-            vertices.push_back({ p + glm::vec3(0, 1, 1), uv2, normal, baseLight * 1.00f });
-            vertices.push_back({ p + glm::vec3(0, 1, 0), uv3, normal, baseLight * 0.95f });
+            normal = glm::vec3(-1, 0, 0);
+            vertices.push_back({ p + glm::vec3(0, 0, 0), uv0, normal, baseLight * 0.70f });
+            vertices.push_back({ p + glm::vec3(0, 0, 1), uv1, normal, baseLight * 0.75f });
+            vertices.push_back({ p + glm::vec3(0, 1, 1), uv2, normal, baseLight * 0.80f });
+            vertices.push_back({ p + glm::vec3(0, 1, 0), uv3, normal, baseLight * 0.75f });
             break;
     }
 

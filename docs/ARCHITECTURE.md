@@ -43,9 +43,11 @@ Die Engine ist in eigenständige Subsysteme unterteilt:
 
 ### World Subsystem (`src/world/`)
 - **`Block`**: Enum und Metadaten-Struktur für Block-Typen (Air, Grass, Dirt, Stone, Bedrock, Wood, Leaves, etc.).
-- **`Chunk`**: 16x256x16 3D-Array von Blöcken. Verwaltet Block-Zustände und Lichtwerte.
-- **`ChunkMesh`**: Generiert optimierte Meshes unter Verwendung von **Culled Face Meshing** (Nachbarblock-Prüfung zur Entfernung unsichtbarer Flächen) zur Maximierung der Bildrate.
-- **`World`**: Koordiniert Chunk-Laden, Prozedurale Weltgenerierung (Perlin/Simplex Noise) und Block-Interaktionen (Setzen/Zerstören).
+- **`Chunk`**: 16x256x16 3D-Array von Blöcken. Verwaltet Block-Zustände und Lichtwerte (`m_Light`).
+- **`ChunkMesh`**: Generiert optimierte Meshes unter Verwendung von **Culled Face Meshing** und dynamischer Gesichtsausleuchtung (Sonnen- & Blocklicht).
+- **`LightEngine`**: 3D Zellularer Automat / BFS-Algorithmus zur Berechnung von Sonnenlicht-Säulen und Blocklicht-Ausbreitung (Fackeln, Lava, Glowstone 0–15).
+- **`RegionFile` (`.mca`)**: Anvil Region-Dateiformat (32x32 Chunks pro Region) für Hochgeschwindigkeits-Binary-Disk-I/O.
+- **`World`**: Koordiniert asynchrones Chunk-Streaming auf `ThreadPool`-Worker-Threads sowie dynamisches Laden/Entladen um den Spieler.
 
 ### ECS Subsystem (`src/ecs/`)
 - Verwendet **EnTT** als Entity Component System:
@@ -64,8 +66,9 @@ Die Engine ist in eigenständige Subsysteme unterteilt:
 
 ## 3. Erweiterungs-Roadmap & Modding
 
-- [ ] **Multi-Threading Chunk Loading**: Hintergründige Weltgenerierung auf Worker-Threads.
-- [ ] **Anvil File Format Persistence**: Speichern & Laden der Welt-Chunks in Region-Dateien (`.mca`).
-- [ ] **Advanced Rendering**: Shadow Mapping, Ambient Occlusion (SSAO / Vertex AO), Wasser-Refraktion & Shader-Packs.
-- [ ] **Redstone Logic & Fluid Dynamics**: Zellularer Automat für Wasser/Lava-Fluss und Signalübertragung.
-- [ ] **Crafting & GUI System**: Skalierbares HUD, Inventar, Crafting Grid und Chest-Container.
+- [x] **Multi-Threading Chunk Loading**: Hintergründige Weltgenerierung auf Worker-Threads.
+- [x] **Anvil File Format Persistence**: Speichern & Laden der Welt-Chunks in Region-Dateien (`.mca`).
+- [x] **Dynamic Light Engine**: 3D BFS Sonnenlicht- & Blocklicht-Ausbreitung (Fackeln, Lava 0–15).
+- [ ] **Advanced Rendering**: SSAO, Wasser-Refraktion & Shader-Packs.
+- [x] **Redstone Logic & Fluid Dynamics**: Zellularer Automat für Wasser/Lava-Fluss und Signalübertragung.
+- [x] **Crafting & GUI System**: Skalierbares HUD, Inventar, Crafting Grid und Chest-Container.

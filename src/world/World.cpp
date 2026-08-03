@@ -6,7 +6,9 @@ namespace Minecraft {
 World::World(int renderDistance)
     : m_RenderDistance(renderDistance)
 {
-    // Generate initial chunks around (0,0)
+    m_ThreadPool = std::make_unique<ThreadPool>(4);
+
+    // Initial Chunks
     for (int x = -m_RenderDistance; x <= m_RenderDistance; ++x) {
         for (int z = -m_RenderDistance; z <= m_RenderDistance; ++z) {
             glm::ivec2 pos(x, z);
@@ -18,15 +20,35 @@ World::World(int renderDistance)
 World::~World() = default;
 
 void World::update(const glm::vec3& playerPos) {
+    // 1. Collect completed background-generated chunks from workers
+    {
+        std::lock_guard<std::mutex> lock(m_QueueMutex);
+        for (auto& chunk : m_CompletedChunks) {
+            if (chunk) {
+                glm::ivec2 pos = chunk->getPosition();
+                chunk->buildMesh();
+                m_Chunks[pos] = std::move(chunk);
+                m_LoadingChunks.erase(pos);
+            }
+        }
+        m_CompletedChunks.clear();
+    }
+
     int playerChunkX = static_cast<int>(std::floor(playerPos.x / CHUNK_SIZE_X));
     int playerChunkZ = static_cast<int>(std::floor(playerPos.z / CHUNK_SIZE_Z));
 
-    // Dynamic Chunk loading around player position
+    // 2. Queue missing chunks for background generation
     for (int x = playerChunkX - m_RenderDistance; x <= playerChunkX + m_RenderDistance; ++x) {
         for (int z = playerChunkZ - m_RenderDistance; z <= playerChunkZ + m_RenderDistance; ++z) {
             glm::ivec2 pos(x, z);
-            if (m_Chunks.find(pos) == m_Chunks.end()) {
-                m_Chunks[pos] = std::make_unique<Chunk>(x, z);
+            if (m_Chunks.find(pos) == m_Chunks.end() && m_LoadingChunks.find(pos) == m_LoadingChunks.end()) {
+                m_LoadingChunks.insert(pos);
+
+                m_ThreadPool->enqueue([this, x, z]() {
+                    auto newChunk = std::make_unique<Chunk>(x, z);
+                    std::lock_guard<std::mutex> lock(m_QueueMutex);
+                    m_CompletedChunks.push_back(std::move(newChunk));
+                });
             }
         }
     }
