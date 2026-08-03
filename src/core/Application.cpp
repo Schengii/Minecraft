@@ -12,6 +12,7 @@
 #include "../world/StructureGenerator.hpp"
 #include "../physics/PhysicsEngine.hpp"
 #include "../audio/AudioManager.hpp"
+#include "../inventory/FoodSystem.hpp"
 #include <iostream>
 
 namespace Minecraft {
@@ -192,8 +193,15 @@ void Application::processInput(float deltaTime) {
         if (Input::isKeyPressed(GLFW_KEY_SPACE) && m_IsGrounded) {
             m_PlayerVelocity.y = 8.5f;
             m_IsGrounded = false;
+            if (m_PlayerStats) m_PlayerStats->addExhaustion(0.2f);
             AudioManager::playSound(SoundEffect::Jump);
         }
+    }
+
+    // Add movement exhaustion
+    if (!m_IsFlying && m_PlayerStats) {
+        float horizSpeed = glm::length(glm::vec2(m_PlayerVelocity.x, m_PlayerVelocity.z));
+        m_PlayerStats->addExhaustion(horizSpeed * deltaTime * (isSprinting ? 0.05f : 0.01f));
     }
 
     // Mouse camera look
@@ -210,31 +218,44 @@ void Application::processInput(float deltaTime) {
     bool rightMouseNow = Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT);
 
     if (world && ((leftMouseNow && !m_LeftMousePressedLast) || (rightMouseNow && !m_RightMousePressedLast))) {
-        int damage = ToolSystem::getDamageDealt(m_SelectedBlock);
-        bool mobHit = m_MobEngine->checkPlayerAttack(m_Camera->getPosition(), m_Camera->getFront(), 4.5f, damage);
+        // Check for right-click food consumption
+        if (rightMouseNow && !m_RightMousePressedLast && FoodSystem::isFood(m_SelectedBlock)) {
+            if (m_PlayerStats && FoodSystem::eatFood(*m_PlayerStats, m_SelectedBlock)) {
+                auto& slot = m_Inventory->getSlot(m_SelectedSlot);
+                if (!slot.isEmpty()) {
+                    slot.count--;
+                    if (slot.count == 0) slot.clear();
+                }
+                m_SelectedBlock = m_Inventory->getSlot(m_SelectedSlot).type;
+            }
+        } else {
+            int damage = ToolSystem::getDamageDealt(m_SelectedBlock);
+            bool mobHit = m_MobEngine->checkPlayerAttack(m_Camera->getPosition(), m_Camera->getFront(), 4.5f, damage, m_ItemEntityManager.get());
 
-        if (!mobHit) {
-            RaycastResult hit = Raycast::raycast(*world, m_Camera->getPosition(), m_Camera->getFront(), 6.0f);
-            if (hit.hit) {
-                BlockType hitType = world->getBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
-                if (rightMouseNow && !m_RightMousePressedLast && hitType == BlockType::Lever) {
-                    RedstoneEngine::updateRedstoneNetwork(*world, hit.blockPos);
-                    AudioManager::playSound3D(SoundEffect::BlockPlace, glm::vec3(hit.blockPos), m_Camera->getPosition(), m_Camera->getFront());
-                } else if (rightMouseNow && !m_RightMousePressedLast && hitType == BlockType::TNT) {
-                    ExplosionEngine::createExplosion(*world, glm::vec3(hit.blockPos) + glm::vec3(0.5f), 4.0f, &m_PlayerVelocity, &m_Camera->getPosition());
-                } else if (leftMouseNow && !m_LeftMousePressedLast) {
-                    if (ToolSystem::canHarvest(hitType, m_SelectedBlock)) {
-                        m_ItemEntityManager->spawnItemDrop(hitType, 1, glm::vec3(hit.blockPos));
-                    }
-                    m_ParticleEngine->spawnBlockBreak(glm::vec3(hit.blockPos));
-                    world->setBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, BlockType::Air);
-                    AudioManager::playSound3D(SoundEffect::BlockBreak, glm::vec3(hit.blockPos), m_Camera->getPosition(), m_Camera->getFront());
-                } else if (rightMouseNow && !m_RightMousePressedLast) {
-                    BlockType toPlace = m_SelectedBlock;
-                    if (toPlace != BlockType::Air) {
-                        world->setBlock(hit.previousPos.x, hit.previousPos.y, hit.previousPos.z, toPlace);
-                        RedstoneEngine::updateRedstoneNetwork(*world, hit.previousPos);
-                        AudioManager::playSound3D(SoundEffect::BlockPlace, glm::vec3(hit.previousPos), m_Camera->getPosition(), m_Camera->getFront());
+            if (!mobHit) {
+                RaycastResult hit = Raycast::raycast(*world, m_Camera->getPosition(), m_Camera->getFront(), 6.0f);
+                if (hit.hit) {
+                    BlockType hitType = world->getBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
+                    if (rightMouseNow && !m_RightMousePressedLast && hitType == BlockType::Lever) {
+                        RedstoneEngine::updateRedstoneNetwork(*world, hit.blockPos);
+                        AudioManager::playSound3D(SoundEffect::BlockPlace, glm::vec3(hit.blockPos), m_Camera->getPosition(), m_Camera->getFront());
+                    } else if (rightMouseNow && !m_RightMousePressedLast && hitType == BlockType::TNT) {
+                        ExplosionEngine::createExplosion(*world, glm::vec3(hit.blockPos) + glm::vec3(0.5f), 4.0f, &m_PlayerVelocity, &m_Camera->getPosition());
+                    } else if (leftMouseNow && !m_LeftMousePressedLast) {
+                        if (ToolSystem::canHarvest(hitType, m_SelectedBlock)) {
+                            m_ItemEntityManager->spawnItemDrop(hitType, 1, glm::vec3(hit.blockPos));
+                        }
+                        if (m_PlayerStats) m_PlayerStats->addExhaustion(0.05f);
+                        m_ParticleEngine->spawnBlockBreak(glm::vec3(hit.blockPos));
+                        world->setBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, BlockType::Air);
+                        AudioManager::playSound3D(SoundEffect::BlockBreak, glm::vec3(hit.blockPos), m_Camera->getPosition(), m_Camera->getFront());
+                    } else if (rightMouseNow && !m_RightMousePressedLast) {
+                        BlockType toPlace = m_SelectedBlock;
+                        if (toPlace != BlockType::Air) {
+                            world->setBlock(hit.previousPos.x, hit.previousPos.y, hit.previousPos.z, toPlace);
+                            RedstoneEngine::updateRedstoneNetwork(*world, hit.previousPos);
+                            AudioManager::playSound3D(SoundEffect::BlockPlace, glm::vec3(hit.previousPos), m_Camera->getPosition(), m_Camera->getFront());
+                        }
                     }
                 }
             }
@@ -252,6 +273,10 @@ void Application::update(float deltaTime) {
 
     if (m_FurnaceManager) {
         m_FurnaceManager->update(deltaTime);
+    }
+
+    if (m_PlayerStats) {
+        m_PlayerStats->update(deltaTime);
     }
 
     World* world = m_DimensionManager->getCurrentWorld();
@@ -272,7 +297,7 @@ void Application::update(float deltaTime) {
         // Mob Engine update & AI
         if (m_MobEngine) {
             float playerHp = m_PlayerStats ? m_PlayerStats->getHealth() : 20.0f;
-            m_MobEngine->update(*world, currentPos, m_PlayerVelocity, playerHp, deltaTime);
+            m_MobEngine->update(*world, currentPos, m_PlayerVelocity, playerHp, deltaTime, m_ItemEntityManager.get());
             if (m_PlayerStats) m_PlayerStats->setHealth(playerHp);
         }
 
@@ -366,7 +391,9 @@ void Application::render() {
 
     // 4. Render 2D HUD Layer
     if (m_HUD && m_Camera && !m_IsInventoryOpen) {
-        m_HUD->render(m_SelectedSlot, m_ShowDebugInfo, m_FPS, m_Camera->getPosition(), m_Camera->getFront(), m_IsFlying);
+        float hp = m_PlayerStats ? m_PlayerStats->getHealth() : 20.0f;
+        float hunger = m_PlayerStats ? m_PlayerStats->getHunger() : 20.0f;
+        m_HUD->render(m_SelectedSlot, m_ShowDebugInfo, m_FPS, m_Camera->getPosition(), m_Camera->getFront(), m_IsFlying, hp, hunger);
     }
 
     // 5. Render 2D Inventory GUI Layer

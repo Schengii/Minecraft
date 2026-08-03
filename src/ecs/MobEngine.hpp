@@ -38,8 +38,8 @@ public:
     MobEngine();
 
     void spawnMob(MobType type, const glm::vec3& position);
-    void update(World& world, glm::vec3& playerPos, glm::vec3& playerVel, float& playerHealth, float deltaTime);
-    bool checkPlayerAttack(const glm::vec3& playerPos, const glm::vec3& playerDir, float reach, int damage);
+    void update(World& world, glm::vec3& playerPos, glm::vec3& playerVel, float& playerHealth, float deltaTime, class ItemEntityManager* itemMgr = nullptr);
+    bool checkPlayerAttack(const glm::vec3& playerPos, const glm::vec3& playerDir, float reach, int damage, class ItemEntityManager* itemMgr = nullptr);
 
     const std::vector<Mob>& getMobs() const { return m_Mobs; }
     const std::vector<ArrowEntity>& getArrows() const { return m_Arrows; }

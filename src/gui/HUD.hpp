@@ -15,13 +15,13 @@ public:
     ~HUD();
 
     void resize(int width, int height);
-    void render(int selectedSlot, bool showDebugInfo, float fps, const glm::vec3& playerPos, const glm::vec3& playerDir, bool isFlying);
+    void render(int selectedSlot, bool showDebugInfo, float fps, const glm::vec3& playerPos, const glm::vec3& playerDir, bool isFlying, float health = 20.0f, float hunger = 20.0f);
 
 private:
     void initBuffers();
     void renderQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
     void renderCrosshair();
-    void renderHotbar(int selectedSlot);
+    void renderHotbar(int selectedSlot, float health, float hunger);
 
     int m_Width;
     int m_Height;

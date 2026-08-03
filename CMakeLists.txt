@@ -75,6 +75,7 @@ set(SOURCES
     src/gui/DebugGUI.cpp
     src/inventory/Inventory.cpp
     src/inventory/PlayerStats.cpp
+    src/inventory/FoodSystem.cpp
     src/crafting/CraftingManager.cpp
     src/ecs/MobEngine.cpp
     src/ecs/ItemEntity.cpp
@@ -138,6 +139,7 @@ set(TEST_SOURCES
     src/gui/DebugGUI.cpp
     src/inventory/Inventory.cpp
     src/inventory/PlayerStats.cpp
+    src/inventory/FoodSystem.cpp
     src/crafting/CraftingManager.cpp
     src/ecs/MobEngine.cpp
     src/ecs/ItemEntity.cpp

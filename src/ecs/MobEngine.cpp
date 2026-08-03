@@ -1,4 +1,5 @@
 #include "MobEngine.hpp"
+#include "ItemEntity.hpp"
 #include "../world/World.hpp"
 #include "../world/ExplosionEngine.hpp"
 #include "../physics/PhysicsEngine.hpp"
@@ -31,13 +32,20 @@ void MobEngine::spawnMob(MobType type, const glm::vec3& position) {
     std::cout << "[MobEngine] Spawned Mob at (" << position.x << ", " << position.y << ", " << position.z << ")" << std::endl;
 }
 
-void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel, float& playerHealth, float deltaTime) {
+void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel, float& playerHealth, float deltaTime, ItemEntityManager* itemMgr) {
     // 1. Update Mobs
     for (auto it = m_Mobs.begin(); it != m_Mobs.end(); ) {
         Mob& mob = *it;
 
         if (mob.health <= 0.0f) {
             std::cout << "[MobEngine] Mob Defeated!" << std::endl;
+            if (itemMgr) {
+                if (mob.type == MobType::Pig) {
+                    itemMgr->spawnItemDrop(BlockType::RawPorkchop, 1 + rand() % 2, mob.position);
+                } else if (mob.type == MobType::Zombie) {
+                    itemMgr->spawnItemDrop(BlockType::Apple, 1, mob.position);
+                }
+            }
             AudioManager::playSound3D(SoundEffect::MobHit, mob.position, playerPos, glm::vec3(0, 0, -1));
             it = m_Mobs.erase(it);
             continue;
@@ -142,7 +150,7 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
     }
 }
 
-bool MobEngine::checkPlayerAttack(const glm::vec3& playerPos, const glm::vec3& playerDir, float reach, int damage) {
+bool MobEngine::checkPlayerAttack(const glm::vec3& playerPos, const glm::vec3& playerDir, float reach, int damage, ItemEntityManager* itemMgr) {
     for (auto& mob : m_Mobs) {
         float dist = glm::distance(playerPos, mob.position);
         if (dist <= reach) {

@@ -51,7 +51,7 @@ void HUD::initBuffers() {
     glBindVertexArray(0);
 }
 
-void HUD::render(int selectedSlot, bool showDebugInfo, float fps, const glm::vec3& playerPos, const glm::vec3& playerDir, bool isFlying) {
+void HUD::render(int selectedSlot, bool showDebugInfo, float fps, const glm::vec3& playerPos, const glm::vec3& playerDir, bool isFlying, float health, float hunger) {
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -63,8 +63,8 @@ void HUD::render(int selectedSlot, bool showDebugInfo, float fps, const glm::vec
     // 1. Crosshair in screen center
     renderCrosshair();
 
-    // 2. Hotbar at bottom center
-    renderHotbar(selectedSlot);
+    // 2. Hotbar at bottom center with health & hunger bars
+    renderHotbar(selectedSlot, health, hunger);
 
     // 3. F3 Debug Screen Overlay
     if (showDebugInfo) {
@@ -112,24 +112,40 @@ void HUD::renderCrosshair() {
     renderQuad(glm::vec2(centerX - length / 2.0f, centerY - thickness / 2.0f), glm::vec2(length, thickness), crossColor);
 }
 
-void HUD::renderHotbar(int selectedSlot) {
+void HUD::renderHotbar(int selectedSlot, float health, float hunger) {
     float slotSize = 44.0f;
     float padding = 4.0f;
     float totalWidth = 9 * slotSize + 8 * padding;
     float startX = (m_Width - totalWidth) / 2.0f;
     float startY = m_Height - slotSize - 15.0f;
 
-    // 1. Health Bar (10 Red Hearts)
+    // 1. Health Bar (10 Red Hearts representing 20 HP)
     float heartY = startY - 20.0f;
     for (int h = 0; h < 10; ++h) {
         float hx = startX + h * 16.0f;
-        renderQuad(glm::vec2(hx, heartY), glm::vec2(12.0f, 12.0f), glm::vec4(0.9f, 0.15f, 0.15f, 0.95f));
+        float heartHP = (h + 1) * 2.0f;
+        glm::vec4 heartColor(0.2f, 0.2f, 0.2f, 0.5f); // Empty heart
+
+        if (health >= heartHP) {
+            heartColor = glm::vec4(0.9f, 0.15f, 0.15f, 0.95f); // Full red heart
+        } else if (health >= heartHP - 1.0f) {
+            heartColor = glm::vec4(0.6f, 0.1f, 0.1f, 0.9f); // Half heart
+        }
+        renderQuad(glm::vec2(hx, heartY), glm::vec2(12.0f, 12.0f), heartColor);
     }
 
-    // 2. Hunger Bar (10 Food Drumsticks)
+    // 2. Hunger Bar (10 Food Drumsticks representing 20 Hunger)
     for (int f = 0; f < 10; ++f) {
         float fx = startX + totalWidth - (f + 1) * 16.0f;
-        renderQuad(glm::vec2(fx, heartY), glm::vec2(12.0f, 12.0f), glm::vec4(0.75f, 0.45f, 0.15f, 0.95f));
+        float drumstickValue = (f + 1) * 2.0f;
+        glm::vec4 drumColor(0.2f, 0.2f, 0.2f, 0.5f); // Empty drumstick
+
+        if (hunger >= drumstickValue) {
+            drumColor = glm::vec4(0.75f, 0.45f, 0.15f, 0.95f); // Full drumstick
+        } else if (hunger >= drumstickValue - 1.0f) {
+            drumColor = glm::vec4(0.45f, 0.25f, 0.1f, 0.85f); // Half drumstick
+        }
+        renderQuad(glm::vec2(fx, heartY), glm::vec2(12.0f, 12.0f), drumColor);
     }
 
     // Hotbar background container

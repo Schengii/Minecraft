@@ -15,7 +15,7 @@ FurnaceData* FurnaceManager::getFurnace(const glm::ivec3& pos) {
 }
 
 bool FurnaceManager::isSmeltable(BlockType input) {
-    return input == BlockType::IronOre || input == BlockType::GoldOre || input == BlockType::Sand || input == BlockType::OakLog;
+    return input == BlockType::IronOre || input == BlockType::GoldOre || input == BlockType::Sand || input == BlockType::OakLog || input == BlockType::RawPorkchop;
 }
 
 BlockType FurnaceManager::getSmeltResult(BlockType input) {
@@ -23,6 +23,7 @@ BlockType FurnaceManager::getSmeltResult(BlockType input) {
     if (input == BlockType::GoldOre) return BlockType::GoldOre;
     if (input == BlockType::Sand) return BlockType::Glass;
     if (input == BlockType::OakLog) return BlockType::CoalOre;
+    if (input == BlockType::RawPorkchop) return BlockType::CookedPorkchop;
     return BlockType::Air;
 }
 

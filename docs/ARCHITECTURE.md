@@ -55,6 +55,11 @@ Die Engine ist in eigenständige Subsysteme unterteilt:
 ### Physics Subsystem (`src/physics/`)
 - **`AABB`**: Axis-Aligned Bounding Box für Voxel-Präzise Kollisionserkennung zwischen Entitäten (Spieler, Mobs, Items) und der Blockwelt.
 
+### Inventory & Player Subsystem (`src/inventory/`)
+- **`PlayerStats`**: Verwaltet Gesundheit (20 HP), Hunger (20 Punkte), Erschöpfung (Exhaustion), Rüstungspunkte und Zeitstempel für passive Regeneration und Verhungern-Schaden.
+- **`FoodSystem`**: Nahrungsmittel-Metadaten (Apfel, Brot, Rohes/Gebratenes Schweinefleisch, Goldener Apfel) und Ess-Mechaniken mit automatischer Lebens- & Hungerwiederherstellung.
+- **`Inventory`**: 36-Slot Inventar des Spielers mit Hotbar-Management.
+
 ---
 
 ## 3. Erweiterungs-Roadmap & Modding

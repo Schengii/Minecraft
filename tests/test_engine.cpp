@@ -20,6 +20,7 @@
 #include "../src/core/ThreadPool.hpp"
 #include "../src/inventory/Inventory.hpp"
 #include "../src/inventory/PlayerStats.hpp"
+#include "../src/inventory/FoodSystem.hpp"
 #include "../src/gui/ContainerGUI.hpp"
 #include "../src/crafting/CraftingManager.hpp"
 #include "../src/physics/PhysicsEngine.hpp"
@@ -232,6 +233,48 @@ void testNetworkManager() {
     std::cout << "  -> NetworkManager tests PASSED!" << std::endl;
 }
 
+void testHungerAndFoodSystem() {
+    std::cout << "[TEST] 15. Hunger & Food System (Eating, Regeneration, Starvation, Mob Drops & Smelting)..." << std::endl;
+    
+    // 1. Food Info & Checks
+    assert(FoodSystem::isFood(BlockType::Apple) == true);
+    assert(FoodSystem::isFood(BlockType::CookedPorkchop) == true);
+    assert(FoodSystem::isFood(BlockType::Stone) == false);
+
+    FoodInfo info = FoodSystem::getFoodInfo(BlockType::CookedPorkchop);
+    assert(info.hungerRestored == 8.0f);
+
+    // 2. Eating Food
+    PlayerStats stats;
+    stats.setHunger(10.0f);
+    bool ate = FoodSystem::eatFood(stats, BlockType::CookedPorkchop);
+    assert(ate == true);
+    assert(stats.getHunger() == 18.0f);
+
+    // 3. Exhaustion & Hunger Consumption
+    stats.addExhaustion(4.0f);
+    stats.update(0.1f);
+    assert(stats.getHunger() == 17.0f);
+
+    // 4. Passive Health Regeneration
+    stats.setHunger(20.0f);
+    stats.setHealth(15.0f);
+    stats.update(4.1f);
+    assert(stats.getHealth() == 16.0f);
+
+    // 5. Starvation Damage
+    stats.setHunger(0.0f);
+    stats.setHealth(10.0f);
+    stats.update(4.1f);
+    assert(stats.getHealth() == 9.0f);
+
+    // 6. Smelting Raw Porkchop -> Cooked Porkchop
+    assert(FurnaceManager::isSmeltable(BlockType::RawPorkchop) == true);
+    assert(FurnaceManager::getSmeltResult(BlockType::RawPorkchop) == BlockType::CookedPorkchop);
+
+    std::cout << "  -> Hunger & Food System tests PASSED!" << std::endl;
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << " Running Minecraft Engine Test Suite   " << std::endl;
@@ -253,6 +296,7 @@ int main() {
     testCaveDecorator();
     testContainerGUI();
     testNetworkManager();
+    testHungerAndFoodSystem();
 
     std::cout << "========================================" << std::endl;
     std::cout << " ALL ENGINE TESTS PASSED 100%!          " << std::endl;

@@ -74,6 +74,23 @@ ItemStack CraftingManager::matchRecipe3x3(const std::array<ItemStack, 9>& grid) 
         return { BlockType::TNT, 1, 64 };
     }
 
+    // 4. Bread Recipe (3 Planks in horizontal row)
+    if (totalItems == 3) {
+        if (grid[3].type == BlockType::Planks && grid[4].type == BlockType::Planks && grid[5].type == BlockType::Planks) {
+            return { BlockType::Bread, 1, 64 };
+        }
+    }
+
+    // 5. Golden Apple Recipe (1 Apple in middle grid[4], surrounded by 8 GoldOre)
+    if (totalItems == 9 && grid[4].type == BlockType::Apple) {
+        bool surroundedByGold = true;
+        int outerIndices[8] = { 0, 1, 2, 3, 5, 6, 7, 8 };
+        for (int idx : outerIndices) {
+            if (grid[idx].type != BlockType::GoldOre) surroundedByGold = false;
+        }
+        if (surroundedByGold) return { BlockType::GoldenApple, 1, 64 };
+    }
+
     return { BlockType::Air, 0, 64 };
 }
 

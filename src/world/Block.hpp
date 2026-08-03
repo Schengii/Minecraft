@@ -50,7 +50,12 @@ enum class BlockType : uint8_t {
     DiamondPickaxe,
     WoodAxe,
     IronSword,
-    DiamondSword
+    DiamondSword,
+    Apple,
+    Bread,
+    RawPorkchop,
+    CookedPorkchop,
+    GoldenApple
 };
 
 enum Direction {
@@ -66,11 +71,11 @@ struct BlockData {
     BlockType type = BlockType::Air;
 
     static bool isOpaque(BlockType type) {
-        return type != BlockType::Air && type != BlockType::Glass && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::ItemDrop;
+        return type != BlockType::Air && type != BlockType::Glass && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::ItemDrop && type != BlockType::Apple && type != BlockType::Bread && type != BlockType::RawPorkchop && type != BlockType::CookedPorkchop && type != BlockType::GoldenApple;
     }
 
     static bool isSolid(BlockType type) {
-        return type != BlockType::Air && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::ItemDrop;
+        return type != BlockType::Air && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::ItemDrop && type != BlockType::Apple && type != BlockType::Bread && type != BlockType::RawPorkchop && type != BlockType::CookedPorkchop && type != BlockType::GoldenApple;
     }
 
     static glm::vec2 getTextureUV(BlockType type, Direction face) {
@@ -176,6 +181,13 @@ struct BlockData {
                 break;
             case BlockType::Obsidian:
                 tileIndex = 4;
+                break;
+            case BlockType::Apple:
+            case BlockType::Bread:
+            case BlockType::RawPorkchop:
+            case BlockType::CookedPorkchop:
+            case BlockType::GoldenApple:
+                tileIndex = 12;
                 break;
             default:
                 tileIndex = 2;
