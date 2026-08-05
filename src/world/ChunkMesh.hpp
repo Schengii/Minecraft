@@ -35,6 +35,7 @@ private:
     size_t m_IndexCount = 0;
 
     void addFace(const Chunk& chunk, int lx, int ly, int lz, const glm::vec3& blockPos, Direction dir, BlockType type, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices);
+    void addMergedFace(const glm::vec3& startPos, float w, float h, Direction dir, BlockType type, float baseLight, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices);
 };
 
 }

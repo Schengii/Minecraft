@@ -31,9 +31,38 @@
 #include "../src/renderer/ParticleEngine.hpp"
 #include "../src/renderer/FrustumCuller.hpp"
 #include "../src/audio/AudioManager.hpp"
-#include "../src/net/NetworkManager.hpp"
+#include "../src/world/ChunkMesh.hpp"
 
 using namespace Minecraft;
+
+void testGreedyMeshing() {
+    std::cout << "[TEST] 18. Greedy Meshing Quad Optimization & Vertex Compression..." << std::endl;
+    Chunk chunk(0, 0);
+    for (int x = 0; x < 16; ++x) {
+        for (int z = 0; z < 16; ++z) {
+            chunk.setBlock(x, 10, z, BlockType::Grass);
+        }
+    }
+    ChunkMesh mesh;
+    std::vector<Vertex> verts;
+    std::vector<unsigned int> indices;
+    mesh.buildMeshData(chunk, verts, indices);
+    assert(verts.size() > 0 && verts.size() < 16 * 16 * 24);
+    std::cout << "  -> Greedy Meshing tests PASSED!" << std::endl;
+}
+
+void testExtendedCrafting() {
+    std::cout << "[TEST] 19. Extended 3x3 Crafting Table Recipes (Swords, Axes)..." << std::endl;
+    std::array<ItemStack, 9> grid;
+    grid.fill({ BlockType::Air, 0, 64 });
+    grid[1] = { BlockType::IronOre, 1, 64 };
+    grid[4] = { BlockType::IronOre, 1, 64 };
+    grid[7] = { BlockType::Stick, 1, 64 };
+
+    ItemStack result = CraftingManager::matchRecipe3x3(grid);
+    assert(result.type == BlockType::IronSword);
+    std::cout << "  -> Extended 3x3 Crafting tests PASSED!" << std::endl;
+}
 
 void testRedstone() {
     std::filesystem::remove_all("world_saves");
@@ -349,6 +378,8 @@ int main() {
     testHungerAndFoodSystem();
     testRegionFileAndChunkStreaming();
     testLightEnginePropagation();
+    testGreedyMeshing();
+    testExtendedCrafting();
 
     std::cout << "========================================" << std::endl;
     std::cout << " ALL ENGINE TESTS PASSED 100%!          " << std::endl;

@@ -14,6 +14,10 @@ uniform vec3 u_SkyColor;
 uniform float u_AmbientLight;
 uniform bool u_IsUnderwater;
 
+// Dynamic Handheld Light Uniforms
+uniform vec3 u_PlayerPos;
+uniform bool u_HasHandheldLight;
+
 void main() {
     vec3 norm = normalize(Normal);
     vec3 sunDir = normalize(u_SunDirection);
@@ -22,6 +26,15 @@ void main() {
     vec3 ambient = u_AmbientLight * u_SkyColor;
     vec3 diffuse = diff * u_SunColor;
     vec3 lighting = (ambient + diffuse) * Light;
+
+    // Handheld Light calculation
+    if (u_HasHandheldLight) {
+        float dist = length(FragPos - u_PlayerPos);
+        if (dist < 12.0) {
+            float handLight = clamp(1.0 - (dist / 12.0), 0.0, 1.0);
+            lighting += vec3(handLight * 0.75, handLight * 0.65, handLight * 0.45); // Warm torch glow
+        }
+    }
 
     vec4 texColor = texture(u_Texture, TexCoord);
     

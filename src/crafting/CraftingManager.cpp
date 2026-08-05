@@ -59,6 +59,23 @@ ItemStack CraftingManager::matchRecipe3x3(const std::array<ItemStack, 9>& grid) 
         }
     }
 
+    // 1b. Sword Recipes (Vertical column 1, 4 = Material, 7 = Stick)
+    if (totalItems == 3 && grid[7].type == BlockType::Stick) {
+        if (grid[1].type == BlockType::IronOre && grid[4].type == BlockType::IronOre) {
+            return { BlockType::IronSword, 1, 1 };
+        }
+        if (grid[1].type == BlockType::DiamondOre && grid[4].type == BlockType::DiamondOre) {
+            return { BlockType::DiamondSword, 1, 1 };
+        }
+    }
+
+    // 1c. Axe Recipes (grid 0,1,3 = Planks, 4,7 = Stick)
+    if (totalItems == 5 && grid[4].type == BlockType::Stick && grid[7].type == BlockType::Stick) {
+        if (grid[0].type == BlockType::Planks && grid[1].type == BlockType::Planks && grid[3].type == BlockType::Planks) {
+            return { BlockType::WoodAxe, 1, 1 };
+        }
+    }
+
     // 2. Chest Recipe (8 Planks around outer border, grid[4] empty)
     if (totalItems == 8 && grid[4].isEmpty()) {
         bool allPlanks = true;

@@ -75,6 +75,7 @@ private:
     float m_FPS = 0.0f;
     float m_FrameCounter = 0;
     float m_FpsTimer = 0.0f;
+    float m_StepTimer = 0.0f;
 
     glm::vec3 m_PlayerVelocity{ 0.0f };
     BlockType m_SelectedBlock = BlockType::Grass;

@@ -58,15 +58,28 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
             if (distToPlayer < 22.0f && distToPlayer > 1.2f) {
                 glm::vec3 dir = glm::normalize(glm::vec3(playerPos.x - mob.position.x, 0.0f, playerPos.z - mob.position.z));
                 float speed = 3.5f;
+
+                // Check 3D obstruction
+                glm::vec3 frontCheck = mob.position + dir * 0.6f;
+                int fx = static_cast<int>(std::floor(frontCheck.x));
+                int fy = static_cast<int>(std::floor(mob.position.y));
+                int fz = static_cast<int>(std::floor(frontCheck.z));
+                BlockType frontBlock = world.getBlock(fx, fy, fz);
+                BlockType headBlock = world.getBlock(fx, fy + 1, fz);
+
+                if (BlockData::isSolid(frontBlock)) {
+                    if (!BlockData::isSolid(headBlock) && mob.isGrounded) {
+                        mob.velocity.y = 7.5f;
+                        mob.isGrounded = false;
+                    } else {
+                        // Sidestep around wall obstacle
+                        glm::vec3 sideDir = glm::normalize(glm::vec3(-dir.z, 0.0f, dir.x));
+                        dir = glm::normalize(dir + sideDir * 0.8f);
+                    }
+                }
+
                 mob.velocity.x = dir.x * speed;
                 mob.velocity.z = dir.z * speed;
-
-                glm::vec3 frontCheck = mob.position + dir * 0.6f;
-                BlockType frontBlock = world.getBlock(static_cast<int>(std::floor(frontCheck.x)), static_cast<int>(std::floor(mob.position.y)), static_cast<int>(std::floor(frontCheck.z)));
-                if (BlockData::isSolid(frontBlock) && mob.isGrounded) {
-                    mob.velocity.y = 7.5f;
-                    mob.isGrounded = false;
-                }
             } else if (distToPlayer <= 1.5f && mob.attackCooldown <= 0.0f) {
                 playerHealth -= 3.0f;
                 playerVel += glm::normalize(playerPos - mob.position) * 4.0f + glm::vec3(0, 2, 0);

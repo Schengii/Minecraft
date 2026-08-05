@@ -198,10 +198,21 @@ void Application::processInput(float deltaTime) {
         }
     }
 
-    // Add movement exhaustion
+    // Add movement exhaustion & footstep sounds
     if (!m_IsFlying && m_PlayerStats) {
         float horizSpeed = glm::length(glm::vec2(m_PlayerVelocity.x, m_PlayerVelocity.z));
         m_PlayerStats->addExhaustion(horizSpeed * deltaTime * (isSprinting ? 0.05f : 0.01f));
+
+        if (m_IsGrounded && horizSpeed > 0.8f) {
+            m_StepTimer += deltaTime;
+            float stepInterval = isSprinting ? 0.28f : 0.42f;
+            if (m_StepTimer >= stepInterval) {
+                m_StepTimer = 0.0f;
+                AudioManager::playSound(SoundEffect::Footstep);
+            }
+        } else {
+            m_StepTimer = 0.0f;
+        }
     }
 
     // Mouse camera look
@@ -372,6 +383,10 @@ void Application::render() {
         m_BlockShader->setVec3("u_SkyColor", skyColor);
         m_BlockShader->setFloat("u_AmbientLight", m_TimeManager->getAmbientLight());
         m_BlockShader->setBool("u_IsUnderwater", m_InWater);
+
+        bool holdingTorch = (m_SelectedBlock == BlockType::RedstoneTorch || m_SelectedBlock == BlockType::RedstoneWire);
+        m_BlockShader->setVec3("u_PlayerPos", m_Camera->getPosition());
+        m_BlockShader->setBool("u_HasHandheldLight", holdingTorch);
 
         if (m_ShadowMap && glActiveTexture) {
             glActiveTexture(GL_TEXTURE0 + 1);
