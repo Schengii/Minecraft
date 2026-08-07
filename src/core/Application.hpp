@@ -20,6 +20,8 @@
 #include "../gui/HUD.hpp"
 #include "../gui/InventoryGUI.hpp"
 #include "../gui/ContainerGUI.hpp"
+#include "../gui/MenuGUI.hpp"
+#include "../renderer/Skybox.hpp"
 #include "../inventory/Inventory.hpp"
 #include "../inventory/PlayerStats.hpp"
 #include "../ecs/MobEngine.hpp"
@@ -29,6 +31,13 @@
 #include "../net/NetworkManager.hpp"
 
 namespace Minecraft {
+
+enum class GameState {
+    MainMenu,
+    SettingsMenu,
+    Playing,
+    Paused
+};
 
 class Application {
 public:
@@ -48,6 +57,7 @@ private:
     std::unique_ptr<Shader> m_ShadowShader;
     std::unique_ptr<ShadowMap> m_ShadowMap;
     std::unique_ptr<PostProcessing> m_PostProcessing;
+    std::unique_ptr<Skybox> m_Skybox;
     std::unique_ptr<Camera> m_Camera;
     std::unique_ptr<DimensionManager> m_DimensionManager;
     std::unique_ptr<TimeManager> m_TimeManager;
@@ -55,6 +65,7 @@ private:
     std::unique_ptr<HUD> m_HUD;
     std::unique_ptr<InventoryGUI> m_InventoryGUI;
     std::unique_ptr<ContainerGUI> m_ContainerGUI;
+    std::unique_ptr<MenuGUI> m_MenuGUI;
     std::unique_ptr<Inventory> m_Inventory;
     std::unique_ptr<PlayerStats> m_PlayerStats;
     std::unique_ptr<MobEngine> m_MobEngine;
@@ -65,12 +76,18 @@ private:
     std::unique_ptr<FrustumCuller> m_FrustumCuller;
     std::unique_ptr<NetworkManager> m_NetworkManager;
 
+    GameState m_State = GameState::MainMenu;
     bool m_IsRunning = true;
     bool m_IsFlying = true;
     bool m_IsGrounded = false;
     bool m_InWater = false;
     bool m_ShowDebugInfo = false;
     bool m_IsInventoryOpen = false;
+
+    int m_RenderDistance = 8;
+    float m_FOV = 75.0f;
+    bool m_VSync = true;
+    std::string m_WorldSeed = "12345";
 
     float m_FPS = 0.0f;
     float m_FrameCounter = 0;
@@ -87,6 +104,7 @@ private:
     bool m_F3PressedLast = false;
     bool m_F4PressedLast = false;
     bool m_EPressedLast = false;
+    bool m_EscPressedLast = false;
 };
 
 }

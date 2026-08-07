@@ -44,23 +44,23 @@ Die Engine ist in eigenständige Subsysteme unterteilt:
 ### World Subsystem (`src/world/`)
 - **`Block`**: Enum und Metadaten-Struktur für Block-Typen (Air, Grass, Dirt, Stone, Bedrock, Wood, Leaves, etc.).
 - **`Chunk`**: 16x256x16 3D-Array von Blöcken. Verwaltet Block-Zustände und Lichtwerte (`m_Light`).
-- **`ChunkMesh`**: Generiert optimierte Meshes unter Verwendung von **Culled Face Meshing** und dynamischer Gesichtsausleuchtung (Sonnen- & Blocklicht).
-- **`LightEngine`**: 3D Zellularer Automat / BFS-Algorithmus zur Berechnung von Sonnenlicht-Säulen und Blocklicht-Ausbreitung (Fackeln, Lava, Glowstone 0–15).
+- **`ChunkMesh`**: Generiert optimierte Meshes unter Verwendung von **Greedy Meshing** (Quad-Merging) und dynamischer Gesichtsausleuchtung (Sonnen- & Blocklicht) für minimale Vertex- und Draw-Call-Belastung.
+- **`LightEngine`**: 3D Zellularer Automat / BFS-Algorithmus zur Berechnung von Sonnenlicht-Säulen, Blocklicht-Ausbreitung (Fackeln, Lava, Glowstone 0–15) sowie dynamischem Handheld Dynamic Light für den Spieler.
 - **`RegionFile` (`.mca`)**: Anvil Region-Dateiformat (32x32 Chunks pro Region) für Hochgeschwindigkeits-Binary-Disk-I/O.
 - **`World`**: Koordiniert asynchrones Chunk-Streaming auf `ThreadPool`-Worker-Threads sowie dynamisches Laden/Entladen um den Spieler.
 
-### ECS Subsystem (`src/ecs/`)
-- Verwendet **EnTT** als Entity Component System:
-  - **Components**: `TransformComponent`, `VelocityComponent`, `BoundingBoxComponent`, `PlayerComponent`, `MeshComponent`.
-  - **Systems**: `MovementSystem`, `RenderSystem`, `PhysicsSystem`, `CollisionSystem`.
+### ECS & Mob Subsystem (`src/ecs/`)
+- Verwaltet Spieler, Items und Entitäten:
+  - **`MobEngine`**: 3D Hindernis-Umgehung & A*-angewandte Pfadfindung für Zombies, Skelette (Pfeil-Fernkampf) & Creeper (Fusions-Timer + Detonation).
+  - **`ItemEntity`**: Magnetischer Drop-Pickup & Drop-Animationen.
 
-### Physics Subsystem (`src/physics/`)
-- **`AABB`**: Axis-Aligned Bounding Box für Voxel-Präzise Kollisionserkennung zwischen Entitäten (Spieler, Mobs, Items) und der Blockwelt.
+### Audio Subsystem (`src/audio/`)
+- **`AudioManager`**: 3D Spatial Audio mit Entfernungs-Dämpfung und Untergrund-spezifischen Schrittgeräuschen, Abbau- und Treffersounds.
 
 ### Inventory & Player Subsystem (`src/inventory/`)
 - **`PlayerStats`**: Verwaltet Gesundheit (20 HP), Hunger (20 Punkte), Erschöpfung (Exhaustion), Rüstungspunkte und Zeitstempel für passive Regeneration und Verhungern-Schaden.
 - **`FoodSystem`**: Nahrungsmittel-Metadaten (Apfel, Brot, Rohes/Gebratenes Schweinefleisch, Goldener Apfel) und Ess-Mechaniken mit automatischer Lebens- & Hungerwiederherstellung.
-- **`Inventory`**: 36-Slot Inventar des Spielers mit Hotbar-Management.
+- **`Inventory`**: 36-Slot Inventar des Spielers mit Hotbar-Management und 2x2/3x3 Crafting Table Integration.
 
 ---
 
@@ -68,7 +68,8 @@ Die Engine ist in eigenständige Subsysteme unterteilt:
 
 - [x] **Multi-Threading Chunk Loading**: Hintergründige Weltgenerierung auf Worker-Threads.
 - [x] **Anvil File Format Persistence**: Speichern & Laden der Welt-Chunks in Region-Dateien (`.mca`).
-- [x] **Dynamic Light Engine**: 3D BFS Sonnenlicht- & Blocklicht-Ausbreitung (Fackeln, Lava 0–15).
-- [ ] **Advanced Rendering**: SSAO, Wasser-Refraktion & Shader-Packs.
+- [x] **Dynamic Light Engine**: 3D BFS Sonnenlicht- & Blocklicht-Ausbreitung + Dynamic Handheld Light.
+- [x] **Greedy Meshing Algorithm**: Hoch-optimiertes Mesh-Merging für maximale Sichtweiten und FPS.
 - [x] **Redstone Logic & Fluid Dynamics**: Zellularer Automat für Wasser/Lava-Fluss und Signalübertragung.
-- [x] **Crafting & GUI System**: Skalierbares HUD, Inventar, Crafting Grid und Chest-Container.
+- [x] **Crafting & GUI System**: Skalierbares HUD, Inventar, 2x2 & 3x3 Crafting Grid und Chest-Container.
+- [x] **Advanced Mob AI & 3D Audio**: Entitäten-Hindernis-Umgehung, Creeper-Detonationen und Positions-Sound.

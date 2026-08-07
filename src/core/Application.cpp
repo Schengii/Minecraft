@@ -35,6 +35,8 @@ Application::Application() {
     m_HUD = std::make_unique<HUD>(m_Window->getWidth(), m_Window->getHeight());
     m_InventoryGUI = std::make_unique<InventoryGUI>(m_Window->getWidth(), m_Window->getHeight());
     m_ContainerGUI = std::make_unique<ContainerGUI>(m_Window->getWidth(), m_Window->getHeight());
+    m_MenuGUI = std::make_unique<MenuGUI>(m_Window->getWidth(), m_Window->getHeight());
+    m_Skybox = std::make_unique<Skybox>();
     m_Inventory = std::make_unique<Inventory>();
     m_PlayerStats = std::make_unique<PlayerStats>();
 
@@ -93,13 +95,27 @@ void Application::run() {
 }
 
 void Application::processInput(float deltaTime) {
-    if (Input::isKeyPressed(GLFW_KEY_ESCAPE)) {
-        if (m_IsInventoryOpen) {
-            m_IsInventoryOpen = false;
+    bool escPressedNow = Input::isKeyPressed(GLFW_KEY_ESCAPE);
+    if (escPressedNow && !m_EscPressedLast) {
+        if (m_State == GameState::Playing) {
+            if (m_IsInventoryOpen) {
+                m_IsInventoryOpen = false;
+                m_Window->setCursorCaptured(true);
+            } else {
+                m_State = GameState::Paused;
+                m_Window->setCursorCaptured(false);
+            }
+        } else if (m_State == GameState::Paused) {
+            m_State = GameState::Playing;
             m_Window->setCursorCaptured(true);
-        } else {
-            m_IsRunning = false;
+        } else if (m_State == GameState::SettingsMenu) {
+            m_State = GameState::MainMenu;
         }
+    }
+    m_EscPressedLast = escPressedNow;
+
+    if (m_State != GameState::Playing) {
+        return;
     }
 
     // Toggle Inventory with 'E' key
@@ -405,15 +421,51 @@ void Application::render() {
     }
 
     // 4. Render 2D HUD Layer
-    if (m_HUD && m_Camera && !m_IsInventoryOpen) {
+    if (m_HUD && m_Camera && !m_IsInventoryOpen && m_State == GameState::Playing) {
         float hp = m_PlayerStats ? m_PlayerStats->getHealth() : 20.0f;
         float hunger = m_PlayerStats ? m_PlayerStats->getHunger() : 20.0f;
         m_HUD->render(m_SelectedSlot, m_ShowDebugInfo, m_FPS, m_Camera->getPosition(), m_Camera->getFront(), m_IsFlying, hp, hunger);
     }
 
     // 5. Render 2D Inventory GUI Layer
-    if (m_InventoryGUI && m_Inventory) {
+    if (m_InventoryGUI && m_Inventory && m_State == GameState::Playing) {
         m_InventoryGUI->render(*m_Inventory, m_IsInventoryOpen);
+    }
+
+    // 6. Render Menu GUI Layer
+    if (m_MenuGUI) {
+        m_MenuGUI->resize(m_Window->getWidth(), m_Window->getHeight());
+        double mx = Input::getMouseX();
+        double my = Input::getMouseY();
+        bool mouseClicked = Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
+
+        if (m_State == GameState::MainMenu) {
+            m_Window->setCursorCaptured(false);
+            MenuAction action = m_MenuGUI->renderMainMenu(mx, my, mouseClicked, m_WorldSeed);
+            if (action == MenuAction::StartNewWorld) {
+                m_State = GameState::Playing;
+                m_Window->setCursorCaptured(true);
+            } else if (action == MenuAction::OpenSettings) {
+                m_State = GameState::SettingsMenu;
+            } else if (action == MenuAction::QuitGame) {
+                m_IsRunning = false;
+            }
+        } else if (m_State == GameState::Paused) {
+            MenuAction action = m_MenuGUI->renderPauseMenu(mx, my, mouseClicked);
+            if (action == MenuAction::ResumeGame) {
+                m_State = GameState::Playing;
+                m_Window->setCursorCaptured(true);
+            } else if (action == MenuAction::OpenSettings) {
+                m_State = GameState::SettingsMenu;
+            } else if (action == MenuAction::QuitGame) {
+                m_State = GameState::MainMenu;
+            }
+        } else if (m_State == GameState::SettingsMenu) {
+            MenuAction action = m_MenuGUI->renderSettingsMenu(mx, my, mouseClicked, m_RenderDistance, m_FOV, m_VSync);
+            if (action == MenuAction::CloseSettings) {
+                m_State = GameState::MainMenu;
+            }
+        }
     }
 }
 

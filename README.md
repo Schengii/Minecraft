@@ -1,78 +1,133 @@
-# Minecraft C++ Voxel Engine (1:1 Remake)
+# Minecraft C++ OpenGL Voxel Engine (1:1 Remake & Modern Voxel Engine)
 
-Eine hoch-performante, modulare Voxel-Engine in C++20 und OpenGL 4.5 nach dem Vorbild von Minecraft.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
+[![OpenGL](https://img.shields.io/badge/OpenGL-4.5-green.svg)](https://www.opengl.org/)
+[![CMake](https://img.shields.io/badge/CMake-%3E%3D3.20-orange.svg)](https://cmake.org/)
+[![Build & Test](https://github.com/Schengii/Minecraft/actions/workflows/build.yml/badge.svg)](.github/workflows/build.yml)
 
-![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)
-![OpenGL](https://img.shields.io/badge/OpenGL-4.5-green.svg)
-![CMake](https://img.shields.io/badge/CMake-%3E%3D3.20-orange.svg)
-
-## Feature-Übersicht & Stand
-
-### 🔴 Redstone Logik & Schaltungen (`RedstoneEngine`)
-- **Signal-Ausbreitung & Interaktion**:
-  - 🔴 **Redstone-Leitung (`RedstoneWire`)**: Transportiert Redstone-Signale über Voxel-Blöcke.
-  - 🕯️ **Redstone-Fackel (`RedstoneTorch`)**: Ständige Energiequelle & Signal-Inverter.
-  - 🎛️ **Hebel / Schalter (`Lever`)**: Interaktives Ein- und Ausschalten von Schaltungen per Rechtsklick.
-  - 💡 **Redstone-Lampe (`RedstoneLamp`)**: Leuchtet automatisch bei anliegendem Redstone-Signal auf.
-
-### 🌍 Multi-Biome System & Prozedurale Strukturen (`Biome`)
-- Dynamisches Biome-Noise (Ebenen, Wüste mit Kakteen, Waldbiome mit Birken, Verschneite Berggipfel).
-
-### 🌊 Wasser-Physik, Schwimmen & Unterwasser-Nebel
-- Flüssigkeits-Physik, Auftrieb, Schwimmen (`Space`) & Unterwasser-Nebelschader.
-
-### ☀️ Dynamischer Tag/Nacht-Zyklus (`TimeManager`)
-- 24.000 Ticks Tageszyklus mit flüssiger Himmelsfarb-Interpolation & Tasten `F4`/`T`.
-
-### 🎒 Inventar-System, Item-Stacks & 2x2 Crafting (`E` Taste)
-- 36-Slot Spieler-Inventar, Abbau-Item Drops & Crafting Rezept-Manager.
-
-### 💾 Welt-Speichersystem (Save / Load Persistence)
-- Binäre Chunk-Serialisierung (`SaveSystem`) in `world_saves/chunk_X_Z.bin`.
-
-### 🏔️ 3D Höhlensysteme, Erze & Unterwelt
-- 3D Noise Caves, Lava-Seen & Erzadern (Diamant, Gold, Eisen, Kohle).
-
-### 💡 Smooth Lighting & Ambient Occlusion (AO)
-- Weiche Eck- und Kanten-Schatten an angrenzenden Voxel-Blöcken für plastischen Tiefeneffekt.
+A high-performance, modular 3D voxel game engine written in **C++20** and **OpenGL 4.5**, modeled after Minecraft. Features high-throughput multithreaded chunk generation, greedy meshing, cellular automaton redstone logic, fluid dynamics, Anvil region saving, entity AI, dynamic lighting, and spatial audio.
 
 ---
 
-## Steuerung & Tastatur-Layout
+## 🌟 Feature Overview & State
 
-| Taste / Eingabe | Aktion |
-|-----------------|--------|
-| `E` | Inventar- & Crafting-GUI öffnen / schließen |
-| `F4` | Tageszeit umschalten (Tag -> Dämmerung -> Nacht -> Morgenrot) |
-| `T` | Zeit im Spiel vorspulen (Zeitraffer) |
-| `W / A / S / D` | Vorwärts, links, rückwärts, rechts bewegen |
-| `Space` | Springen (am Land) / Nach oben schwimmen (im Wasser) / Steigen (im Flugmodus) |
-| `L-Shift` | Sinken / Nach unten fliegen (im Flugmodus) |
-| `F` | Umschalten zwischen Flugmodus & Voxel-Physik |
-| `F3` | Debug-Bildschirm (FPS, Koordinaten, Facing) ein-/ausblenden |
-| `1 - 9` | Hotbar Slot wählen (inkl. Redstone-Staub, Fackeln, Hebel & Lampen) |
-| `Linksklick` | Block unter Fadenkreuz abbauen / Item im Inventar bewegen |
-| `Rechtsklick` | Ausgewählten Block platzieren / Hebel umschalten |
-| `Maus bewegen` | Umsehen (Pitch / Yaw) |
-| `Escape` | Inventar schließen oder Spiel beenden |
+### 🔴 Redstone Engine (`RedstoneEngine`)
+- **Signal Propagation & Logic Gates**:
+  - 🔴 **Redstone Wire (`RedstoneWire`)**: Signal transport across blocks with signal decay (0–15 strength).
+  - 🕯️ **Redstone Torch (`RedstoneTorch`)**: Infinite power source & signal inverter.
+  - 🎛️ **Lever (`Lever`)**: Interactive state toggling on right-click.
+  - 💡 **Redstone Lamp (`RedstoneLamp`)**: Automatic visual light emission upon active redstone power.
+
+### 🏔️ Greedy Meshing Algorithm (`ChunkMesh`)
+- Quad-merging quad face optimization reducing vertex memory footprint and draw calls by up to **80%**.
+- **Two-Pass Mesh Rendering**: Separate transparent render passes for water and glass blocks eliminating depth-sorting artifacts.
+
+### 🌍 World Generation & Biomes (`Biome`)
+- Multi-biome procedural terrain using Perlin/Simplex noise (Plains, Desert with Cacti, Birch & Oak Forests, Snowy Mountains).
+- 3D Noise Cave Systems, Lava lakes, and ore veins (Diamond, Gold, Iron, Coal).
+
+### ☀️ Dynamic Time & Sky System (`Skybox` & `TimeManager`)
+- 24,000-tick daily cycle with dynamic sky color interpolation, directional sun/moon movement, and custom skybox.
+- Key shortcuts `F4` (cycle time) and `T` (timelapse fast-forward).
+
+### 🌊 Water Physics & Swimming (`FluidEngine`)
+- Cellular automaton liquid spreading for water and lava. Buoyancy mechanics and underwater fog shader.
+
+### 🎒 GUI, Main Menu & Pause System (`MenuGUI` & `HUD`)
+- **Main Menu**: Start new worlds with custom Seed input, adjust graphics settings, or quit.
+- **Pause Menu (`Esc`)**: In-game pause menu with Resume, Settings, and Save & Exit.
+- **Settings GUI**: Live adjustment of FOV (60°–110°), Render Distance (4–16 Chunks), and VSync.
+- **Inventory & Crafting**: 36-slot inventory, hotbar, and 2x2 / 3x3 Crafting Table integration.
+
+### 💾 Region Save File System (`SaveSystem` & `RegionFile`)
+- Binary chunk serialization (`.mca` Anvil format) with high-speed disk I/O.
+
+### 🧟 Entity AI & 3D Mob Animations (`MobEngine`)
+- Entity pathfinding for Zombies, Skeletons (arrow projectiles), Creepers (fuse countdown & explosion), and passive Mobs.
+- 3D limb walking animations and hit feedback.
+
+### 💥 Particle Debris Engine (`ParticleEngine`)
+- 3D block fragment particles spawned on block destruction with velocity and gravity physics.
 
 ---
 
-## Build & Ausführung
+## ⌨️ Controls & Keybindings
 
-### Kompilieren (PowerShell / Terminal)
+| Key / Input | Action |
+|-------------|--------|
+| `Escape` | Open Pause Menu / Close UI / Back |
+| `E` | Open / Close Inventory & Crafting GUI |
+| `W / A / S / D` | Movement (Forward, Left, Backward, Right) |
+| `Space` | Jump / Swim upward in water / Ascend in Fly Mode |
+| `L-Shift` | Descend / Sink in Fly Mode |
+| `F` | Toggle Fly Mode vs Physics Mode |
+| `F3` | Toggle Debug HUD (FPS, Position, Facing, Biome) |
+| `F4` | Cycle Time of Day (Day -> Sunset -> Night -> Sunrise) |
+| `1 - 9` | Select Hotbar Item |
+| `Left Click` | Break block under crosshair / Attack Mob |
+| `Right Click` | Place block / Interact (Lever, Chest, Furnace) |
+| `Mouse Move` | Look around (Pitch / Yaw) |
 
-```powershell
-# 1. Build-Ordner erstellen & CMake Konfiguration
+---
+
+## 🏗️ Build & Compilation
+
+### Requirements
+- **Compiler**: C++20 compatible (MSVC 2019+, GCC 10+, Clang 11+)
+- **CMake**: Version >= 3.20
+- **Libraries** (automatically fetched via CMake): GLFW 3.4, GLM 1.0.1, EnTT 3.13.2, OpenGL 4.5 Core
+
+### Build Instructions (PowerShell / Command Prompt / Terminal)
+
+```bash
+# 1. Clone repository
+git clone https://github.com/Schengii/Minecraft.git
+cd Minecraft
+
+# 2. Configure project
 cmake -B build -S .
 
-# 2. Projekt kompilieren
+# 3. Build executable
 cmake --build build --config Release
 
-# 3. Spiel starten
-.\build\Release\Minecraft.exe
+# 4. Run main game
+./build/Release/Minecraft
+
+# 5. Run automated unit tests
+./build/Release/TestEngine
 ```
 
-## Architektur
+---
 
-Vollständige Dokumentation der C++ Engine-Module befindet sich in [`docs/ARCHITECTURE.md`](file:///c:/Users/sche-/Desktop/Programmieren%20Projekte/Minecraft/docs/ARCHITECTURE.md).
+## 📐 Architecture & Modules
+
+Full system architecture and module documentation is available in [`docs/ARCHITECTURE.md`](file:///c:/Users/sche-/Desktop/Programmieren%20Projekte/Minecraft/docs/ARCHITECTURE.md).
+
+```
+                  +-------------------+
+                  |    Application    |
+                  +---------+---------+
+                            |
+        +-------------------+-------------------+
+        |                   |                   |
++-------v-------+   +-------v-------+   +-------v-------+
+|  Core (GLFW)  |   | World / Chunk |   |  ECS (EnTT)   |
++-------+-------+   +-------+-------+   +-------+-------+
+        |                   |                   |
++-------v-------+   +-------v-------+   +-------v-------+
+| Camera / Input|   | Chunk Mesher  |   | Physics / AABB|
++-------+-------+   +-------+-------+   +-------+-------+
+        |                   |
+        +---------+---------+
+                  |
+          +-------v-------+
+          | OpenGL Render |
+          +---------------+
+```
+
+---
+
+## 📜 License
+
+This project is open-source software licensed under the [MIT License](LICENSE).

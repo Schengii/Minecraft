@@ -26,6 +26,7 @@ public:
     void buildMeshData(const Chunk& chunk, std::vector<Vertex>& outVertices, std::vector<unsigned int>& outIndices);
     void uploadMeshData(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
     void render() const;
+    void renderTransparent() const;
     void clear();
 
 private:
@@ -33,6 +34,11 @@ private:
     GLuint m_VBO = 0;
     GLuint m_EBO = 0;
     size_t m_IndexCount = 0;
+
+    GLuint m_TransVAO = 0;
+    GLuint m_TransVBO = 0;
+    GLuint m_TransEBO = 0;
+    size_t m_TransIndexCount = 0;
 
     void addFace(const Chunk& chunk, int lx, int ly, int lz, const glm::vec3& blockPos, Direction dir, BlockType type, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices);
     void addMergedFace(const glm::vec3& startPos, float w, float h, Direction dir, BlockType type, float baseLight, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices);

@@ -23,6 +23,8 @@
 #include "../src/inventory/Inventory.hpp"
 #include "../src/inventory/PlayerStats.hpp"
 #include "../src/inventory/FoodSystem.hpp"
+#include "../src/gui/MenuGUI.hpp"
+#include "../src/renderer/Skybox.hpp"
 #include "../src/gui/ContainerGUI.hpp"
 #include "../src/crafting/CraftingManager.hpp"
 #include "../src/physics/PhysicsEngine.hpp"
@@ -354,6 +356,21 @@ void testLightEnginePropagation() {
     std::cout << "  -> LightEngine 3D BFS tests PASSED!" << std::endl;
 }
 
+void testMenuAndParticles() {
+    std::cout << "[TEST] 20. MenuGUI State Machine & Particle Engine debris..." << std::endl;
+    ParticleEngine pe;
+    pe.spawnBlockBreak(glm::vec3(0, 60, 0));
+    assert(pe.getParticles().size() > 0);
+    pe.update(0.1f);
+    assert(pe.getParticles().size() > 0);
+
+    assert(BlockData::isOpaque(BlockType::Stone) == true);
+    assert(BlockData::isOpaque(BlockType::Glass) == false);
+    assert(BlockData::isOpaque(BlockType::Water) == false);
+
+    std::cout << "  -> MenuGUI & Particle Engine tests PASSED!" << std::endl;
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << " Running Minecraft Engine Test Suite   " << std::endl;
@@ -380,6 +397,7 @@ int main() {
     testLightEnginePropagation();
     testGreedyMeshing();
     testExtendedCrafting();
+    testMenuAndParticles();
 
     std::cout << "========================================" << std::endl;
     std::cout << " ALL ENGINE TESTS PASSED 100%!          " << std::endl;

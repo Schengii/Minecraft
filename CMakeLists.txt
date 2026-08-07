@@ -37,6 +37,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(entt)
 
+find_package(OpenGL REQUIRED)
+
 # Source files
 set(SOURCES
     src/main.cpp
@@ -51,6 +53,7 @@ set(SOURCES
     src/renderer/FrustumCuller.cpp
     src/renderer/ShadowMap.cpp
     src/renderer/PostProcessing.cpp
+    src/renderer/Skybox.cpp
     src/world/Chunk.cpp
     src/world/ChunkMesh.cpp
     src/world/World.cpp
@@ -75,6 +78,7 @@ set(SOURCES
     src/gui/InventoryGUI.cpp
     src/gui/ContainerGUI.cpp
     src/gui/DebugGUI.cpp
+    src/gui/MenuGUI.cpp
     src/inventory/Inventory.cpp
     src/inventory/PlayerStats.cpp
     src/inventory/FoodSystem.cpp
@@ -97,11 +101,8 @@ target_include_directories(Minecraft PRIVATE
 target_link_libraries(Minecraft PRIVATE
     glfw
     glm::glm
+    OpenGL::GL
 )
-
-if(WIN32)
-    target_link_libraries(Minecraft PRIVATE opengl32)
-endif()
 
 # Test Engine Target
 set(TEST_SOURCES
@@ -117,6 +118,7 @@ set(TEST_SOURCES
     src/renderer/FrustumCuller.cpp
     src/renderer/ShadowMap.cpp
     src/renderer/PostProcessing.cpp
+    src/renderer/Skybox.cpp
     src/world/Chunk.cpp
     src/world/ChunkMesh.cpp
     src/world/World.cpp
@@ -141,6 +143,7 @@ set(TEST_SOURCES
     src/gui/InventoryGUI.cpp
     src/gui/ContainerGUI.cpp
     src/gui/DebugGUI.cpp
+    src/gui/MenuGUI.cpp
     src/inventory/Inventory.cpp
     src/inventory/PlayerStats.cpp
     src/inventory/FoodSystem.cpp
@@ -157,10 +160,8 @@ target_include_directories(TestEngine PRIVATE
     ${glm_SOURCE_DIR}
     ${entt_SOURCE_DIR}/single_include
 )
-target_link_libraries(TestEngine PRIVATE glfw glm::glm)
-if(WIN32)
-    target_link_libraries(TestEngine PRIVATE opengl32)
-endif()
+target_link_libraries(TestEngine PRIVATE glfw glm::glm OpenGL::GL)
+
 
 # Copy assets folder to output executable directory
 add_custom_command(TARGET Minecraft POST_BUILD
