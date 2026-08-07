@@ -298,13 +298,6 @@ void ChunkMesh::uploadMeshData(const std::vector<Vertex>& vertices, const std::v
     glBindVertexArray(0);
 }
 
-void ChunkMesh::render() const {
-    if (m_IndexCount == 0 || !glBindVertexArray) return;
-    glBindVertexArray(m_VAO);
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_IndexCount), GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
-}
-
 void ChunkMesh::addFace(const Chunk& chunk, int lx, int ly, int lz, const glm::vec3& p, Direction dir, BlockType type, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices) {
     addMergedFace(p, 1.0f, 1.0f, dir, type, 1.0f, vertices, indices);
 }

@@ -7,7 +7,9 @@
 #include <unordered_map>
 #include <fstream>
 #include <memory>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
+#include <glm/gtx/hash.hpp>
 #include "Block.hpp"
 
 namespace Minecraft {

@@ -1,7 +1,15 @@
+#include <glad/glad.h>
 #include "Skybox.hpp"
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+#ifndef GL_LEQUAL
+#define GL_LEQUAL 0x0203
+#endif
+#ifndef GL_LESS
+#define GL_LESS 0x0201
+#endif
 
 namespace Minecraft {
 
