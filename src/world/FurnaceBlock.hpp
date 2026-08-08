@@ -24,6 +24,10 @@ public:
     FurnaceData* getFurnace(const glm::ivec3& pos);
     void update(float deltaTime);
 
+    static bool isSmeltable(BlockType input);
+    static BlockType getSmeltResult(BlockType input);
+    static bool isFuel(BlockType fuel);
+
 private:
     struct IVec3Hash {
         std::size_t operator()(const glm::ivec3& v) const {
@@ -32,10 +36,6 @@ private:
     };
 
     std::unordered_map<glm::ivec3, FurnaceData, IVec3Hash> m_Furnaces;
-
-    bool isSmeltable(BlockType input);
-    BlockType getSmeltResult(BlockType input);
-    bool isFuel(BlockType fuel);
 };
 
 }

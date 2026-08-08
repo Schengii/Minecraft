@@ -33,6 +33,7 @@
 #include "../src/renderer/ParticleEngine.hpp"
 #include "../src/renderer/FrustumCuller.hpp"
 #include "../src/audio/AudioManager.hpp"
+#include "../src/net/NetworkManager.hpp"
 #include "../src/world/ChunkMesh.hpp"
 
 using namespace Minecraft;
@@ -310,7 +311,9 @@ void testHungerAndFoodSystem() {
 
 void testRegionFileAndChunkStreaming() {
     std::cout << "[TEST] 16. Anvil .mca RegionFile Persistence & Async Chunk Streaming..." << std::endl;
+    RegionManager::getInstance().clearCache();
     std::filesystem::remove_all("test_saves");
+    std::filesystem::create_directories("test_saves");
 
     // 1. Test RegionFile Save & Load
     BlockType blocks[16][256][16];
@@ -348,6 +351,8 @@ void testLightEnginePropagation() {
 
     // Blocklight check torch emission & decay
     chunk.setBlock(5, 50, 5, BlockType::RedstoneTorch);
+    chunk.setBlock(6, 50, 5, BlockType::Air);
+    chunk.setBlock(7, 50, 5, BlockType::Air);
     LightEngine::calculateBlocklight(chunk);
     assert(chunk.getBlocklight(5, 50, 5) == 14);
     assert(chunk.getBlocklight(6, 50, 5) == 13);

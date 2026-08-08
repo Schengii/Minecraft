@@ -3,6 +3,7 @@
 
 #include "ItemStack.hpp"
 #include <array>
+#include <algorithm>
 
 namespace Minecraft {
 

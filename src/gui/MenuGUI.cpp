@@ -7,35 +7,7 @@ namespace Minecraft {
 MenuGUI::MenuGUI(int windowWidth, int windowHeight) 
     : m_Width(windowWidth), m_Height(windowHeight) {
     
-    std::string vertexShader = R"(
-        #version 450 core
-        layout (location = 0) in vec2 aPos;
-        layout (location = 1) in vec2 aTexCoord;
-
-        uniform mat4 projection;
-        uniform mat4 model;
-
-        out vec2 TexCoord;
-
-        void main() {
-            gl_Position = projection * model * vec4(aPos, 0.0, 1.0);
-            TexCoord = aTexCoord;
-        }
-    )";
-
-    std::string fragmentShader = R"(
-        #version 450 core
-        out vec4 FragColor;
-        in vec2 TexCoord;
-
-        uniform vec4 color;
-
-        void main() {
-            FragColor = color;
-        }
-    )";
-
-    m_UIShader = std::make_unique<Shader>(vertexShader, fragmentShader, true);
+    m_UIShader = std::make_unique<Shader>("assets/shaders/ui.vert", "assets/shaders/ui.frag");
     initBuffers();
 }
 
