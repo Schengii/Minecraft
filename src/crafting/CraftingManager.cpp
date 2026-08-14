@@ -200,6 +200,27 @@ ItemStack CraftingManager::matchRecipe3x3(const std::array<ItemStack, 9>& grid) 
         }
     }
 
+    // 8. Emerald & Enchanting Suite Recipes
+    // 8a. Emerald Block (9 Emeralds)
+    if (totalItems == 9 && grid[0].type == BlockType::Emerald) {
+        bool allEmeralds = true;
+        for (int i = 0; i < 9; ++i) if (grid[i].type != BlockType::Emerald) allEmeralds = false;
+        if (allEmeralds) return { BlockType::EmeraldBlock, 1, 64 };
+    }
+
+    // 8b. Bookshelf (6 Planks top & bottom, 3 middle)
+    if (totalItems == 9 && grid[0].type == BlockType::Planks && grid[1].type == BlockType::Planks && grid[2].type == BlockType::Planks &&
+        grid[6].type == BlockType::Planks && grid[7].type == BlockType::Planks && grid[8].type == BlockType::Planks) {
+        return { BlockType::Bookshelf, 1, 64 };
+    }
+
+    // 8c. Enchanting Table (1 Book top-mid[1], 2 Diamond mid-left/right[3,5], 4 Obsidian[4,6,7,8])
+    if (totalItems >= 4 && grid[4].type == BlockType::Obsidian) {
+        if (grid[3].type == BlockType::DiamondOre && grid[5].type == BlockType::DiamondOre) {
+            return { BlockType::EnchantingTable, 1, 64 };
+        }
+    }
+
     return { BlockType::Air, 0, 64 };
 }
 

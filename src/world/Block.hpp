@@ -66,7 +66,11 @@ enum class BlockType : uint8_t {
     CarrotCrop,
     PotatoCrop,
     Minecart,
-    Boat
+    Boat,
+    Emerald,
+    EmeraldBlock,
+    EnchantingTable,
+    Bookshelf
 };
 
 enum Direction {
@@ -224,6 +228,18 @@ struct BlockData {
             case BlockType::Minecart:
             case BlockType::Boat:
                 tileIndex = 9;
+                break;
+            case BlockType::Emerald:
+                tileIndex = 13;
+                break;
+            case BlockType::EmeraldBlock:
+                tileIndex = 14;
+                break;
+            case BlockType::EnchantingTable:
+                tileIndex = 6;
+                break;
+            case BlockType::Bookshelf:
+                tileIndex = 5;
                 break;
             default:
                 tileIndex = 2;

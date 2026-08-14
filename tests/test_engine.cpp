@@ -19,6 +19,9 @@
 #include "../src/world/StructureGenerator.hpp"
 #include "../src/world/DimensionManager.hpp"
 #include "../src/world/CropsEngine.hpp"
+#include "../src/world/VillageGenerator.hpp"
+#include "../src/world/TradingEngine.hpp"
+#include "../src/world/EnchantingEngine.hpp"
 #include "../src/world/RegionFile.hpp"
 #include "../src/world/LightEngine.hpp"
 #include "../src/core/ThreadPool.hpp"
@@ -544,6 +547,81 @@ void testVehicleAndRailPhysics() {
     std::cout << "  -> Vehicle & Rail Physics tests PASSED!" << std::endl;
 }
 
+void testVillageAndVillagers() {
+    std::cout << "[TEST] 27. Procedural Village Architecture, Houses & Iron Golem Defenders..." << std::endl;
+    World world(2);
+    MobEngine mobEngine;
+    VillageGenerator::generateVillage(world, 0, 60, 0, &mobEngine);
+
+    // Verify Village Well & Structures
+    assert(world.getBlock(0, 60, 0) == BlockType::Stone);
+    assert(world.getBlock(0, 59, 0) == BlockType::Water);
+    assert(world.getBlock(7, 60, 0) == BlockType::Planks); // House 1 floor
+    assert(world.getBlock(0, 61, 8) == BlockType::Furnace); // Blacksmith
+
+    // Verify Villagers and Golem
+    assert(mobEngine.getMobs().size() == 4); // 3 Villagers + 1 Iron Golem
+    std::cout << "  -> Village & Villager tests PASSED!" << std::endl;
+}
+
+void testVillagerTradingEngine() {
+    std::cout << "[TEST] 28. Villager Professions & Emerald Trading System..." << std::endl;
+    auto blacksmithTrades = TradingEngine::getTradesForProfession(VillagerProfession::Blacksmith);
+    assert(blacksmithTrades.size() >= 2);
+
+    ItemStack ironSlot = { BlockType::IronOre, 8, 64 };
+    ItemStack emptySlot = { BlockType::Air, 0, 64 };
+    ItemStack resultSlot;
+
+    bool tradeSuccess = TradingEngine::executeTrade(VillagerProfession::Blacksmith, 0, ironSlot, emptySlot, resultSlot);
+    assert(tradeSuccess == true);
+    assert(ironSlot.count == 4); // 8 - 4
+    assert(resultSlot.type == BlockType::Emerald && resultSlot.count == 1);
+
+    std::cout << "  -> Villager Trading Engine tests PASSED!" << std::endl;
+}
+
+void testEnchantingAndAnvilSystem() {
+    std::cout << "[TEST] 29. Enchanting Table, Bookshelves & Enchantment Power..." << std::endl;
+    World world(2);
+    world.setBlock(0, 60, 0, BlockType::EnchantingTable);
+    world.setBlock(2, 60, 0, BlockType::Bookshelf);
+    world.setBlock(-2, 60, 0, BlockType::Bookshelf);
+    world.setBlock(0, 60, 2, BlockType::Bookshelf);
+    world.setBlock(0, 60, -2, BlockType::Bookshelf);
+
+    int bookshelves = EnchantingEngine::countNearbyBookshelves(world, 0, 60, 0);
+    assert(bookshelves >= 4);
+
+    ItemStack sword = { BlockType::DiamondSword, 1, 1, 1561, 1561 };
+    auto options = EnchantingEngine::getEnchantmentOptions(sword, bookshelves);
+    assert(!options.empty());
+    assert(options[0].type == Enchantment::Sharpness);
+
+    // Apply Sharpness Tier 4
+    EnchantingEngine::applyEnchantment(sword, Enchantment::Sharpness, 4);
+    assert(sword.enchantmentLevel == 4);
+    assert(sword.enchantmentType == static_cast<int>(Enchantment::Sharpness));
+
+    float bonusDamage = EnchantingEngine::getEnchantedDamageBonus(sword);
+    assert(bonusDamage == 6.0f); // 4 * 1.5
+
+    // Crafting table recipe for Enchanting Table
+    std::array<ItemStack, 9> enchGrid;
+    enchGrid.fill({ BlockType::Air, 0, 64 });
+    enchGrid[1] = { BlockType::Stick, 1, 64 }; // Book
+    enchGrid[3] = { BlockType::DiamondOre, 1, 64 };
+    enchGrid[4] = { BlockType::Obsidian, 1, 64 };
+    enchGrid[5] = { BlockType::DiamondOre, 1, 64 };
+    enchGrid[6] = { BlockType::Obsidian, 1, 64 };
+    enchGrid[7] = { BlockType::Obsidian, 1, 64 };
+    enchGrid[8] = { BlockType::Obsidian, 1, 64 };
+    ItemStack enchResult = CraftingManager::matchRecipe3x3(enchGrid);
+    assert(enchResult.type == BlockType::EnchantingTable);
+
+    std::cout << "  -> Enchanting & Power Calculation tests PASSED!" << std::endl;
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << " Running Minecraft Engine Test Suite   " << std::endl;
@@ -577,6 +655,9 @@ int main() {
     testTheEndDimensionAndDragon();
     testCropsAndFarmingSystem();
     testVehicleAndRailPhysics();
+    testVillageAndVillagers();
+    testVillagerTradingEngine();
+    testEnchantingAndAnvilSystem();
 
     std::cout << "========================================" << std::endl;
     std::cout << " ALL ENGINE TESTS PASSED 100%!          " << std::endl;

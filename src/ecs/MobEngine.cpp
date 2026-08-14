@@ -27,6 +27,8 @@ void MobEngine::spawnMob(MobType type, const glm::vec3& position) {
     else if (type == MobType::Skeleton) mob.health = 20.0f;
     else if (type == MobType::Creeper) mob.health = 20.0f;
     else if (type == MobType::EnderDragon) mob.health = 200.0f; // Boss health
+    else if (type == MobType::IronGolem) mob.health = 100.0f;   // Defender health
+    else if (type == MobType::Villager) mob.health = 20.0f;
     else mob.health = 10.0f; // Pig / Cow
     mob.maxHealth = mob.health;
     m_Mobs.push_back(mob);
@@ -45,6 +47,10 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
                     itemMgr->spawnItemDrop(BlockType::RawPorkchop, 1 + rand() % 2, mob.position);
                 } else if (mob.type == MobType::Zombie) {
                     itemMgr->spawnItemDrop(BlockType::Apple, 1, mob.position);
+                } else if (mob.type == MobType::Villager) {
+                    itemMgr->spawnItemDrop(BlockType::Emerald, 1, mob.position);
+                } else if (mob.type == MobType::IronGolem) {
+                    itemMgr->spawnItemDrop(BlockType::IronOre, 3 + rand() % 3, mob.position);
                 }
             }
             AudioManager::playSound3D(SoundEffect::MobHit, mob.position, playerPos, glm::vec3(0, 0, -1));
@@ -148,11 +154,31 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
             ++it;
             continue;
         }
-        // --- Passive Animal Wandering ---
-        else if (mob.type == MobType::Pig || mob.type == MobType::Cow) {
-            if (rand() % 200 == 0) {
-                mob.velocity.x = (rand() % 100 - 50) * 0.04f;
-                mob.velocity.z = (rand() % 100 - 50) * 0.04f;
+        // --- Iron Golem Defender AI ---
+        else if (mob.type == MobType::IronGolem) {
+            // Find nearby hostile mobs (Zombies, Skeletons) and attack them
+            for (auto& hostile : m_Mobs) {
+                if (hostile.type == MobType::Zombie || hostile.type == MobType::Skeleton) {
+                    float distToHostile = glm::distance(mob.position, hostile.position);
+                    if (distToHostile < 16.0f && distToHostile > 1.5f) {
+                        glm::vec3 dir = glm::normalize(glm::vec3(hostile.position.x - mob.position.x, 0.0f, hostile.position.z - mob.position.z));
+                        mob.velocity.x = dir.x * 2.5f;
+                        mob.velocity.z = dir.z * 2.5f;
+                    } else if (distToHostile <= 1.5f && mob.attackCooldown <= 0.0f) {
+                        hostile.health -= 12.0f; // Iron Golem smash attack
+                        hostile.velocity += glm::vec3(0.0f, 6.0f, 0.0f); // Launch into air
+                        mob.attackCooldown = 1.2f;
+                        AudioManager::playSound(SoundEffect::MobHit);
+                    }
+                    break;
+                }
+            }
+        }
+        // --- Villager & Passive Animal Wandering ---
+        else if (mob.type == MobType::Villager || mob.type == MobType::Pig || mob.type == MobType::Cow) {
+            if (rand() % 150 == 0) {
+                mob.velocity.x = (rand() % 100 - 50) * 0.03f;
+                mob.velocity.z = (rand() % 100 - 50) * 0.03f;
             }
         }
 

@@ -14,7 +14,9 @@ enum class MobType {
     Zombie,
     Skeleton,
     Creeper,
-    EnderDragon
+    EnderDragon,
+    Villager,
+    IronGolem
 };
 
 struct Mob {

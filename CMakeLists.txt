@@ -75,6 +75,9 @@ set(SOURCES
     src/world/StructureGenerator.cpp
     src/world/DimensionManager.cpp
     src/world/CropsEngine.cpp
+    src/world/VillageGenerator.cpp
+    src/world/TradingEngine.cpp
+    src/world/EnchantingEngine.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp
@@ -141,6 +144,9 @@ set(TEST_SOURCES
     src/world/StructureGenerator.cpp
     src/world/DimensionManager.cpp
     src/world/CropsEngine.cpp
+    src/world/VillageGenerator.cpp
+    src/world/TradingEngine.cpp
+    src/world/EnchantingEngine.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp
