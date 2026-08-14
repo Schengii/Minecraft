@@ -108,6 +108,98 @@ ItemStack CraftingManager::matchRecipe3x3(const std::array<ItemStack, 9>& grid) 
         if (surroundedByGold) return { BlockType::GoldenApple, 1, 64 };
     }
 
+    // 6. Armor Suite Recipes (Helmet, Chestplate, Leggings, Boots)
+    // 6a. Helmet (5 items: 0, 1, 2, 3, 5)
+    if (totalItems == 5 && grid[4].isEmpty() && grid[6].isEmpty() && grid[7].isEmpty() && grid[8].isEmpty()) {
+        int helmIndices[5] = { 0, 1, 2, 3, 5 };
+        if (grid[0].type == BlockType::IronOre) {
+            bool allMatch = true;
+            for (int idx : helmIndices) if (grid[idx].type != BlockType::IronOre) allMatch = false;
+            if (allMatch) return { BlockType::IronPickaxe, 1, 1, 165, 165 }; // Helmet Item
+        }
+        if (grid[0].type == BlockType::DiamondOre) {
+            bool allMatch = true;
+            for (int idx : helmIndices) if (grid[idx].type != BlockType::DiamondOre) allMatch = false;
+            if (allMatch) return { BlockType::DiamondPickaxe, 1, 1, 363, 363 }; // Helmet Item
+        }
+    }
+
+    // 6b. Chestplate (8 items: all except index 1 or index 4)
+    if (totalItems == 8 && grid[1].isEmpty()) {
+        int cpIndices[8] = { 0, 2, 3, 4, 5, 6, 7, 8 };
+        if (grid[0].type == BlockType::IronOre) {
+            bool allMatch = true;
+            for (int idx : cpIndices) if (grid[idx].type != BlockType::IronOre) allMatch = false;
+            if (allMatch) return { BlockType::IronPickaxe, 1, 1, 240, 240 }; // Chestplate Item
+        }
+        if (grid[0].type == BlockType::DiamondOre) {
+            bool allMatch = true;
+            for (int idx : cpIndices) if (grid[idx].type != BlockType::DiamondOre) allMatch = false;
+            if (allMatch) return { BlockType::DiamondPickaxe, 1, 1, 528, 528 }; // Chestplate Item
+        }
+    }
+
+    // 6c. Leggings (7 items: 0,1,2, 3,5, 6,8)
+    if (totalItems == 7 && grid[4].isEmpty() && grid[7].isEmpty()) {
+        int legIndices[7] = { 0, 1, 2, 3, 5, 6, 8 };
+        if (grid[0].type == BlockType::IronOre) {
+            bool allMatch = true;
+            for (int idx : legIndices) if (grid[idx].type != BlockType::IronOre) allMatch = false;
+            if (allMatch) return { BlockType::IronPickaxe, 1, 1, 225, 225 }; // Leggings Item
+        }
+        if (grid[0].type == BlockType::DiamondOre) {
+            bool allMatch = true;
+            for (int idx : legIndices) if (grid[idx].type != BlockType::DiamondOre) allMatch = false;
+            if (allMatch) return { BlockType::DiamondPickaxe, 1, 1, 495, 495 }; // Leggings Item
+        }
+    }
+
+    // 6d. Boots (4 items: 3,5, 6,8 or 0,2, 3,5)
+    if (totalItems == 4 && grid[1].isEmpty() && grid[4].isEmpty() && grid[7].isEmpty()) {
+        if (!grid[0].isEmpty() && !grid[2].isEmpty() && !grid[3].isEmpty() && !grid[5].isEmpty()) {
+            if (grid[0].type == BlockType::IronOre && grid[2].type == BlockType::IronOre && grid[3].type == BlockType::IronOre && grid[5].type == BlockType::IronOre) {
+                return { BlockType::IronPickaxe, 1, 1, 195, 195 }; // Boots Item
+            }
+            if (grid[0].type == BlockType::DiamondOre && grid[2].type == BlockType::DiamondOre && grid[3].type == BlockType::DiamondOre && grid[5].type == BlockType::DiamondOre) {
+                return { BlockType::DiamondPickaxe, 1, 1, 429, 429 }; // Boots Item
+            }
+        }
+        if (!grid[3].isEmpty() && !grid[5].isEmpty() && !grid[6].isEmpty() && !grid[8].isEmpty()) {
+            if (grid[3].type == BlockType::IronOre && grid[5].type == BlockType::IronOre && grid[6].type == BlockType::IronOre && grid[8].type == BlockType::IronOre) {
+                return { BlockType::IronPickaxe, 1, 1, 195, 195 }; // Boots Item
+            }
+            if (grid[3].type == BlockType::DiamondOre && grid[5].type == BlockType::DiamondOre && grid[6].type == BlockType::DiamondOre && grid[8].type == BlockType::DiamondOre) {
+                return { BlockType::DiamondPickaxe, 1, 1, 429, 429 }; // Boots Item
+            }
+        }
+    }
+
+    // 7. Transport & Vehicle Recipes
+    // 7a. Rail Recipe (6 Iron + 1 Stick in center grid[4])
+    if (totalItems == 7 && grid[4].type == BlockType::Stick && grid[1].isEmpty() && grid[7].isEmpty()) {
+        if (grid[0].type == BlockType::IronOre && grid[2].type == BlockType::IronOre &&
+            grid[3].type == BlockType::IronOre && grid[5].type == BlockType::IronOre &&
+            grid[6].type == BlockType::IronOre && grid[8].type == BlockType::IronOre) {
+            return { BlockType::Rail, 16, 64 };
+        }
+    }
+
+    // 7b. Minecart Recipe (5 Iron in U-shape: 3, 5, 6, 7, 8)
+    if (totalItems == 5 && grid[0].isEmpty() && grid[1].isEmpty() && grid[2].isEmpty() && grid[4].isEmpty()) {
+        if (grid[3].type == BlockType::IronOre && grid[5].type == BlockType::IronOre &&
+            grid[6].type == BlockType::IronOre && grid[7].type == BlockType::IronOre && grid[8].type == BlockType::IronOre) {
+            return { BlockType::Minecart, 1, 1 };
+        }
+    }
+
+    // 7c. Boat Recipe (5 Planks in U-shape: 3, 5, 6, 7, 8)
+    if (totalItems == 5 && grid[0].isEmpty() && grid[1].isEmpty() && grid[2].isEmpty() && grid[4].isEmpty()) {
+        if (grid[3].type == BlockType::Planks && grid[5].type == BlockType::Planks &&
+            grid[6].type == BlockType::Planks && grid[7].type == BlockType::Planks && grid[8].type == BlockType::Planks) {
+            return { BlockType::Boat, 1, 1 };
+        }
+    }
+
     return { BlockType::Air, 0, 64 };
 }
 

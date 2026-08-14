@@ -19,13 +19,30 @@ A high-performance, modular 3D voxel game engine written in **C++20** and **Open
   - 🎛️ **Lever (`Lever`)**: Interactive state toggling on right-click.
   - 💡 **Redstone Lamp (`RedstoneLamp`)**: Automatic visual light emission upon active redstone power.
 
-### 🏔️ Greedy Meshing Algorithm (`ChunkMesh`)
-- Quad-merging quad face optimization reducing vertex memory footprint and draw calls by up to **80%**.
-- **Two-Pass Mesh Rendering**: Separate transparent render passes for water and glass blocks eliminating depth-sorting artifacts.
+### 🌌 Multi-Dimension System (`DimensionManager`)
+- 🌍 **Overworld**: Multi-biome world with dynamic weather, cave networks, vegetation, and day-night cycle.
+- 🔥 **The Nether (`DimensionType::Nether`)**: Bedrock ceilings/floors, vast lava oceans, Soul Sand, Netherrack, Glowstone stalactites and working Nether Portals.
+- 🐉 **The End (`DimensionType::TheEnd`)**: Floating End Stone islands, towering Obsidian Pillars with glowing crystals, central exit End Portal, custom void skybox, and **Ender Dragon Boss AI** (200 HP, 3D aerial flight, swooping dive attacks, heavy knockback).
 
-### 🌍 World Generation & Biomes (`Biome`)
-- Multi-biome procedural terrain using Perlin/Simplex noise (Plains, Desert with Cacti, Birch & Oak Forests, Snowy Mountains).
-- 3D Noise Cave Systems, Lava lakes, and ore veins (Diamond, Gold, Iron, Coal).
+### 🌾 Agricultural Crops & Farming Engine (`CropsEngine`)
+- Cultivation of **Wheat**, **Carrots**, and **Potatoes** (`WheatCrop`, `CarrotCrop`, `PotatoCrop`).
+- **Growth Stages (0–7)**: Realistic growth progression accelerated by adjacent water soil irrigation and bone meal fertilization.
+- Drop yield drops on harvesting fully mature crops.
+
+### 🚂 Rail Network & Vehicle Physics (`PhysicsEngine` & `CraftingManager`)
+- **Rails & Powered Rails**: Craftable 16x rail tracks and velocity-boosted powered rails.
+- **Vehicles (`Minecart` & `Boat`)**:
+  - Minecarts with smooth rail track snapping, momentum preservation, and powered rail acceleration.
+  - Wooden Boats with water buoyancy, drag, and gliding mechanics.
+
+### 🛡️ Armor Suite & Extended 3x3 Crafting (`CraftingManager` & `PlayerStats`)
+- Full armor sets (Helmets, Chestplates, Leggings, Boots) crafted with Iron and Diamond in 3x3 Crafting Tables.
+- Dynamic Damage Reduction (up to 80%) based on total equipped armor points and item durability wear.
+
+### 🏔️ Greedy Meshing & Frustum Culling (`ChunkMesh` & `FrustumCuller`)
+- Quad-merging quad face optimization reducing vertex memory footprint and draw calls by up to **80%**.
+- **Camera Frustum Culling**: 6-plane AABB chunk visibility testing eliminating off-screen chunk render overhead.
+- **Two-Pass Mesh Rendering**: Separate transparent render passes for water, bamboo, and glass blocks eliminating depth-sorting artifacts.
 
 ### ☀️ Dynamic Time & Sky System (`Skybox` & `TimeManager`)
 - 24,000-tick daily cycle with dynamic sky color interpolation, directional sun/moon movement, and custom skybox.

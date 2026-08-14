@@ -13,7 +13,8 @@ enum class MobType {
     Cow,
     Zombie,
     Skeleton,
-    Creeper
+    Creeper,
+    EnderDragon
 };
 
 struct Mob {

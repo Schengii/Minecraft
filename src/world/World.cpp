@@ -1,5 +1,7 @@
 #include "World.hpp"
+#include "../renderer/FrustumCuller.hpp"
 #include <iostream>
+#include <cmath>
 
 namespace Minecraft {
 
@@ -54,11 +56,31 @@ void World::update(const glm::vec3& playerPos) {
     }
 }
 
-void World::render() {
+void World::render(const FrustumCuller* culler) {
     for (auto& [pos, chunk] : m_Chunks) {
-        if (chunk) {
-            chunk->render();
+        if (!chunk) continue;
+        if (culler) {
+            glm::vec3 minAABB(pos.x * CHUNK_SIZE_X, 0.0f, pos.y * CHUNK_SIZE_Z);
+            glm::vec3 maxAABB(minAABB.x + CHUNK_SIZE_X, static_cast<float>(CHUNK_SIZE_Y), minAABB.z + CHUNK_SIZE_Z);
+            if (!culler->isBoxVisible(minAABB, maxAABB)) {
+                continue;
+            }
         }
+        chunk->render();
+    }
+}
+
+void World::renderTransparent(const FrustumCuller* culler) {
+    for (auto& [pos, chunk] : m_Chunks) {
+        if (!chunk) continue;
+        if (culler) {
+            glm::vec3 minAABB(pos.x * CHUNK_SIZE_X, 0.0f, pos.y * CHUNK_SIZE_Z);
+            glm::vec3 maxAABB(minAABB.x + CHUNK_SIZE_X, static_cast<float>(CHUNK_SIZE_Y), minAABB.z + CHUNK_SIZE_Z);
+            if (!culler->isBoxVisible(minAABB, maxAABB)) {
+                continue;
+            }
+        }
+        chunk->renderTransparent();
     }
 }
 

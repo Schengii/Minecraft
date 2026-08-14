@@ -41,6 +41,7 @@ public:
     void generateTerrain();
     void buildMesh();
     void render();
+    void renderTransparent();
 
     bool isDirty() const { return m_IsDirty; }
     void setDirty(bool dirty) { m_IsDirty = dirty; }

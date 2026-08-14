@@ -74,6 +74,7 @@ set(SOURCES
     src/world/FurnaceBlock.cpp
     src/world/StructureGenerator.cpp
     src/world/DimensionManager.cpp
+    src/world/CropsEngine.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp
@@ -139,6 +140,7 @@ set(TEST_SOURCES
     src/world/FurnaceBlock.cpp
     src/world/StructureGenerator.cpp
     src/world/DimensionManager.cpp
+    src/world/CropsEngine.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp

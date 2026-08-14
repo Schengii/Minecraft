@@ -3,7 +3,9 @@
 namespace Minecraft {
 
 BiomeType Biome::getBiome(float temperature, float moisture) {
-    if (temperature > 0.3f && moisture < -0.1f) {
+    if (temperature > 0.25f && moisture > 0.25f) {
+        return BiomeType::Jungle;
+    } else if (temperature > 0.3f && moisture < -0.1f) {
         return BiomeType::Desert;
     } else if (temperature < -0.2f) {
         return BiomeType::Mountains;

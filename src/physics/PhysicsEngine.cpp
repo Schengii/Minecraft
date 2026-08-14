@@ -116,4 +116,51 @@ bool PhysicsEngine::checkCollision(World& world, const AABB& playerBox) {
     return false;
 }
 
+void PhysicsEngine::updateMinecart(World& world, glm::vec3& position, glm::vec3& velocity, float deltaTime) {
+    int px = static_cast<int>(std::floor(position.x));
+    int py = static_cast<int>(std::floor(position.y));
+    int pz = static_cast<int>(std::floor(position.z));
+
+    BlockType onBlock = world.getBlock(px, py, pz);
+    BlockType belowBlock = world.getBlock(px, py - 1, pz);
+
+    if (onBlock == BlockType::PoweredRail || belowBlock == BlockType::PoweredRail) {
+        // Boost velocity on powered rail
+        velocity *= 1.5f;
+    } else if (onBlock == BlockType::Rail || belowBlock == BlockType::Rail) {
+        // Low friction rolling on standard rail
+        velocity.x *= 0.98f;
+        velocity.z *= 0.98f;
+    } else {
+        // High ground friction off-rail
+        velocity.x *= 0.70f;
+        velocity.z *= 0.70f;
+    }
+
+    position += velocity * deltaTime;
+}
+
+void PhysicsEngine::updateBoat(World& world, glm::vec3& position, glm::vec3& velocity, float deltaTime) {
+    int px = static_cast<int>(std::floor(position.x));
+    int py = static_cast<int>(std::floor(position.y));
+    int pz = static_cast<int>(std::floor(position.z));
+
+    bool inWater = (world.getBlock(px, py, pz) == BlockType::Water || world.getBlock(px, py - 1, pz) == BlockType::Water);
+
+    if (inWater) {
+        // Water buoyancy & smooth glide
+        velocity.y = 0.0f;
+        position.y = std::floor(position.y) + 0.2f;
+        velocity.x *= 0.96f;
+        velocity.z *= 0.96f;
+    } else {
+        // Gravity on land
+        velocity.y -= 18.0f * deltaTime;
+        velocity.x *= 0.80f;
+        velocity.z *= 0.80f;
+    }
+
+    position += velocity * deltaTime;
+}
+
 }

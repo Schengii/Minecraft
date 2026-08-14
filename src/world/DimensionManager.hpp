@@ -9,7 +9,8 @@ namespace Minecraft {
 
 enum class DimensionType {
     Overworld,
-    Nether
+    Nether,
+    TheEnd
 };
 
 class DimensionManager {
@@ -28,9 +29,11 @@ private:
     DimensionType m_CurrentDimension = DimensionType::Overworld;
     std::unique_ptr<World> m_Overworld;
     std::unique_ptr<World> m_NetherWorld;
+    std::unique_ptr<World> m_EndWorld;
     std::unique_ptr<World> m_CurrentWorld;
 
     void generateNetherTerrain(World& nether);
+    void generateEndTerrain(World& endWorld);
 };
 
 }

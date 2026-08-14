@@ -26,6 +26,7 @@ void MobEngine::spawnMob(MobType type, const glm::vec3& position) {
     if (type == MobType::Zombie) mob.health = 20.0f;
     else if (type == MobType::Skeleton) mob.health = 20.0f;
     else if (type == MobType::Creeper) mob.health = 20.0f;
+    else if (type == MobType::EnderDragon) mob.health = 200.0f; // Boss health
     else mob.health = 10.0f; // Pig / Cow
     mob.maxHealth = mob.health;
     m_Mobs.push_back(mob);
@@ -125,6 +126,27 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
                     mob.fuseTimer = std::max(0.0f, mob.fuseTimer - deltaTime);
                 }
             }
+        }
+        // --- Ender Dragon Flying Boss AI ---
+        else if (mob.type == MobType::EnderDragon) {
+            // Aerial flight & circling player
+            glm::vec3 target = playerPos + glm::vec3(std::sin(mob.fuseTimer) * 15.0f, 10.0f + std::cos(mob.fuseTimer) * 4.0f, std::cos(mob.fuseTimer) * 15.0f);
+            mob.fuseTimer += deltaTime * 1.2f;
+
+            glm::vec3 flyDir = glm::normalize(target - mob.position);
+            mob.velocity = flyDir * 8.0f;
+            mob.position += mob.velocity * deltaTime;
+
+            // Swoop attack when close
+            if (distToPlayer < 4.0f && mob.attackCooldown <= 0.0f) {
+                playerHealth -= 8.0f; // Boss heavy knockback and damage
+                playerVel += glm::normalize(playerPos - mob.position) * 12.0f + glm::vec3(0, 6, 0);
+                mob.attackCooldown = 2.5f;
+                AudioManager::playSound(SoundEffect::Explosion);
+            }
+            if (mob.attackCooldown > 0.0f) mob.attackCooldown -= deltaTime;
+            ++it;
+            continue;
         }
         // --- Passive Animal Wandering ---
         else if (mob.type == MobType::Pig || mob.type == MobType::Cow) {

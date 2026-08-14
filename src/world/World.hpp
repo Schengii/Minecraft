@@ -22,13 +22,16 @@ namespace std {
 
 namespace Minecraft {
 
+class FrustumCuller;
+
 class World {
 public:
     World(int renderDistance = 6);
     ~World();
 
     void update(const glm::vec3& playerPos);
-    void render();
+    void render(const FrustumCuller* culler = nullptr);
+    void renderTransparent(const FrustumCuller* culler = nullptr);
 
     Chunk* getChunk(int chunkX, int chunkZ);
     BlockType getBlock(int worldX, int worldY, int worldZ);

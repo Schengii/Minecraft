@@ -11,6 +11,8 @@ class World;
 class PhysicsEngine {
 public:
     static void updatePlayer(World& world, glm::vec3& position, glm::vec3& velocity, bool& isGrounded, bool& inWater, bool isFlying, bool isSneaking, float deltaTime);
+    static void updateMinecart(World& world, glm::vec3& position, glm::vec3& velocity, float deltaTime);
+    static void updateBoat(World& world, glm::vec3& position, glm::vec3& velocity, float deltaTime);
     static bool isPointInWater(World& world, const glm::vec3& point);
 
 private:

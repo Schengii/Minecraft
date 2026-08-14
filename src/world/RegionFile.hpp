@@ -7,7 +7,9 @@
 #include <unordered_map>
 #include <fstream>
 #include <memory>
+#ifndef GLM_ENABLE_EXPERIMENTAL
 #define GLM_ENABLE_EXPERIMENTAL
+#endif
 #include <glm/glm.hpp>
 #include <glm/gtx/hash.hpp>
 #include "Block.hpp"

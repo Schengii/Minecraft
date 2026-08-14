@@ -193,6 +193,12 @@
 },
 {
   "directory": "C:/Users/sche-/Desktop/Programmieren Projekte/Minecraft/build",
+  "command": "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe\"  /nologo /TP -DGLM_ENABLE_EXPERIMENTAL -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\src -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\src\\vendor -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\build\\_deps\\glm-src -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\build\\_deps\\entt-src\\SINGLE~1 -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\build\\_deps\\glfw-src\\include /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /FoCMakeFiles\\Minecraft.dir\\src\\world\\CropsEngine.cpp.obj /FdCMakeFiles\\Minecraft.dir\\ /FS -c \"C:\\Users\\sche-\\Desktop\\Programmieren Projekte\\Minecraft\\src\\world\\CropsEngine.cpp\"",
+  "file": "C:/Users/sche-/Desktop/Programmieren Projekte/Minecraft/src/world/CropsEngine.cpp",
+  "output": "CMakeFiles/Minecraft.dir/src/world/CropsEngine.cpp.obj"
+},
+{
+  "directory": "C:/Users/sche-/Desktop/Programmieren Projekte/Minecraft/build",
   "command": "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe\"  /nologo /TP -DGLM_ENABLE_EXPERIMENTAL -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\src -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\src\\vendor -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\build\\_deps\\glm-src -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\build\\_deps\\entt-src\\SINGLE~1 -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\build\\_deps\\glfw-src\\include /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /FoCMakeFiles\\Minecraft.dir\\src\\physics\\PhysicsEngine.cpp.obj /FdCMakeFiles\\Minecraft.dir\\ /FS -c \"C:\\Users\\sche-\\Desktop\\Programmieren Projekte\\Minecraft\\src\\physics\\PhysicsEngine.cpp\"",
   "file": "C:/Users/sche-/Desktop/Programmieren Projekte/Minecraft/src/physics/PhysicsEngine.cpp",
   "output": "CMakeFiles/Minecraft.dir/src/physics/PhysicsEngine.cpp.obj"
@@ -466,6 +472,12 @@
   "command": "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe\"  /nologo /TP -DGLM_ENABLE_EXPERIMENTAL -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\src -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\src\\vendor -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\build\\_deps\\glm-src -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\build\\_deps\\entt-src\\SINGLE~1 -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\build\\_deps\\glfw-src\\include /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /FoCMakeFiles\\TestEngine.dir\\src\\world\\DimensionManager.cpp.obj /FdCMakeFiles\\TestEngine.dir\\ /FS -c \"C:\\Users\\sche-\\Desktop\\Programmieren Projekte\\Minecraft\\src\\world\\DimensionManager.cpp\"",
   "file": "C:/Users/sche-/Desktop/Programmieren Projekte/Minecraft/src/world/DimensionManager.cpp",
   "output": "CMakeFiles/TestEngine.dir/src/world/DimensionManager.cpp.obj"
+},
+{
+  "directory": "C:/Users/sche-/Desktop/Programmieren Projekte/Minecraft/build",
+  "command": "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe\"  /nologo /TP -DGLM_ENABLE_EXPERIMENTAL -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\src -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\src\\vendor -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\build\\_deps\\glm-src -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\build\\_deps\\entt-src\\SINGLE~1 -IC:\\Users\\sche-\\Desktop\\PROGRA~1\\MINECR~2\\build\\_deps\\glfw-src\\include /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /FoCMakeFiles\\TestEngine.dir\\src\\world\\CropsEngine.cpp.obj /FdCMakeFiles\\TestEngine.dir\\ /FS -c \"C:\\Users\\sche-\\Desktop\\Programmieren Projekte\\Minecraft\\src\\world\\CropsEngine.cpp\"",
+  "file": "C:/Users/sche-/Desktop/Programmieren Projekte/Minecraft/src/world/CropsEngine.cpp",
+  "output": "CMakeFiles/TestEngine.dir/src/world/CropsEngine.cpp.obj"
 },
 {
   "directory": "C:/Users/sche-/Desktop/Programmieren Projekte/Minecraft/build",

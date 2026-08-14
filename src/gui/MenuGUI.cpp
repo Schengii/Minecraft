@@ -56,14 +56,15 @@ void MenuGUI::renderQuad(const glm::vec2& position, const glm::vec2& size, const
     if (m_VAO == 0) return;
 
     m_UIShader->use();
-    glm::mat4 projection = glm::ortho(0.0f, (float)m_Width, (float)m_Height, 0.0f, -1.0f, 1.0f);
-    m_UIShader->setMat4("projection", projection);
+    m_UIShader->setVec4("u_Color", color);
+    m_UIShader->setBool("u_UseTexture", false);
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(position, 0.0f));
     model = glm::scale(model, glm::vec3(size, 1.0f));
-    m_UIShader->setMat4("model", model);
-    m_UIShader->setVec4("color", color);
+
+    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(m_Width), static_cast<float>(m_Height), 0.0f, -1.0f, 1.0f);
+    m_UIShader->setMat4("u_Projection", projection * model);
 
     glBindVertexArray(m_VAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);

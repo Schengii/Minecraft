@@ -9,7 +9,8 @@ enum class BiomeType {
     Plains,
     Desert,
     Forest,
-    Mountains
+    Mountains,
+    Jungle
 };
 
 class Biome {

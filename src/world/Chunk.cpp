@@ -147,6 +147,31 @@ void Chunk::generateTerrain() {
                     for (int ch = 1; ch <= 3; ++ch) {
                         m_Blocks[x][height + ch][z] = BlockType::Cactus;
                     }
+                } else if (biome == BiomeType::Jungle) {
+                    // Jungle: Tall Rainforest Trees & Bamboo Groves
+                    if (treeChance > 0.65f) {
+                        int trunkHeight = 8;
+                        for (int th = 1; th <= trunkHeight; ++th) {
+                            m_Blocks[x][height + th][z] = BlockType::OakLog;
+                        }
+                        for (int lx = -2; lx <= 2; ++lx) {
+                            for (int lz = -2; lz <= 2; ++lz) {
+                                for (int ly = trunkHeight - 2; ly <= trunkHeight + 1; ++ly) {
+                                    if (m_Blocks[x + lx][height + ly][z + lz] == BlockType::Air) {
+                                        m_Blocks[x + lx][height + ly][z + lz] = BlockType::Leaves;
+                                    }
+                                }
+                            }
+                        }
+                    } else if (treeChance > 0.35f) {
+                        // Bamboo Grove
+                        int bambooHeight = 3 + static_cast<int>(treeChance * 8.0f) % 4;
+                        for (int bh = 1; bh <= bambooHeight; ++bh) {
+                            if (m_Blocks[x][height + bh][z] == BlockType::Air) {
+                                m_Blocks[x][height + bh][z] = BlockType::Bamboo;
+                            }
+                        }
+                    }
                 } else if ((biome == BiomeType::Forest || biome == BiomeType::Plains) && treeChance > 0.60f) {
                     // Oak or Birch Trees
                     BlockType logType = (biome == BiomeType::Forest && treeChance > 0.8f) ? BlockType::BirchLog : BlockType::OakLog;
@@ -160,6 +185,34 @@ void Chunk::generateTerrain() {
                                 if (m_Blocks[x + lx][height + ly][z + lz] == BlockType::Air) {
                                     m_Blocks[x + lx][height + ly][z + lz] = BlockType::Leaves;
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Cave Stalactite / Stalagmite Decoration
+            for (int cy = 10; cy < height - 6; ++cy) {
+                // Stalagmite on cave floor
+                if (m_Blocks[x][cy][z] == BlockType::Air && m_Blocks[x][cy - 1][z] == BlockType::Stone) {
+                    float caveDecorNoise = std::abs(caveNoise.GetNoise(worldX * 8.0f, static_cast<float>(cy), worldZ * 8.0f));
+                    if (caveDecorNoise > 0.65f) {
+                        int spikeHeight = 2;
+                        for (int sh = 0; sh < spikeHeight; ++sh) {
+                            if (m_Blocks[x][cy + sh][z] == BlockType::Air) {
+                                m_Blocks[x][cy + sh][z] = BlockType::Stone;
+                            }
+                        }
+                    }
+                }
+                // Stalactite on cave ceiling
+                if (m_Blocks[x][cy][z] == BlockType::Air && m_Blocks[x][cy + 1][z] == BlockType::Stone) {
+                    float caveDecorNoise = std::abs(caveNoise.GetNoise(worldX * 8.0f + 50.0f, static_cast<float>(cy), worldZ * 8.0f));
+                    if (caveDecorNoise > 0.65f) {
+                        int spikeHeight = 2;
+                        for (int sh = 0; sh < spikeHeight; ++sh) {
+                            if (m_Blocks[x][cy - sh][z] == BlockType::Air) {
+                                m_Blocks[x][cy - sh][z] = BlockType::Stone;
                             }
                         }
                     }
@@ -184,6 +237,12 @@ void Chunk::render() {
     }
     if (m_Mesh) {
         m_Mesh->render();
+    }
+}
+
+void Chunk::renderTransparent() {
+    if (m_Mesh) {
+        m_Mesh->renderTransparent();
     }
 }
 

@@ -361,6 +361,8 @@ void Application::render() {
 
     if (m_DimensionManager->getCurrentDimension() == DimensionType::Nether) {
         skyColor = glm::vec3(0.18f, 0.04f, 0.04f);
+    } else if (m_DimensionManager->getCurrentDimension() == DimensionType::TheEnd) {
+        skyColor = glm::vec3(0.06f, 0.02f, 0.09f);
     }
 
     // 1. Shadow Map Pass
@@ -390,6 +392,10 @@ void Application::render() {
         glm::mat4 view = m_Camera->getViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
 
+        if (m_FrustumCuller) {
+            m_FrustumCuller->update(projection * view);
+        }
+
         m_BlockShader->setMat4("u_Projection", projection);
         m_BlockShader->setMat4("u_View", view);
         m_BlockShader->setMat4("u_Model", model);
@@ -412,7 +418,13 @@ void Application::render() {
             m_BlockShader->setMat4("u_LightSpaceMatrix", lightSpaceMatrix);
         }
 
-        world->render();
+        world->render(m_FrustumCuller.get());
+
+        // Transparent pass (water, glass)
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        world->renderTransparent(m_FrustumCuller.get());
+        glDisable(GL_BLEND);
     }
 
     // Render screen quad with Post-Processing
