@@ -3,9 +3,25 @@
 
 #include "ItemStack.hpp"
 #include <array>
+#include <vector>
 #include <algorithm>
 
 namespace Minecraft {
+
+enum class StatusEffect {
+    None,
+    Speed,
+    JumpBoost,
+    NightVision,
+    Regeneration,
+    Poison
+};
+
+struct ActiveEffect {
+    StatusEffect effect = StatusEffect::None;
+    float duration = 0.0f;
+    int amplifier = 1;
+};
 
 class PlayerStats {
 public:
@@ -30,6 +46,15 @@ public:
     float applyDamageReduction(float incomingDamage);
     void applyArmorDurabilityDamage();
 
+    // Potion Status Effects
+    void addEffect(StatusEffect effect, float duration, int amplifier = 1);
+    bool hasEffect(StatusEffect effect) const;
+    float getSpeedMultiplier() const;
+    float getJumpMultiplier() const;
+    bool hasNightVision() const { return hasEffect(StatusEffect::NightVision); }
+
+    const std::vector<ActiveEffect>& getActiveEffects() const { return m_ActiveEffects; }
+
 private:
     float m_Health = 20.0f;
     float m_Hunger = 20.0f;
@@ -37,6 +62,7 @@ private:
     float m_RegenTimer = 0.0f;
     float m_StarveTimer = 0.0f;
     std::array<ItemStack, 4> m_ArmorSlots;
+    std::vector<ActiveEffect> m_ActiveEffects;
 };
 
 }

@@ -12,6 +12,9 @@ Chunk::Chunk(int chunkX, int chunkZ)
     : m_ChunkX(chunkX), m_ChunkZ(chunkZ)
 {
     m_Mesh = std::make_unique<ChunkMesh>();
+    for (int sy = 0; sy < 16; ++sy) {
+        m_Sections[sy] = std::make_unique<ChunkSection>(sy);
+    }
 
     if (!SaveSystem::loadChunk(*this)) {
         generateTerrain();
@@ -32,8 +35,14 @@ BlockType Chunk::getBlock(int x, int y, int z) const {
 
 void Chunk::setBlock(int x, int y, int z, BlockType type) {
     if (x < 0 || x >= CHUNK_SIZE_X || y < 0 || y >= CHUNK_SIZE_Y || z < 0 || z >= CHUNK_SIZE_Z) return;
+    BlockType old = m_Blocks[x][y][z];
     m_Blocks[x][y][z] = type;
     m_IsDirty = true;
+
+    int sy = y / 16;
+    if (sy >= 0 && sy < 16 && m_Sections[sy]) {
+        m_Sections[sy]->notifyBlockChange(old, type);
+    }
 }
 
 int Chunk::getSunlight(int x, int y, int z) const {
@@ -126,7 +135,7 @@ void Chunk::generateTerrain() {
                         } else if (y <= 60 && oreVal > 0.52f) {
                             m_Blocks[x][y][z] = BlockType::CoalOre;
                         } else {
-                            m_Blocks[x][y][z] = BlockType::Stone;
+                            m_Blocks[x][y][z] = (y < 16) ? BlockType::Obsidian : BlockType::Stone; // Deepslate layer
                         }
                     }
                 } else if (y < height) {
@@ -135,6 +144,12 @@ void Chunk::generateTerrain() {
                     m_Blocks[x][y][z] = topBlock;
                 } else {
                     m_Blocks[x][y][z] = BlockType::Air;
+                }
+
+                // Update section non-air count
+                int sy = y / 16;
+                if (m_Blocks[x][y][z] != BlockType::Air && m_Sections[sy]) {
+                    m_Sections[sy]->notifyBlockChange(BlockType::Air, m_Blocks[x][y][z]);
                 }
             }
 
@@ -190,38 +205,22 @@ void Chunk::generateTerrain() {
                     }
                 }
             }
-
-            // Cave Stalactite / Stalagmite Decoration
-            for (int cy = 10; cy < height - 6; ++cy) {
-                // Stalagmite on cave floor
-                if (m_Blocks[x][cy][z] == BlockType::Air && m_Blocks[x][cy - 1][z] == BlockType::Stone) {
-                    float caveDecorNoise = std::abs(caveNoise.GetNoise(worldX * 8.0f, static_cast<float>(cy), worldZ * 8.0f));
-                    if (caveDecorNoise > 0.65f) {
-                        int spikeHeight = 2;
-                        for (int sh = 0; sh < spikeHeight; ++sh) {
-                            if (m_Blocks[x][cy + sh][z] == BlockType::Air) {
-                                m_Blocks[x][cy + sh][z] = BlockType::Stone;
-                            }
-                        }
-                    }
-                }
-                // Stalactite on cave ceiling
-                if (m_Blocks[x][cy][z] == BlockType::Air && m_Blocks[x][cy + 1][z] == BlockType::Stone) {
-                    float caveDecorNoise = std::abs(caveNoise.GetNoise(worldX * 8.0f + 50.0f, static_cast<float>(cy), worldZ * 8.0f));
-                    if (caveDecorNoise > 0.65f) {
-                        int spikeHeight = 2;
-                        for (int sh = 0; sh < spikeHeight; ++sh) {
-                            if (m_Blocks[x][cy - sh][z] == BlockType::Air) {
-                                m_Blocks[x][cy - sh][z] = BlockType::Stone;
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
     LightEngine::calculateChunkLighting(*this);
     m_IsDirty = true;
+}
+
+void Chunk::buildMeshDataAsync() {
+    m_PendingMeshData = std::make_unique<MeshData>(ChunkMesh::buildMeshData(*this));
+}
+
+void Chunk::uploadPendingMesh() {
+    if (m_PendingMeshData && m_Mesh) {
+        m_Mesh->uploadMeshData(*m_PendingMeshData);
+        m_PendingMeshData.reset();
+        m_IsDirty = false;
+    }
 }
 
 void Chunk::buildMesh() {

@@ -14,9 +14,11 @@ public:
 
     void resize(unsigned int width, unsigned int height);
     void bindForWriting();
-    void unbindAndRender(bool isUnderwater);
+    void unbindAndRender(bool isUnderwater, bool hasNightVision = false, bool bloomEnabled = true);
 
     GLuint getColorTexture() const { return m_ColorTex; }
+    bool isBloomEnabled() const { return m_BloomEnabled; }
+    void setBloomEnabled(bool enabled) { m_BloomEnabled = enabled; }
 
 private:
     GLuint m_FBO = 0;
@@ -27,6 +29,7 @@ private:
 
     unsigned int m_Width = 1280;
     unsigned int m_Height = 720;
+    bool m_BloomEnabled = true;
     std::unique_ptr<Shader> m_Shader;
 
     void initQuad();

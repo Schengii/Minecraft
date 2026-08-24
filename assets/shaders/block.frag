@@ -5,6 +5,7 @@ out vec4 FragColor;
 in vec2 TexCoord;
 in vec3 Normal;
 in float Light;
+in float AO;
 in vec3 FragPos;
 
 uniform sampler2D u_Texture;
@@ -25,14 +26,17 @@ void main() {
     
     vec3 ambient = u_AmbientLight * u_SkyColor;
     vec3 diffuse = diff * u_SunColor;
-    vec3 lighting = (ambient + diffuse) * Light;
+
+    // Smooth Vertex Ambient Occlusion factor
+    float aoFactor = clamp(AO, 0.2, 1.0);
+    vec3 lighting = (ambient + diffuse) * Light * aoFactor;
 
     // Handheld Light calculation
     if (u_HasHandheldLight) {
         float dist = length(FragPos - u_PlayerPos);
-        if (dist < 12.0) {
-            float handLight = clamp(1.0 - (dist / 12.0), 0.0, 1.0);
-            lighting += vec3(handLight * 0.75, handLight * 0.65, handLight * 0.45); // Warm torch glow
+        if (dist < 14.0) {
+            float handLight = clamp(1.0 - (dist / 14.0), 0.0, 1.0);
+            lighting += vec3(handLight * 0.85, handLight * 0.70, handLight * 0.45); // Warm torch glow
         }
     }
 

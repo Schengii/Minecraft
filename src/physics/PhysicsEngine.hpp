@@ -15,11 +15,9 @@ public:
     static void updateBoat(World& world, glm::vec3& position, glm::vec3& velocity, float deltaTime);
     static bool isPointInWater(World& world, const glm::vec3& point);
 
-private:
     static bool checkCollision(World& world, const AABB& playerBox);
 };
 
 }
 
 #endif // PHYSICSENGINE_HPP
-

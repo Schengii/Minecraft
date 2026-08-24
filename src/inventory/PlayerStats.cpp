@@ -1,75 +1,127 @@
 #include "PlayerStats.hpp"
-#include "../audio/AudioManager.hpp"
-#include <algorithm>
 
 namespace Minecraft {
 
 PlayerStats::PlayerStats() {
     for (auto& slot : m_ArmorSlots) {
-        slot.clear();
-    }
-}
-
-void PlayerStats::update(float deltaTime) {
-    // 1. Process Exhaustion
-    while (m_Exhaustion >= 4.0f) {
-        m_Hunger = std::max(0.0f, m_Hunger - 1.0f);
-        m_Exhaustion -= 4.0f;
-    }
-
-    // 2. Passive Health Regeneration when well-fed (Hunger >= 18)
-    if (m_Hunger >= 18.0f && m_Health < 20.0f) {
-        m_RegenTimer += deltaTime;
-        if (m_RegenTimer >= 4.0f) {
-            m_RegenTimer = 0.0f;
-            setHealth(m_Health + 1.0f);
-            addExhaustion(1.5f);
-        }
-    } else {
-        m_RegenTimer = 0.0f;
-    }
-
-    // 3. Starvation Damage when completely out of food (Hunger == 0)
-    if (m_Hunger <= 0.0f) {
-        m_StarveTimer += deltaTime;
-        if (m_StarveTimer >= 4.0f) {
-            m_StarveTimer = 0.0f;
-            setHealth(m_Health - 1.0f);
-        }
-    } else {
-        m_StarveTimer = 0.0f;
+        slot = { BlockType::Air, 0, 64 };
     }
 }
 
 int PlayerStats::getTotalArmorPoints() const {
     int points = 0;
-    for (const auto& armor : m_ArmorSlots) {
-        if (armor.isEmpty()) continue;
-        if (armor.type == BlockType::DiamondPickaxe) points += 5; // Armor tier bonus
-        else if (armor.type == BlockType::IronPickaxe) points += 3;
-        else if (armor.type == BlockType::WoodPickaxe) points += 1;
-        else points += 2;
+    for (const auto& slot : m_ArmorSlots) {
+        if (slot.type != BlockType::Air) {
+            points += 4;
+        }
     }
-    return std::min(20, points);
+    return points;
 }
 
 float PlayerStats::applyDamageReduction(float incomingDamage) {
-    int armorPoints = getTotalArmorPoints();
-    float defensePercent = armorPoints * 0.04f; // 4% reduction per armor point, up to 80%
-    float finalDamage = incomingDamage * (1.0f - defensePercent);
-    applyArmorDurabilityDamage();
-    return std::max(0.0f, finalDamage);
+    int points = getTotalArmorPoints();
+    float reduction = static_cast<float>(points) * 0.04f;
+    reduction = std::clamp(reduction, 0.0f, 0.80f);
+    return incomingDamage * (1.0f - reduction);
 }
 
 void PlayerStats::applyArmorDurabilityDamage() {
-    for (auto& armor : m_ArmorSlots) {
-        if (!armor.isEmpty() && armor.durability > 0) {
-            armor.durability--;
-            if (armor.durability == 0) {
-                armor.clear();
-                AudioManager::playSound(SoundEffect::BlockBreak);
+    for (auto& slot : m_ArmorSlots) {
+        if (slot.type != BlockType::Air && slot.durability > 0) {
+            slot.durability--;
+            if (slot.durability <= 0) {
+                slot = { BlockType::Air, 0, 64 };
             }
         }
+    }
+}
+
+void PlayerStats::addEffect(StatusEffect effect, float duration, int amplifier) {
+    for (auto& active : m_ActiveEffects) {
+        if (active.effect == effect) {
+            active.duration = std::max(active.duration, duration);
+            active.amplifier = std::max(active.amplifier, amplifier);
+            return;
+        }
+    }
+    m_ActiveEffects.push_back({ effect, duration, amplifier });
+}
+
+bool PlayerStats::hasEffect(StatusEffect effect) const {
+    for (const auto& active : m_ActiveEffects) {
+        if (active.effect == effect && active.duration > 0.0f) return true;
+    }
+    return false;
+}
+
+float PlayerStats::getSpeedMultiplier() const {
+    float mult = 1.0f;
+    for (const auto& active : m_ActiveEffects) {
+        if (active.effect == StatusEffect::Speed && active.duration > 0.0f) {
+            mult += 0.20f * active.amplifier;
+        }
+    }
+    return mult;
+}
+
+float PlayerStats::getJumpMultiplier() const {
+    float mult = 1.0f;
+    for (const auto& active : m_ActiveEffects) {
+        if (active.effect == StatusEffect::JumpBoost && active.duration > 0.0f) {
+            mult += 0.35f * active.amplifier;
+        }
+    }
+    return mult;
+}
+
+void PlayerStats::update(float deltaTime) {
+    // 1. Update Status Effects
+    for (auto it = m_ActiveEffects.begin(); it != m_ActiveEffects.end(); ) {
+        it->duration -= deltaTime;
+        if (it->effect == StatusEffect::Regeneration && it->duration > 0.0f) {
+            setHealth(m_Health + 1.0f * deltaTime);
+        } else if (it->effect == StatusEffect::Poison && it->duration > 0.0f) {
+            if (m_Health > 1.0f) {
+                setHealth(m_Health - 0.5f * deltaTime);
+            }
+        }
+
+        if (it->duration <= 0.0f) {
+            it = m_ActiveEffects.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    // 2. Natural Health Regeneration when hunger >= 18
+    if (m_Hunger >= 18.0f && m_Health < 20.0f) {
+        m_RegenTimer += deltaTime;
+        if (m_RegenTimer >= 4.0f) {
+            m_Health = std::min(20.0f, m_Health + 1.0f);
+            m_Exhaustion += 6.0f;
+            m_RegenTimer = 0.0f;
+        }
+    } else {
+        m_RegenTimer = 0.0f;
+    }
+
+    // 3. Starvation Damage when hunger == 0
+    if (m_Hunger <= 0.0f) {
+        m_StarveTimer += deltaTime;
+        if (m_StarveTimer >= 4.0f) {
+            if (m_Health > 1.0f) {
+                m_Health -= 1.0f;
+            }
+            m_StarveTimer = 0.0f;
+        }
+    } else {
+        m_StarveTimer = 0.0f;
+    }
+
+    // 4. Exhaustion to Hunger depletion
+    if (m_Exhaustion >= 4.0f) {
+        m_Hunger = std::max(0.0f, m_Hunger - 1.0f);
+        m_Exhaustion -= 4.0f;
     }
 }
 

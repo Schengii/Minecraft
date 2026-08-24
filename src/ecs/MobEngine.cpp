@@ -7,6 +7,9 @@
 #include <cmath>
 #include <iostream>
 #include <algorithm>
+#include <queue>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace Minecraft {
 
@@ -26,13 +29,103 @@ void MobEngine::spawnMob(MobType type, const glm::vec3& position) {
     if (type == MobType::Zombie) mob.health = 20.0f;
     else if (type == MobType::Skeleton) mob.health = 20.0f;
     else if (type == MobType::Creeper) mob.health = 20.0f;
-    else if (type == MobType::EnderDragon) mob.health = 200.0f; // Boss health
-    else if (type == MobType::IronGolem) mob.health = 100.0f;   // Defender health
+    else if (type == MobType::EnderDragon) mob.health = 200.0f;
+    else if (type == MobType::IronGolem) mob.health = 100.0f;
     else if (type == MobType::Villager) mob.health = 20.0f;
     else mob.health = 10.0f; // Pig / Cow
     mob.maxHealth = mob.health;
     m_Mobs.push_back(mob);
-    std::cout << "[MobEngine] Spawned Mob at (" << position.x << ", " << position.y << ", " << position.z << ")" << std::endl;
+}
+
+std::deque<glm::ivec3> MobEngine::findPath3D(World& world, const glm::ivec3& start, const glm::ivec3& target, int maxSteps) {
+    std::deque<glm::ivec3> path;
+    if (start == target) return path;
+
+    struct Node {
+        glm::ivec3 pos;
+        float gCost;
+        float hCost;
+        float fCost() const { return gCost + hCost; }
+    };
+
+    auto comp = [](const Node& a, const Node& b) { return a.fCost() > b.fCost(); };
+    std::priority_queue<Node, std::vector<Node>, decltype(comp)> openSet(comp);
+
+    auto hashPos = [](const glm::ivec3& v) -> int64_t {
+        return (static_cast<int64_t>(v.x) & 0x3FFFFFF) |
+               ((static_cast<int64_t>(v.z) & 0x3FFFFFF) << 26) |
+               ((static_cast<int64_t>(v.y) & 0xFFF) << 52);
+    };
+
+    std::unordered_map<int64_t, glm::ivec3> cameFrom;
+    std::unordered_map<int64_t, float> gScore;
+
+    int64_t startKey = hashPos(start);
+    gScore[startKey] = 0.0f;
+    openSet.push({ start, 0.0f, glm::distance(glm::vec3(start), glm::vec3(target)) });
+
+    glm::ivec3 neighborDeltas[10] = {
+        {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1},       // Cardinal
+        {1, 1, 0}, {-1, 1, 0}, {0, 1, 1}, {0, 1, -1},       // Step-up jump
+        {0, -1, 0}, {0, -2, 0}                               // Step-down drop
+    };
+
+    int steps = 0;
+    bool found = false;
+    glm::ivec3 closest = start;
+    float closestDist = glm::distance(glm::vec3(start), glm::vec3(target));
+
+    while (!openSet.empty() && steps < maxSteps) {
+        Node current = openSet.top();
+        openSet.pop();
+        steps++;
+
+        float d = glm::distance(glm::vec3(current.pos), glm::vec3(target));
+        if (d < closestDist) {
+            closestDist = d;
+            closest = current.pos;
+        }
+
+        if (glm::distance(glm::vec3(current.pos), glm::vec3(target)) <= 1.5f) {
+            closest = current.pos;
+            found = true;
+            break;
+        }
+
+        for (const auto& delta : neighborDeltas) {
+            glm::ivec3 neighbor = current.pos + delta;
+            if (neighbor.y < 0 || neighbor.y >= CHUNK_SIZE_Y) continue;
+
+            // Check if foot is non-solid and head is non-solid, and block below foot is solid
+            BlockType footBlock = world.getBlock(neighbor.x, neighbor.y, neighbor.z);
+            BlockType headBlock = world.getBlock(neighbor.x, neighbor.y + 1, neighbor.z);
+            BlockType groundBlock = world.getBlock(neighbor.x, neighbor.y - 1, neighbor.z);
+
+            if (BlockData::isSolid(footBlock) || BlockData::isSolid(headBlock)) continue;
+            if (!BlockData::isSolid(groundBlock)) continue;
+
+            float tentativeG = current.gCost + glm::distance(glm::vec3(current.pos), glm::vec3(neighbor));
+            int64_t nKey = hashPos(neighbor);
+
+            if (gScore.find(nKey) == gScore.end() || tentativeG < gScore[nKey]) {
+                gScore[nKey] = tentativeG;
+                cameFrom[nKey] = current.pos;
+                openSet.push({ neighbor, tentativeG, glm::distance(glm::vec3(neighbor), glm::vec3(target)) });
+            }
+        }
+    }
+
+    if (found || steps > 0) {
+        glm::ivec3 curr = closest;
+        int64_t currKey = hashPos(curr);
+        while (currKey != startKey && cameFrom.find(currKey) != cameFrom.end()) {
+            path.push_front(curr);
+            curr = cameFrom[currKey];
+            currKey = hashPos(curr);
+        }
+    }
+
+    return path;
 }
 
 void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel, float& playerHealth, float deltaTime, ItemEntityManager* itemMgr) {
@@ -40,8 +133,16 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
     for (auto it = m_Mobs.begin(); it != m_Mobs.end(); ) {
         Mob& mob = *it;
 
+        if (mob.hurtTime > 0.0f) {
+            mob.hurtTime -= deltaTime * 3.0f;
+            if (mob.hurtTime < 0.0f) mob.hurtTime = 0.0f;
+        }
+
+        if (mob.attackCooldown > 0.0f) {
+            mob.attackCooldown -= deltaTime;
+        }
+
         if (mob.health <= 0.0f) {
-            std::cout << "[MobEngine] Mob Defeated!" << std::endl;
             if (itemMgr) {
                 if (mob.type == MobType::Pig) {
                     itemMgr->spawnItemDrop(BlockType::RawPorkchop, 1 + rand() % 2, mob.position);
@@ -60,13 +161,16 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
 
         float distToPlayer = glm::distance(mob.position, playerPos);
 
+        // Calculate Yaw rotation towards player
+        glm::vec3 lookVec = playerPos - mob.position;
+        mob.yaw = std::atan2(lookVec.x, lookVec.z);
+
         // --- Zombie AI ---
         if (mob.type == MobType::Zombie) {
             if (distToPlayer < 22.0f && distToPlayer > 1.2f) {
                 glm::vec3 dir = glm::normalize(glm::vec3(playerPos.x - mob.position.x, 0.0f, playerPos.z - mob.position.z));
                 float speed = 3.5f;
 
-                // Check 3D obstruction
                 glm::vec3 frontCheck = mob.position + dir * 0.6f;
                 int fx = static_cast<int>(std::floor(frontCheck.x));
                 int fy = static_cast<int>(std::floor(mob.position.y));
@@ -79,7 +183,6 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
                         mob.velocity.y = 7.5f;
                         mob.isGrounded = false;
                     } else {
-                        // Sidestep around wall obstacle
                         glm::vec3 sideDir = glm::normalize(glm::vec3(-dir.z, 0.0f, dir.x));
                         dir = glm::normalize(dir + sideDir * 0.8f);
                     }
@@ -87,6 +190,7 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
 
                 mob.velocity.x = dir.x * speed;
                 mob.velocity.z = dir.z * speed;
+                mob.limbSwing += deltaTime * 8.0f;
             } else if (distToPlayer <= 1.5f && mob.attackCooldown <= 0.0f) {
                 playerHealth -= 3.0f;
                 playerVel += glm::normalize(playerPos - mob.position) * 4.0f + glm::vec3(0, 2, 0);
@@ -98,14 +202,16 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
         else if (mob.type == MobType::Skeleton) {
             if (distToPlayer < 24.0f && distToPlayer > 8.0f) {
                 glm::vec3 dir = glm::normalize(glm::vec3(playerPos.x - mob.position.x, 0.0f, playerPos.z - mob.position.z));
-                mob.velocity.x = dir.x * 3.0f;
-                mob.velocity.z = dir.z * 3.0f;
-            } else if (distToPlayer <= 14.0f && mob.attackCooldown <= 0.0f) {
-                // Shoot Arrow towards player
-                glm::vec3 shootDir = glm::normalize(playerPos + glm::vec3(0, 1.2f, 0) - mob.position);
+                mob.velocity.x = dir.x * 2.8f;
+                mob.velocity.z = dir.z * 2.8f;
+                mob.limbSwing += deltaTime * 6.0f;
+            } else if (distToPlayer <= 16.0f && mob.attackCooldown <= 0.0f) {
+                // Shoot Arrow projectile
                 ArrowEntity arrow;
-                arrow.position = mob.position + glm::vec3(0, 1.2f, 0);
-                arrow.velocity = shootDir * 18.0f;
+                arrow.position = mob.position + glm::vec3(0.0f, 1.4f, 0.0f);
+                glm::vec3 aimDir = glm::normalize((playerPos + glm::vec3(0, 1, 0)) - arrow.position);
+                arrow.velocity = aimDir * 18.0f + glm::vec3(0.0f, 2.0f, 0.0f);
+                arrow.active = true;
                 m_Arrows.push_back(arrow);
                 mob.attackCooldown = 2.0f;
                 AudioManager::playSound3D(SoundEffect::ArrowShoot, mob.position, playerPos, glm::vec3(0, 0, -1));
@@ -113,80 +219,59 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
         }
         // --- Creeper AI ---
         else if (mob.type == MobType::Creeper) {
-            if (distToPlayer < 20.0f) {
+            if (distToPlayer < 18.0f && distToPlayer > 2.5f) {
                 glm::vec3 dir = glm::normalize(glm::vec3(playerPos.x - mob.position.x, 0.0f, playerPos.z - mob.position.z));
                 mob.velocity.x = dir.x * 3.2f;
                 mob.velocity.z = dir.z * 3.2f;
-
-                if (distToPlayer < 3.2f) {
-                    mob.fuseTimer += deltaTime;
-                    if (mob.fuseTimer >= 1.5f) {
-                        ExplosionEngine::createExplosion(world, mob.position, 4.5f, &playerVel, &playerPos);
-                        AudioManager::playSound3D(SoundEffect::Explosion, mob.position, playerPos, glm::vec3(0, 0, -1));
-                        it = m_Mobs.erase(it);
-                        continue;
-                    } else if (mob.fuseTimer < 0.1f) {
-                        AudioManager::playSound3D(SoundEffect::CreeperFuse, mob.position, playerPos, glm::vec3(0, 0, -1));
-                    }
-                } else {
-                    mob.fuseTimer = std::max(0.0f, mob.fuseTimer - deltaTime);
+                mob.fuseTimer = 0.0f;
+                mob.limbSwing += deltaTime * 7.0f;
+            } else if (distToPlayer <= 2.8f) {
+                mob.velocity.x = 0.0f;
+                mob.velocity.z = 0.0f;
+                mob.fuseTimer += deltaTime;
+                if (mob.fuseTimer >= 1.5f) {
+                    ExplosionEngine::createExplosion(world, mob.position, 3.5f);
+                    AudioManager::playSound3D(SoundEffect::Explosion, mob.position, playerPos, glm::vec3(0, 0, -1));
+                    it = m_Mobs.erase(it);
+                    continue;
                 }
             }
         }
-        // --- Ender Dragon Flying Boss AI ---
+        // --- Ender Dragon Boss AI ---
         else if (mob.type == MobType::EnderDragon) {
-            // Aerial flight & circling player
-            glm::vec3 target = playerPos + glm::vec3(std::sin(mob.fuseTimer) * 15.0f, 10.0f + std::cos(mob.fuseTimer) * 4.0f, std::cos(mob.fuseTimer) * 15.0f);
-            mob.fuseTimer += deltaTime * 1.2f;
-
-            glm::vec3 flyDir = glm::normalize(target - mob.position);
-            mob.velocity = flyDir * 8.0f;
+            glm::vec3 target = playerPos + glm::vec3(0, 5, 0);
+            glm::vec3 dir = glm::normalize(target - mob.position);
+            mob.velocity = dir * 10.0f;
             mob.position += mob.velocity * deltaTime;
 
-            // Swoop attack when close
             if (distToPlayer < 4.0f && mob.attackCooldown <= 0.0f) {
-                playerHealth -= 8.0f; // Boss heavy knockback and damage
-                playerVel += glm::normalize(playerPos - mob.position) * 12.0f + glm::vec3(0, 6, 0);
-                mob.attackCooldown = 2.5f;
-                AudioManager::playSound(SoundEffect::Explosion);
+                playerHealth -= 10.0f;
+                playerVel += dir * 12.0f + glm::vec3(0, 6, 0);
+                mob.attackCooldown = 2.0f;
+                AudioManager::playSound(SoundEffect::MobHit);
             }
-            if (mob.attackCooldown > 0.0f) mob.attackCooldown -= deltaTime;
             ++it;
             continue;
         }
-        // --- Iron Golem Defender AI ---
-        else if (mob.type == MobType::IronGolem) {
-            // Find nearby hostile mobs (Zombies, Skeletons) and attack them
-            for (auto& hostile : m_Mobs) {
-                if (hostile.type == MobType::Zombie || hostile.type == MobType::Skeleton) {
-                    float distToHostile = glm::distance(mob.position, hostile.position);
-                    if (distToHostile < 16.0f && distToHostile > 1.5f) {
-                        glm::vec3 dir = glm::normalize(glm::vec3(hostile.position.x - mob.position.x, 0.0f, hostile.position.z - mob.position.z));
-                        mob.velocity.x = dir.x * 2.5f;
-                        mob.velocity.z = dir.z * 2.5f;
-                    } else if (distToHostile <= 1.5f && mob.attackCooldown <= 0.0f) {
-                        hostile.health -= 12.0f; // Iron Golem smash attack
-                        hostile.velocity += glm::vec3(0.0f, 6.0f, 0.0f); // Launch into air
-                        mob.attackCooldown = 1.2f;
-                        AudioManager::playSound(SoundEffect::MobHit);
-                    }
-                    break;
-                }
-            }
-        }
-        // --- Villager & Passive Animal Wandering ---
-        else if (mob.type == MobType::Villager || mob.type == MobType::Pig || mob.type == MobType::Cow) {
-            if (rand() % 150 == 0) {
-                mob.velocity.x = (rand() % 100 - 50) * 0.03f;
-                mob.velocity.z = (rand() % 100 - 50) * 0.03f;
-            }
+
+        // Apply Mob Gravity & Physics
+        mob.velocity.y -= 25.0f * deltaTime;
+        mob.position.y += mob.velocity.y * deltaTime;
+
+        int mx = static_cast<int>(std::floor(mob.position.x));
+        int my = static_cast<int>(std::floor(mob.position.y));
+        int mz = static_cast<int>(std::floor(mob.position.z));
+
+        if (BlockData::isSolid(world.getBlock(mx, my, mz))) {
+            mob.position.y = std::floor(mob.position.y) + 1.0f;
+            mob.velocity.y = 0.0f;
+            mob.isGrounded = true;
+        } else {
+            mob.isGrounded = false;
         }
 
-        if (mob.attackCooldown > 0.0f) mob.attackCooldown -= deltaTime;
-
-        // Apply Physics
-        bool dummyInWater = false;
-        PhysicsEngine::updatePlayer(world, mob.position, mob.velocity, mob.isGrounded, dummyInWater, false, false, deltaTime);
+        mob.position.x += mob.velocity.x * deltaTime;
+        mob.position.z += mob.velocity.z * deltaTime;
 
         ++it;
     }
@@ -194,33 +279,39 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
     // 2. Update Arrows
     for (auto it = m_Arrows.begin(); it != m_Arrows.end(); ) {
         ArrowEntity& arrow = *it;
+        arrow.velocity.y -= 9.8f * deltaTime;
         arrow.position += arrow.velocity * deltaTime;
-        arrow.velocity.y -= 4.0f * deltaTime;
 
-        float dist = glm::distance(arrow.position, playerPos);
-        if (dist < 1.2f) {
+        if (glm::distance(arrow.position, playerPos + glm::vec3(0, 1, 0)) < 1.0f) {
             playerHealth -= 4.0f;
             playerVel += glm::normalize(arrow.velocity) * 3.0f;
             AudioManager::playSound(SoundEffect::MobHit);
             it = m_Arrows.erase(it);
-        } else if (arrow.position.y < 0.0f || ArrowEntityCollisionCheck(world, arrow.position)) {
-            it = m_Arrows.erase(it);
-        } else {
-            ++it;
+            continue;
         }
+
+        if (ArrowEntityCollisionCheck(world, arrow.position)) {
+            it = m_Arrows.erase(it);
+            continue;
+        }
+
+        ++it;
     }
 }
 
 bool MobEngine::checkPlayerAttack(const glm::vec3& playerPos, const glm::vec3& playerDir, float reach, int damage, ItemEntityManager* itemMgr) {
+    (void)itemMgr;
     for (auto& mob : m_Mobs) {
-        float dist = glm::distance(playerPos, mob.position);
+        glm::vec3 toMob = (mob.position + glm::vec3(0, 1, 0)) - playerPos;
+        float dist = glm::length(toMob);
         if (dist <= reach) {
-            glm::vec3 toMob = glm::normalize(mob.position - playerPos);
-            float dot = glm::dot(playerDir, toMob);
-            if (dot > 0.6f) {
-                mob.health -= static_cast<float>(damage);
-                mob.velocity += toMob * 5.0f + glm::vec3(0.0f, 3.0f, 0.0f); // Knockback
-                AudioManager::playSound3D(SoundEffect::MobHit, mob.position, playerPos, playerDir);
+            glm::vec3 dirToMob = glm::normalize(toMob);
+            float dot = glm::dot(playerDir, dirToMob);
+            if (dot > 0.65f) {
+                mob.health -= damage;
+                mob.hurtTime = 1.0f; // Visual red flash
+                mob.velocity += playerDir * 6.0f + glm::vec3(0, 4, 0); // Knockback
+                AudioManager::playSound3D(SoundEffect::MobHit, mob.position, playerPos, glm::vec3(0, 0, -1));
                 return true;
             }
         }

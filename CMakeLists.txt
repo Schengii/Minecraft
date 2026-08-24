@@ -48,14 +48,17 @@ set(SOURCES
     src/core/Input.cpp
     src/core/Application.cpp
     src/core/ThreadPool.cpp
+    src/core/ModdingEngine.cpp
     src/renderer/Shader.cpp
     src/renderer/Camera.cpp
+    src/renderer/TextureAtlas.cpp
     src/renderer/ParticleEngine.cpp
     src/renderer/FrustumCuller.cpp
     src/renderer/ShadowMap.cpp
     src/renderer/PostProcessing.cpp
     src/renderer/Skybox.cpp
     src/world/Chunk.cpp
+    src/world/ChunkSection.cpp
     src/world/ChunkMesh.cpp
     src/world/World.cpp
     src/world/Raycast.cpp
@@ -78,6 +81,7 @@ set(SOURCES
     src/world/VillageGenerator.cpp
     src/world/TradingEngine.cpp
     src/world/EnchantingEngine.cpp
+    src/world/BrewingEngine.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp
@@ -117,14 +121,17 @@ set(TEST_SOURCES
     src/core/Input.cpp
     src/core/Application.cpp
     src/core/ThreadPool.cpp
+    src/core/ModdingEngine.cpp
     src/renderer/Shader.cpp
     src/renderer/Camera.cpp
+    src/renderer/TextureAtlas.cpp
     src/renderer/ParticleEngine.cpp
     src/renderer/FrustumCuller.cpp
     src/renderer/ShadowMap.cpp
     src/renderer/PostProcessing.cpp
     src/renderer/Skybox.cpp
     src/world/Chunk.cpp
+    src/world/ChunkSection.cpp
     src/world/ChunkMesh.cpp
     src/world/World.cpp
     src/world/Raycast.cpp
@@ -147,6 +154,7 @@ set(TEST_SOURCES
     src/world/VillageGenerator.cpp
     src/world/TradingEngine.cpp
     src/world/EnchantingEngine.cpp
+    src/world/BrewingEngine.cpp
     src/physics/PhysicsEngine.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp

@@ -22,6 +22,10 @@ public:
     static void calculateBlocklight(Chunk& chunk, World* world = nullptr);
     static void calculateChunkLighting(Chunk& chunk, World* world = nullptr);
     static void updateBlockLight(World& world, const glm::ivec3& pos);
+
+    static void addBlockLight(World& world, const glm::ivec3& pos, int intensity);
+    static void removeBlockLight(World& world, const glm::ivec3& pos);
+    static void propagateCrossChunk(World& world, Chunk& chunk);
 };
 
 }

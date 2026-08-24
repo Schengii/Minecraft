@@ -1,7 +1,9 @@
 #include "World.hpp"
 #include "../renderer/FrustumCuller.hpp"
+#include "SaveSystem.hpp"
 #include <iostream>
 #include <cmath>
+#include <vector>
 
 namespace Minecraft {
 
@@ -19,27 +21,63 @@ World::World(int renderDistance)
     }
 }
 
-World::~World() = default;
+World::~World() {
+    for (auto& [pos, chunk] : m_Chunks) {
+        if (chunk) {
+            SaveSystem::saveChunk(*chunk);
+        }
+    }
+}
+
+void World::unloadFarChunks(const glm::vec3& playerPos) {
+    int playerChunkX = static_cast<int>(std::floor(playerPos.x / CHUNK_SIZE_X));
+    int playerChunkZ = static_cast<int>(std::floor(playerPos.z / CHUNK_SIZE_Z));
+    int maxDist = m_RenderDistance + 2;
+
+    std::vector<glm::ivec2> chunksToUnload;
+    for (const auto& [pos, chunk] : m_Chunks) {
+        if (std::abs(pos.x - playerChunkX) > maxDist || std::abs(pos.y - playerChunkZ) > maxDist) {
+            chunksToUnload.push_back(pos);
+        }
+    }
+
+    for (const auto& pos : chunksToUnload) {
+        auto it = m_Chunks.find(pos);
+        if (it != m_Chunks.end() && it->second) {
+            SaveSystem::saveChunk(*it->second);
+            m_Chunks.erase(it);
+        }
+    }
+}
 
 void World::update(const glm::vec3& playerPos) {
-    // 1. Collect completed background-generated chunks from workers
+    // 1. Collect completed background-generated chunks from workers and upload in batches
     {
         std::lock_guard<std::mutex> lock(m_QueueMutex);
-        for (auto& chunk : m_CompletedChunks) {
-            if (chunk) {
-                glm::ivec2 pos = chunk->getPosition();
-                chunk->buildMesh();
-                m_Chunks[pos] = std::move(chunk);
+        size_t uploadsThisFrame = 0;
+        const size_t MAX_UPLOADS_PER_FRAME = 6;
+
+        auto it = m_CompletedChunks.begin();
+        while (it != m_CompletedChunks.end() && uploadsThisFrame < MAX_UPLOADS_PER_FRAME) {
+            if (*it) {
+                glm::ivec2 pos = (*it)->getPosition();
+                if ((*it)->hasPendingMesh()) {
+                    (*it)->uploadPendingMesh();
+                } else {
+                    (*it)->buildMesh();
+                }
+                m_Chunks[pos] = std::move(*it);
                 m_LoadingChunks.erase(pos);
+                uploadsThisFrame++;
             }
+            it = m_CompletedChunks.erase(it);
         }
-        m_CompletedChunks.clear();
     }
 
     int playerChunkX = static_cast<int>(std::floor(playerPos.x / CHUNK_SIZE_X));
     int playerChunkZ = static_cast<int>(std::floor(playerPos.z / CHUNK_SIZE_Z));
 
-    // 2. Queue missing chunks for background generation
+    // 2. Queue missing chunks for background generation with asynchronous CPU meshing
     for (int x = playerChunkX - m_RenderDistance; x <= playerChunkX + m_RenderDistance; ++x) {
         for (int z = playerChunkZ - m_RenderDistance; z <= playerChunkZ + m_RenderDistance; ++z) {
             glm::ivec2 pos(x, z);
@@ -48,12 +86,16 @@ void World::update(const glm::vec3& playerPos) {
 
                 m_ThreadPool->enqueue([this, x, z]() {
                     auto newChunk = std::make_unique<Chunk>(x, z);
+                    newChunk->buildMeshDataAsync();
                     std::lock_guard<std::mutex> lock(m_QueueMutex);
                     m_CompletedChunks.push_back(std::move(newChunk));
                 });
             }
         }
     }
+
+    // 3. Unload distant chunks to preserve memory (LRU Chunk Caching)
+    unloadFarChunks(playerPos);
 }
 
 void World::render(const FrustumCuller* culler) {

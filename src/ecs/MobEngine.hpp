@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <deque>
 
 namespace Minecraft {
 
@@ -28,6 +29,11 @@ struct Mob {
     bool isGrounded = false;
     float fuseTimer = 0.0f;
     float attackCooldown = 0.0f;
+    float hurtTime = 0.0f;       // Visual hit feedback
+    float limbSwing = 0.0f;      // Walking animation
+    float yaw = 0.0f;
+    float pitch = 0.0f;
+    std::deque<glm::ivec3> path; // 3D A* Waypoints
 };
 
 struct ArrowEntity {
@@ -43,6 +49,8 @@ public:
     void spawnMob(MobType type, const glm::vec3& position);
     void update(World& world, glm::vec3& playerPos, glm::vec3& playerVel, float& playerHealth, float deltaTime, class ItemEntityManager* itemMgr = nullptr);
     bool checkPlayerAttack(const glm::vec3& playerPos, const glm::vec3& playerDir, float reach, int damage, class ItemEntityManager* itemMgr = nullptr);
+
+    static std::deque<glm::ivec3> findPath3D(World& world, const glm::ivec3& start, const glm::ivec3& target, int maxSteps = 30);
 
     const std::vector<Mob>& getMobs() const { return m_Mobs; }
     const std::vector<ArrowEntity>& getArrows() const { return m_Arrows; }

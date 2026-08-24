@@ -1,5 +1,6 @@
 #include "ChunkMesh.hpp"
 #include "Chunk.hpp"
+#include <algorithm>
 
 namespace Minecraft {
 
@@ -46,11 +47,17 @@ void ChunkMesh::renderTransparent() const {
     glBindVertexArray(0);
 }
 
+float ChunkMesh::calculateVertexAO(bool side1, bool side2, bool corner) {
+    if (side1 && side2) {
+        return 0.25f; // Deep corner shadow
+    }
+    int count = (side1 ? 1 : 0) + (side2 ? 1 : 0) + (corner ? 1 : 0);
+    return 1.0f - (count * 0.22f);
+}
+
 void ChunkMesh::generate(const Chunk& chunk) {
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-    buildMeshData(chunk, vertices, indices);
-    uploadMeshData(vertices, indices);
+    MeshData meshData = buildMeshData(chunk);
+    uploadMeshData(meshData);
 }
 
 struct FaceInfo {
@@ -66,10 +73,8 @@ struct FaceInfo {
     }
 };
 
-void ChunkMesh::buildMeshData(const Chunk& chunk, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices) {
-    vertices.clear();
-    indices.clear();
-
+MeshData ChunkMesh::buildMeshData(const Chunk& chunk) {
+    MeshData data;
     int worldChunkX = chunk.getChunkX() * CHUNK_SIZE_X;
     int worldChunkZ = chunk.getChunkZ() * CHUNK_SIZE_Z;
 
@@ -124,7 +129,31 @@ void ChunkMesh::buildMeshData(const Chunk& chunk, std::vector<Vertex>& vertices,
 
                     glm::vec3 pos(worldChunkX + x, y, worldChunkZ + z);
                     float baseLight = std::max(0.12f, static_cast<float>(current.light) / 15.0f);
-                    addMergedFace(pos, static_cast<float>(w), static_cast<float>(h), dir, current.type, baseLight, vertices, indices);
+
+                    // Vertex Ambient Occlusion calculation for corners
+                    int ny = (dir == TOP) ? y + 1 : y - 1;
+                    bool sLeft = BlockData::isOpaque(chunk.getBlock(x - 1, ny, z));
+                    bool sRight = BlockData::isOpaque(chunk.getBlock(x + w, ny, z));
+                    bool sBack = BlockData::isOpaque(chunk.getBlock(x, ny, z - 1));
+                    bool sFront = BlockData::isOpaque(chunk.getBlock(x, ny, z + h));
+
+                    bool c0 = BlockData::isOpaque(chunk.getBlock(x - 1, ny, z - 1));
+                    bool c1 = BlockData::isOpaque(chunk.getBlock(x + w, ny, z - 1));
+                    bool c2 = BlockData::isOpaque(chunk.getBlock(x + w, ny, z + h));
+                    bool c3 = BlockData::isOpaque(chunk.getBlock(x - 1, ny, z + h));
+
+                    float cornerAO[4] = {
+                        calculateVertexAO(sLeft, sBack, c0),
+                        calculateVertexAO(sRight, sBack, c1),
+                        calculateVertexAO(sRight, sFront, c2),
+                        calculateVertexAO(sLeft, sFront, c3)
+                    };
+
+                    bool isTrans = (current.type == BlockType::Water || current.type == BlockType::Glass || current.type == BlockType::Leaves || current.type == BlockType::Bamboo);
+                    auto& targetVerts = isTrans ? data.transVertices : data.vertices;
+                    auto& targetIndices = isTrans ? data.transIndices : data.indices;
+
+                    addMergedFace(pos, static_cast<float>(w), static_cast<float>(h), dir, current.type, baseLight, cornerAO, targetVerts, targetIndices);
 
                     for (int dz = 0; dz < h; ++dz) {
                         for (int dx = 0; dx < w; ++dx) {
@@ -187,7 +216,25 @@ void ChunkMesh::buildMeshData(const Chunk& chunk, std::vector<Vertex>& vertices,
 
                     glm::vec3 pos(worldChunkX + x, y, worldChunkZ + z);
                     float baseLight = std::max(0.12f, static_cast<float>(current.light) / 15.0f);
-                    addMergedFace(pos, static_cast<float>(w), static_cast<float>(h), dir, current.type, baseLight, vertices, indices);
+
+                    int nz = (dir == NORTH) ? z + 1 : z - 1;
+                    bool sLeft = BlockData::isOpaque(chunk.getBlock(x - 1, y, nz));
+                    bool sRight = BlockData::isOpaque(chunk.getBlock(x + w, y, nz));
+                    bool sDown = (y > 0) && BlockData::isOpaque(chunk.getBlock(x, y - 1, nz));
+                    bool sUp = (y + h < CHUNK_SIZE_Y) && BlockData::isOpaque(chunk.getBlock(x, y + h, nz));
+
+                    float cornerAO[4] = {
+                        calculateVertexAO(sLeft, sDown, false),
+                        calculateVertexAO(sRight, sDown, false),
+                        calculateVertexAO(sRight, sUp, false),
+                        calculateVertexAO(sLeft, sUp, false)
+                    };
+
+                    bool isTrans = (current.type == BlockType::Water || current.type == BlockType::Glass || current.type == BlockType::Leaves || current.type == BlockType::Bamboo);
+                    auto& targetVerts = isTrans ? data.transVertices : data.vertices;
+                    auto& targetIndices = isTrans ? data.transIndices : data.indices;
+
+                    addMergedFace(pos, static_cast<float>(w), static_cast<float>(h), dir, current.type, baseLight, cornerAO, targetVerts, targetIndices);
 
                     for (int dy = 0; dy < h; ++dy) {
                         for (int dx = 0; dx < w; ++dx) {
@@ -250,7 +297,25 @@ void ChunkMesh::buildMeshData(const Chunk& chunk, std::vector<Vertex>& vertices,
 
                     glm::vec3 pos(worldChunkX + x, y, worldChunkZ + z);
                     float baseLight = std::max(0.12f, static_cast<float>(current.light) / 15.0f);
-                    addMergedFace(pos, static_cast<float>(w), static_cast<float>(h), dir, current.type, baseLight, vertices, indices);
+
+                    int nx = (dir == EAST) ? x + 1 : x - 1;
+                    bool sLeft = BlockData::isOpaque(chunk.getBlock(nx, y, z - 1));
+                    bool sRight = BlockData::isOpaque(chunk.getBlock(nx, y, z + w));
+                    bool sDown = (y > 0) && BlockData::isOpaque(chunk.getBlock(nx, y - 1, z));
+                    bool sUp = (y + h < CHUNK_SIZE_Y) && BlockData::isOpaque(chunk.getBlock(nx, y + h, z));
+
+                    float cornerAO[4] = {
+                        calculateVertexAO(sLeft, sDown, false),
+                        calculateVertexAO(sRight, sDown, false),
+                        calculateVertexAO(sRight, sUp, false),
+                        calculateVertexAO(sLeft, sUp, false)
+                    };
+
+                    bool isTrans = (current.type == BlockType::Water || current.type == BlockType::Glass || current.type == BlockType::Leaves || current.type == BlockType::Bamboo);
+                    auto& targetVerts = isTrans ? data.transVertices : data.vertices;
+                    auto& targetIndices = isTrans ? data.transIndices : data.indices;
+
+                    addMergedFace(pos, static_cast<float>(w), static_cast<float>(h), dir, current.type, baseLight, cornerAO, targetVerts, targetIndices);
 
                     for (int dy = 0; dy < h; ++dy) {
                         for (int dz = 0; dz < w; ++dz) {
@@ -260,6 +325,44 @@ void ChunkMesh::buildMeshData(const Chunk& chunk, std::vector<Vertex>& vertices,
                 }
             }
         }
+    }
+
+    return data;
+}
+
+void ChunkMesh::uploadMeshData(const MeshData& data) {
+    uploadMeshData(data.vertices, data.indices);
+
+    m_TransIndexCount = data.transIndices.size();
+    if (m_TransIndexCount > 0 && glBindVertexArray) {
+        if (!m_TransVAO && glGenVertexArrays) glGenVertexArrays(1, &m_TransVAO);
+        if (!m_TransVBO && glGenBuffers) glGenBuffers(1, &m_TransVBO);
+        if (!m_TransEBO && glGenBuffers) glGenBuffers(1, &m_TransEBO);
+
+        glBindVertexArray(m_TransVAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, m_TransVBO);
+        glBufferData(GL_ARRAY_BUFFER, data.transVertices.size() * sizeof(Vertex), data.transVertices.data(), GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_TransEBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.transIndices.size() * sizeof(unsigned int), data.transIndices.data(), GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
+
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, light));
+
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, ao));
+
+        glBindVertexArray(0);
     }
 }
 
@@ -295,14 +398,14 @@ void ChunkMesh::uploadMeshData(const std::vector<Vertex>& vertices, const std::v
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, light));
 
+    // AO
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, ao));
+
     glBindVertexArray(0);
 }
 
-void ChunkMesh::addFace(const Chunk& chunk, int lx, int ly, int lz, const glm::vec3& p, Direction dir, BlockType type, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices) {
-    addMergedFace(p, 1.0f, 1.0f, dir, type, 1.0f, vertices, indices);
-}
-
-void ChunkMesh::addMergedFace(const glm::vec3& p, float w, float h, Direction dir, BlockType type, float baseLight, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices) {
+void ChunkMesh::addMergedFace(const glm::vec3& p, float w, float h, Direction dir, BlockType type, float baseLight, const float cornerAO[4], std::vector<Vertex>& vertices, std::vector<unsigned int>& indices) {
     unsigned int startIndex = static_cast<unsigned int>(vertices.size());
     glm::vec3 normal(0.0f);
     glm::vec2 baseUV = BlockData::getTextureUV(type, dir);
@@ -316,45 +419,45 @@ void ChunkMesh::addMergedFace(const glm::vec3& p, float w, float h, Direction di
     switch (dir) {
         case TOP:
             normal = glm::vec3(0, 1, 0);
-            vertices.push_back({ p + glm::vec3(0, 1, 0), uv0, normal, baseLight * 1.00f });
-            vertices.push_back({ p + glm::vec3(w, 1, 0), uv1, normal, baseLight * 0.92f });
-            vertices.push_back({ p + glm::vec3(w, 1, h), uv2, normal, baseLight * 0.85f });
-            vertices.push_back({ p + glm::vec3(0, 1, h), uv3, normal, baseLight * 0.92f });
+            vertices.push_back({ p + glm::vec3(0, 1, 0), uv0, normal, baseLight * 1.00f, cornerAO[0] });
+            vertices.push_back({ p + glm::vec3(w, 1, 0), uv1, normal, baseLight * 0.95f, cornerAO[1] });
+            vertices.push_back({ p + glm::vec3(w, 1, h), uv2, normal, baseLight * 0.90f, cornerAO[2] });
+            vertices.push_back({ p + glm::vec3(0, 1, h), uv3, normal, baseLight * 0.95f, cornerAO[3] });
             break;
         case BOTTOM:
             normal = glm::vec3(0, -1, 0);
-            vertices.push_back({ p + glm::vec3(0, 0, h), uv0, normal, baseLight * 0.50f });
-            vertices.push_back({ p + glm::vec3(w, 0, h), uv1, normal, baseLight * 0.50f });
-            vertices.push_back({ p + glm::vec3(w, 0, 0), uv2, normal, baseLight * 0.50f });
-            vertices.push_back({ p + glm::vec3(0, 0, 0), uv3, normal, baseLight * 0.50f });
+            vertices.push_back({ p + glm::vec3(0, 0, h), uv0, normal, baseLight * 0.50f, cornerAO[0] });
+            vertices.push_back({ p + glm::vec3(w, 0, h), uv1, normal, baseLight * 0.50f, cornerAO[1] });
+            vertices.push_back({ p + glm::vec3(w, 0, 0), uv2, normal, baseLight * 0.50f, cornerAO[2] });
+            vertices.push_back({ p + glm::vec3(0, 0, 0), uv3, normal, baseLight * 0.50f, cornerAO[3] });
             break;
         case NORTH:
             normal = glm::vec3(0, 0, 1);
-            vertices.push_back({ p + glm::vec3(0, 0, 1), uv0, normal, baseLight * 0.85f });
-            vertices.push_back({ p + glm::vec3(w, 0, 1), uv1, normal, baseLight * 0.80f });
-            vertices.push_back({ p + glm::vec3(w, h, 1), uv2, normal, baseLight * 0.90f });
-            vertices.push_back({ p + glm::vec3(0, h, 1), uv3, normal, baseLight * 0.85f });
+            vertices.push_back({ p + glm::vec3(0, 0, 1), uv0, normal, baseLight * 0.85f, cornerAO[0] });
+            vertices.push_back({ p + glm::vec3(w, 0, 1), uv1, normal, baseLight * 0.80f, cornerAO[1] });
+            vertices.push_back({ p + glm::vec3(w, h, 1), uv2, normal, baseLight * 0.90f, cornerAO[2] });
+            vertices.push_back({ p + glm::vec3(0, h, 1), uv3, normal, baseLight * 0.85f, cornerAO[3] });
             break;
         case SOUTH:
             normal = glm::vec3(0, 0, -1);
-            vertices.push_back({ p + glm::vec3(w, 0, 0), uv0, normal, baseLight * 0.80f });
-            vertices.push_back({ p + glm::vec3(0, 0, 0), uv1, normal, baseLight * 0.85f });
-            vertices.push_back({ p + glm::vec3(0, h, 0), uv2, normal, baseLight * 0.90f });
-            vertices.push_back({ p + glm::vec3(w, h, 0), uv3, normal, baseLight * 0.85f });
+            vertices.push_back({ p + glm::vec3(w, 0, 0), uv0, normal, baseLight * 0.80f, cornerAO[0] });
+            vertices.push_back({ p + glm::vec3(0, 0, 0), uv1, normal, baseLight * 0.85f, cornerAO[1] });
+            vertices.push_back({ p + glm::vec3(0, h, 0), uv2, normal, baseLight * 0.90f, cornerAO[2] });
+            vertices.push_back({ p + glm::vec3(w, h, 0), uv3, normal, baseLight * 0.85f, cornerAO[3] });
             break;
         case EAST:
             normal = glm::vec3(1, 0, 0);
-            vertices.push_back({ p + glm::vec3(1, 0, w), uv0, normal, baseLight * 0.75f });
-            vertices.push_back({ p + glm::vec3(1, 0, 0), uv1, normal, baseLight * 0.70f });
-            vertices.push_back({ p + glm::vec3(1, h, 0), uv2, normal, baseLight * 0.80f });
-            vertices.push_back({ p + glm::vec3(1, h, w), uv3, normal, baseLight * 0.75f });
+            vertices.push_back({ p + glm::vec3(1, 0, w), uv0, normal, baseLight * 0.75f, cornerAO[0] });
+            vertices.push_back({ p + glm::vec3(1, 0, 0), uv1, normal, baseLight * 0.70f, cornerAO[1] });
+            vertices.push_back({ p + glm::vec3(1, h, 0), uv2, normal, baseLight * 0.80f, cornerAO[2] });
+            vertices.push_back({ p + glm::vec3(1, h, w), uv3, normal, baseLight * 0.75f, cornerAO[3] });
             break;
         case WEST:
             normal = glm::vec3(-1, 0, 0);
-            vertices.push_back({ p + glm::vec3(0, 0, 0), uv0, normal, baseLight * 0.70f });
-            vertices.push_back({ p + glm::vec3(0, 0, w), uv1, normal, baseLight * 0.75f });
-            vertices.push_back({ p + glm::vec3(0, h, w), uv2, normal, baseLight * 0.80f });
-            vertices.push_back({ p + glm::vec3(0, h, 0), uv3, normal, baseLight * 0.75f });
+            vertices.push_back({ p + glm::vec3(0, 0, 0), uv0, normal, baseLight * 0.70f, cornerAO[0] });
+            vertices.push_back({ p + glm::vec3(0, 0, w), uv1, normal, baseLight * 0.75f, cornerAO[1] });
+            vertices.push_back({ p + glm::vec3(0, h, w), uv2, normal, baseLight * 0.80f, cornerAO[2] });
+            vertices.push_back({ p + glm::vec3(0, h, 0), uv3, normal, baseLight * 0.75f, cornerAO[3] });
             break;
     }
 

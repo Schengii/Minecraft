@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <mutex>
 #include <queue>
+#include <vector>
 
 namespace std {
     template <>
@@ -38,6 +39,10 @@ public:
     void setBlock(int worldX, int worldY, int worldZ, BlockType type);
 
     int getLoadedChunkCount() const { return static_cast<int>(m_Chunks.size()); }
+    int getRenderDistance() const { return m_RenderDistance; }
+    void setRenderDistance(int rd) { m_RenderDistance = rd; }
+
+    void unloadFarChunks(const glm::vec3& playerPos);
 
 private:
     int m_RenderDistance;

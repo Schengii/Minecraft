@@ -2,8 +2,11 @@
 #define CHUNK_HPP
 
 #include "Block.hpp"
+#include "ChunkMesh.hpp"
+#include "ChunkSection.hpp"
 #include <vector>
 #include <memory>
+#include <array>
 #include <glm/glm.hpp>
 
 namespace Minecraft {
@@ -11,8 +14,6 @@ namespace Minecraft {
 constexpr int CHUNK_SIZE_X = 16;
 constexpr int CHUNK_SIZE_Y = 256;
 constexpr int CHUNK_SIZE_Z = 16;
-
-class ChunkMesh;
 
 class Chunk {
 public:
@@ -40,11 +41,23 @@ public:
 
     void generateTerrain();
     void buildMesh();
+    void buildMeshDataAsync();
+    void uploadPendingMesh();
+    bool hasPendingMesh() const { return m_PendingMeshData != nullptr; }
+
     void render();
     void renderTransparent();
 
     bool isDirty() const { return m_IsDirty; }
     void setDirty(bool dirty) { m_IsDirty = dirty; }
+
+    ChunkMesh* getMesh() { return m_Mesh.get(); }
+    const ChunkMesh* getMesh() const { return m_Mesh.get(); }
+
+    ChunkSection* getSection(int sectionY) {
+        if (sectionY >= 0 && sectionY < 16) return m_Sections[sectionY].get();
+        return nullptr;
+    }
 
 private:
     int m_ChunkX;
@@ -54,6 +67,8 @@ private:
     bool m_IsDirty = true;
     
     std::unique_ptr<ChunkMesh> m_Mesh;
+    std::unique_ptr<MeshData> m_PendingMeshData;
+    std::array<std::unique_ptr<ChunkSection>, 16> m_Sections;
 };
 
 }
