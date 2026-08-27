@@ -1,26 +1,34 @@
 #include "HUD.hpp"
+#include "FontRenderer.hpp"
+#include "../renderer/TextureAtlas.hpp"
+#include "../inventory/Inventory.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <cmath>
 
 namespace Minecraft {
 
 HUD::HUD(int windowWidth, int windowHeight)
     : m_Width(windowWidth), m_Height(windowHeight)
 {
-    m_UIShader = std::make_unique<Shader>("assets/shaders/ui.vert", "assets/shaders/ui.frag");
-    initBuffers();
+    if (glCreateShader && glGenVertexArrays) {
+        m_UIShader = std::make_unique<Shader>("assets/shaders/ui.vert", "assets/shaders/ui.frag");
+        initBuffers();
+        FontRenderer::getInstance().init();
+    }
 }
 
 HUD::~HUD() {
-    if (m_VAO) glDeleteVertexArrays(1, &m_VAO);
-    if (m_VBO) glDeleteBuffers(1, &m_VBO);
+    if (m_VAO && glDeleteVertexArrays) glDeleteVertexArrays(1, &m_VAO);
+    if (m_VBO && glDeleteBuffers) glDeleteBuffers(1, &m_VBO);
 }
 
 void HUD::resize(int width, int height) {
     m_Width = width;
     m_Height = height;
+    FontRenderer::getInstance().resize(width, height);
 }
 
 void HUD::initBuffers() {
@@ -51,7 +59,9 @@ void HUD::initBuffers() {
     glBindVertexArray(0);
 }
 
-void HUD::render(int selectedSlot, bool showDebugInfo, float fps, const glm::vec3& playerPos, const glm::vec3& playerDir, bool isFlying, float health, float hunger) {
+void HUD::render(int selectedSlot, bool showDebugInfo, float fps, const glm::vec3& playerPos, 
+                const glm::vec3& playerDir, bool isFlying, float health, float hunger, 
+                const Inventory* inventory, const std::string& biomeName, int lightLevel) {
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -66,13 +76,116 @@ void HUD::render(int selectedSlot, bool showDebugInfo, float fps, const glm::vec
     // 2. Hotbar at bottom center with health & hunger bars
     renderHotbar(selectedSlot, health, hunger);
 
-    // 3. F3 Debug Screen Overlay
-    if (showDebugInfo) {
-        // Draw Debug Box Background Top-Left
-        renderQuad(glm::vec2(10.0f, 10.0f), glm::vec2(340.0f, 140.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.65f));
+    // 3. Render Item icons & stack counts in hotbar slots
+    if (inventory) {
+        float slotSize = 44.0f;
+        float padding = 4.0f;
+        float totalWidth = 9 * slotSize + 8 * padding;
+        float startX = (m_Width - totalWidth) / 2.0f;
+        float startY = m_Height - slotSize - 15.0f;
 
-        // Draw Debug Status Bar Indicators
-        renderQuad(glm::vec2(15.0f, 15.0f), glm::vec2(330.0f, 4.0f), glm::vec4(0.2f, 0.8f, 0.2f, 0.9f));
+        for (int i = 0; i < 9; ++i) {
+            const ItemStack& stack = inventory->getSlot(i);
+            if (!stack.isEmpty()) {
+                float slotX = startX + i * (slotSize + padding);
+                
+                // Render item thumbnail icon
+                glm::vec2 uv = TextureAtlas::getBlockUV(stack.type, Direction::TOP);
+                float uvSize = 1.0f / 16.0f;
+
+                m_UIShader->use();
+                m_UIShader->setBool("u_UseTexture", true);
+                if (glActiveTexture) glActiveTexture(GL_TEXTURE0);
+                TextureAtlas::getInstance().bind(0);
+                m_UIShader->setInt("u_Texture", 0);
+                m_UIShader->setVec4("u_Color", glm::vec4(1.0f));
+
+                glm::mat4 model = glm::mat4(1.0f);
+                model = glm::translate(model, glm::vec3(slotX + 6.0f, startY + 6.0f, 0.0f));
+                model = glm::scale(model, glm::vec3(slotSize - 12.0f, slotSize - 12.0f, 1.0f));
+                m_UIShader->setMat4("u_Projection", projection * model);
+
+                // Update texture coordinates for the quad
+                float quad[24] = {
+                    0.0f, 1.0f, uv.x, uv.y + uvSize,
+                    1.0f, 0.0f, uv.x + uvSize, uv.y,
+                    0.0f, 0.0f, uv.x, uv.y,
+
+                    0.0f, 1.0f, uv.x, uv.y + uvSize,
+                    1.0f, 1.0f, uv.x + uvSize, uv.y + uvSize,
+                    1.0f, 0.0f, uv.x + uvSize, uv.y
+                };
+                glBindVertexArray(m_VAO);
+                glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(quad), quad);
+                glDrawArrays(GL_TRIANGLES, 0, 6);
+
+                // Reset standard quad buffer
+                float defaultQuad[24] = {
+                    0.0f, 1.0f, 0.0f, 1.0f,
+                    1.0f, 0.0f, 1.0f, 0.0f,
+                    0.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f, 1.0f,
+                    1.0f, 1.0f, 1.0f, 1.0f,
+                    1.0f, 0.0f, 1.0f, 0.0f
+                };
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(defaultQuad), defaultQuad);
+                glBindVertexArray(0);
+                TextureAtlas::getInstance().unbind();
+
+                // Render item count number with FontRenderer if count > 1
+                if (stack.count > 1) {
+                    std::string countStr = std::to_string(stack.count);
+                    FontRenderer::getInstance().renderText(countStr, slotX + slotSize - 14.0f, startY + slotSize - 14.0f, 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true);
+                }
+            }
+        }
+    }
+
+    // 4. F3 Debug Screen Overlay with Real Text
+    if (showDebugInfo) {
+        // Draw background box
+        renderQuad(glm::vec2(10.0f, 10.0f), glm::vec2(380.0f, 160.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.70f));
+        renderQuad(glm::vec2(12.0f, 12.0f), glm::vec2(376.0f, 2.0f), glm::vec4(0.2f, 0.85f, 0.3f, 0.9f));
+
+        std::string facing = "North (-Z)";
+        if (std::abs(playerDir.x) > std::abs(playerDir.z)) {
+            facing = (playerDir.x > 0) ? "East (+X)" : "West (-X)";
+        } else {
+            facing = (playerDir.z > 0) ? "South (+Z)" : "North (-Z)";
+        }
+
+        std::ostringstream ss;
+        FontRenderer::getInstance().renderText("Minecraft 1:1 C++ Voxel Engine (OpenGL 4.5)", 18.0f, 18.0f, 1.0f, glm::vec4(1.0f, 0.85f, 0.2f, 1.0f));
+        
+        ss.str(""); ss << std::fixed << std::setprecision(1) << "FPS: " << fps << " (VSync: Off)";
+        FontRenderer::getInstance().renderText(ss.str(), 18.0f, 32.0f, 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+        ss.str(""); ss << std::fixed << std::setprecision(2) << "XYZ: " << playerPos.x << " / " << playerPos.y << " / " << playerPos.z;
+        FontRenderer::getInstance().renderText(ss.str(), 18.0f, 46.0f, 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+        int bx = static_cast<int>(std::floor(playerPos.x));
+        int by = static_cast<int>(std::floor(playerPos.y));
+        int bz = static_cast<int>(std::floor(playerPos.z));
+        int cx = bx >> 4;
+        int cy = by >> 4;
+        int cz = bz >> 4;
+        ss.str(""); ss << "Block: " << bx << " " << by << " " << bz << " [Chunk " << cx << " " << cy << " " << cz << "]";
+        FontRenderer::getInstance().renderText(ss.str(), 18.0f, 60.0f, 1.0f, glm::vec4(0.85f, 0.85f, 0.85f, 1.0f));
+
+        ss.str(""); ss << "Facing: " << facing;
+        FontRenderer::getInstance().renderText(ss.str(), 18.0f, 74.0f, 1.0f, glm::vec4(0.85f, 0.85f, 0.85f, 1.0f));
+
+        ss.str(""); ss << "Biome: " << biomeName;
+        FontRenderer::getInstance().renderText(ss.str(), 18.0f, 88.0f, 1.0f, glm::vec4(0.4f, 0.9f, 0.5f, 1.0f));
+
+        ss.str(""); ss << "Client Light: " << lightLevel << " (15 sky, " << lightLevel << " block)";
+        FontRenderer::getInstance().renderText(ss.str(), 18.0f, 102.0f, 1.0f, glm::vec4(1.0f, 0.9f, 0.4f, 1.0f));
+
+        ss.str(""); ss << "Flight Mode: " << (isFlying ? "ENABLED [Fly]" : "DISABLED [Physics]");
+        FontRenderer::getInstance().renderText(ss.str(), 18.0f, 116.0f, 1.0f, isFlying ? glm::vec4(0.3f, 0.8f, 1.0f, 1.0f) : glm::vec4(0.9f, 0.5f, 0.2f, 1.0f));
+
+        FontRenderer::getInstance().renderText("F3: Toggle HUD  F4: Cycle Time  E: Inventory", 18.0f, 134.0f, 1.0f, glm::vec4(0.6f, 0.6f, 0.6f, 1.0f));
     }
 
     glDisable(GL_BLEND);
@@ -85,7 +198,6 @@ void HUD::renderQuad(const glm::vec2& position, const glm::vec2& size, const glm
     m_UIShader->setVec4("u_Color", color);
     m_UIShader->setBool("u_UseTexture", false);
 
-    // Calculate projection scale matrix for quad
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(position, 0.0f));
     model = glm::scale(model, glm::vec3(size, 1.0f));

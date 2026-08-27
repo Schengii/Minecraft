@@ -70,7 +70,8 @@ enum class BlockType : uint8_t {
     Emerald,
     EmeraldBlock,
     EnchantingTable,
-    Bookshelf
+    Bookshelf,
+    Sugar
 };
 
 enum Direction {
@@ -86,11 +87,11 @@ struct BlockData {
     BlockType type = BlockType::Air;
 
     static bool isOpaque(BlockType type) {
-        return type != BlockType::Air && type != BlockType::Glass && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::EndPortal && type != BlockType::ItemDrop && type != BlockType::Apple && type != BlockType::Bread && type != BlockType::RawPorkchop && type != BlockType::CookedPorkchop && type != BlockType::GoldenApple && type != BlockType::Bamboo && type != BlockType::Rail && type != BlockType::PoweredRail && type != BlockType::WheatCrop && type != BlockType::CarrotCrop && type != BlockType::PotatoCrop && type != BlockType::Minecart && type != BlockType::Boat;
+        return type != BlockType::Air && type != BlockType::Glass && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::EndPortal && type != BlockType::ItemDrop && type != BlockType::Apple && type != BlockType::Bread && type != BlockType::RawPorkchop && type != BlockType::CookedPorkchop && type != BlockType::GoldenApple && type != BlockType::Bamboo && type != BlockType::Rail && type != BlockType::PoweredRail && type != BlockType::WheatCrop && type != BlockType::CarrotCrop && type != BlockType::PotatoCrop && type != BlockType::Minecart && type != BlockType::Boat && type != BlockType::Sugar;
     }
 
     static bool isSolid(BlockType type) {
-        return type != BlockType::Air && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::EndPortal && type != BlockType::ItemDrop && type != BlockType::Apple && type != BlockType::Bread && type != BlockType::RawPorkchop && type != BlockType::CookedPorkchop && type != BlockType::GoldenApple && type != BlockType::Bamboo && type != BlockType::Rail && type != BlockType::PoweredRail && type != BlockType::WheatCrop && type != BlockType::CarrotCrop && type != BlockType::PotatoCrop && type != BlockType::Minecart && type != BlockType::Boat;
+        return type != BlockType::Air && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::EndPortal && type != BlockType::ItemDrop && type != BlockType::Apple && type != BlockType::Bread && type != BlockType::RawPorkchop && type != BlockType::CookedPorkchop && type != BlockType::GoldenApple && type != BlockType::Bamboo && type != BlockType::Rail && type != BlockType::PoweredRail && type != BlockType::WheatCrop && type != BlockType::CarrotCrop && type != BlockType::PotatoCrop && type != BlockType::Minecart && type != BlockType::Boat && type != BlockType::Sugar;
     }
 
     static glm::vec2 getTextureUV(BlockType type, Direction face) {
@@ -241,14 +242,18 @@ struct BlockData {
             case BlockType::Bookshelf:
                 tileIndex = 5;
                 break;
+            case BlockType::Sugar:
+                tileIndex = 8;
+                break;
             default:
                 tileIndex = 2;
                 break;
         }
 
-        float tileWidth = 1.0f / 16.0f;
-        float u = (tileIndex % 16) * tileWidth;
-        float v = (tileIndex / 16) * tileWidth;
+        int tileX = tileIndex % 16;
+        int tileY = tileIndex / 16;
+        float u = static_cast<float>(tileX) / 16.0f;
+        float v = static_cast<float>(tileY) / 16.0f;
 
         return glm::vec2(u, v);
     }

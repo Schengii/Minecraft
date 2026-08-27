@@ -18,6 +18,7 @@ PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = NULL;
 PFNGLGENBUFFERSPROC glGenBuffers = NULL;
 PFNGLBINDBUFFERPROC glBindBuffer = NULL;
 PFNGLBUFFERDATAPROC glBufferData = NULL;
+PFNGLBUFFERSUBDATAPROC glBufferSubData = NULL;
 PFNGLDELETEBUFFERSPROC glDeleteBuffers = NULL;
 
 PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray = NULL;
@@ -105,6 +106,7 @@ int gladLoadGLLoader(GLADloadproc loadproc) {
     glGenBuffers = (PFNGLGENBUFFERSPROC)load(loadproc, "glGenBuffers");
     glBindBuffer = (PFNGLBINDBUFFERPROC)load(loadproc, "glBindBuffer");
     glBufferData = (PFNGLBUFFERDATAPROC)load(loadproc, "glBufferData");
+    glBufferSubData = (PFNGLBUFFERSUBDATAPROC)load(loadproc, "glBufferSubData");
     glDeleteBuffers = (PFNGLDELETEBUFFERSPROC)load(loadproc, "glDeleteBuffers");
 
     glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)load(loadproc, "glEnableVertexAttribArray");

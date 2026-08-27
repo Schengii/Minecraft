@@ -15,7 +15,9 @@ public:
     ~HUD();
 
     void resize(int width, int height);
-    void render(int selectedSlot, bool showDebugInfo, float fps, const glm::vec3& playerPos, const glm::vec3& playerDir, bool isFlying, float health = 20.0f, float hunger = 20.0f);
+    void render(int selectedSlot, bool showDebugInfo, float fps, const glm::vec3& playerPos, const glm::vec3& playerDir, 
+                bool isFlying, float health = 20.0f, float hunger = 20.0f, const class Inventory* inventory = nullptr, 
+                const std::string& biomeName = "Plains", int lightLevel = 15);
 
 private:
     void initBuffers();

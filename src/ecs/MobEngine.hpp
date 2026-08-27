@@ -49,6 +49,7 @@ public:
     void spawnMob(MobType type, const glm::vec3& position);
     void update(World& world, glm::vec3& playerPos, glm::vec3& playerVel, float& playerHealth, float deltaTime, class ItemEntityManager* itemMgr = nullptr);
     bool checkPlayerAttack(const glm::vec3& playerPos, const glm::vec3& playerDir, float reach, int damage, class ItemEntityManager* itemMgr = nullptr);
+    void checkNaturalSpawning(World& world, const glm::vec3& playerPos, float deltaTime);
 
     static std::deque<glm::ivec3> findPath3D(World& world, const glm::ivec3& start, const glm::ivec3& target, int maxSteps = 30);
 
@@ -58,6 +59,7 @@ public:
 private:
     std::vector<Mob> m_Mobs;
     std::vector<ArrowEntity> m_Arrows;
+    float m_SpawnTimer = 0.0f;
 };
 
 }

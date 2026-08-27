@@ -146,8 +146,14 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
             if (itemMgr) {
                 if (mob.type == MobType::Pig) {
                     itemMgr->spawnItemDrop(BlockType::RawPorkchop, 1 + rand() % 2, mob.position);
+                } else if (mob.type == MobType::Cow) {
+                    itemMgr->spawnItemDrop(BlockType::RawPorkchop, 1 + rand() % 2, mob.position);
                 } else if (mob.type == MobType::Zombie) {
                     itemMgr->spawnItemDrop(BlockType::Apple, 1, mob.position);
+                } else if (mob.type == MobType::Skeleton) {
+                    itemMgr->spawnItemDrop(BlockType::Stick, 1 + rand() % 2, mob.position);
+                } else if (mob.type == MobType::Creeper) {
+                    itemMgr->spawnItemDrop(BlockType::TNT, 1, mob.position);
                 } else if (mob.type == MobType::Villager) {
                     itemMgr->spawnItemDrop(BlockType::Emerald, 1, mob.position);
                 } else if (mob.type == MobType::IronGolem) {
@@ -161,9 +167,15 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
 
         float distToPlayer = glm::distance(mob.position, playerPos);
 
-        // Calculate Yaw rotation towards player
+        // Despawn far away mobs (> 72 blocks) except bosses
+        if (distToPlayer > 72.0f && mob.type != MobType::EnderDragon) {
+            it = m_Mobs.erase(it);
+            continue;
+        }
+
+        // Calculate Yaw rotation towards player in degrees
         glm::vec3 lookVec = playerPos - mob.position;
-        mob.yaw = std::atan2(lookVec.x, lookVec.z);
+        mob.yaw = glm::degrees(std::atan2(lookVec.x, lookVec.z));
 
         // --- Zombie AI ---
         if (mob.type == MobType::Zombie) {
@@ -296,6 +308,49 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
         }
 
         ++it;
+    }
+
+    // 3. Periodic Natural Mob Spawner
+    checkNaturalSpawning(world, playerPos, deltaTime);
+}
+
+void MobEngine::checkNaturalSpawning(World& world, const glm::vec3& playerPos, float deltaTime) {
+    m_SpawnTimer += deltaTime;
+    if (m_SpawnTimer < 3.0f) return;
+    m_SpawnTimer = 0.0f;
+
+    if (m_Mobs.size() >= 24) return; // Mob cap
+
+    // Attempt random spawn location around player (radius 24 to 44 blocks)
+    float angle = static_cast<float>(rand() % 360) * 0.0174533f;
+    float dist = 24.0f + static_cast<float>(rand() % 20);
+    int sx = static_cast<int>(std::floor(playerPos.x + std::cos(angle) * dist));
+    int sz = static_cast<int>(std::floor(playerPos.z + std::sin(angle) * dist));
+
+    // Find surface / ground block
+    for (int sy = 120; sy >= 5; --sy) {
+        BlockType ground = world.getBlock(sx, sy, sz);
+        BlockType air1 = world.getBlock(sx, sy + 1, sz);
+        BlockType air2 = world.getBlock(sx, sy + 2, sz);
+
+        if (BlockData::isSolid(ground) && !BlockData::isSolid(air1) && !BlockData::isSolid(air2)) {
+            glm::vec3 spawnPos(sx + 0.5f, sy + 1.0f, sz + 0.5f);
+
+            if (ground == BlockType::Grass) {
+                // Passive mob spawn
+                int r = rand() % 3;
+                if (r == 0) spawnMob(MobType::Pig, spawnPos);
+                else if (r == 1) spawnMob(MobType::Cow, spawnPos);
+                else spawnMob(MobType::Villager, spawnPos);
+            } else if (ground == BlockType::Stone || ground == BlockType::Dirt || ground == BlockType::Sand) {
+                // Hostile mob spawn in darkness
+                int r = rand() % 3;
+                if (r == 0) spawnMob(MobType::Zombie, spawnPos);
+                else if (r == 1) spawnMob(MobType::Skeleton, spawnPos);
+                else spawnMob(MobType::Creeper, spawnPos);
+            }
+            break;
+        }
     }
 }
 

@@ -99,6 +99,8 @@ typedef khronos_sizei_t GLsizeiptr;
 #define GL_NEAREST 0x2600
 #define GL_LINEAR 0x2601
 #define GL_NEAREST_MIPMAP_NEAREST 0x2700
+#define GL_LINEAR_MIPMAP_NEAREST 0x2701
+#define GL_NEAREST_MIPMAP_LINEAR 0x2702
 #define GL_LINEAR_MIPMAP_LINEAR 0x2703
 #define GL_REPEAT 0x2901
 #define GL_CLAMP_TO_EDGE 0x812F
@@ -134,6 +136,7 @@ typedef void (GLAD_API_PTR *PFNGLDELETEVERTEXARRAYSPROC)(GLsizei n, const GLuint
 typedef void (GLAD_API_PTR *PFNGLGENBUFFERSPROC)(GLsizei n, GLuint *buffers);
 typedef void (GLAD_API_PTR *PFNGLBINDBUFFERPROC)(GLenum target, GLuint buffer);
 typedef void (GLAD_API_PTR *PFNGLBUFFERDATAPROC)(GLenum target, GLsizeiptr size, const void *data, GLenum usage);
+typedef void (GLAD_API_PTR *PFNGLBUFFERSUBDATAPROC)(GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
 typedef void (GLAD_API_PTR *PFNGLDELETEBUFFERSPROC)(GLsizei n, const GLuint *buffers);
 
 typedef void (GLAD_API_PTR *PFNGLENABLEVERTEXATTRIBARRAYPROC)(GLuint index);
@@ -203,6 +206,7 @@ GLAD_GLAPI PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
 GLAD_GLAPI PFNGLGENBUFFERSPROC glGenBuffers;
 GLAD_GLAPI PFNGLBINDBUFFERPROC glBindBuffer;
 GLAD_GLAPI PFNGLBUFFERDATAPROC glBufferData;
+GLAD_GLAPI PFNGLBUFFERSUBDATAPROC glBufferSubData;
 GLAD_GLAPI PFNGLDELETEBUFFERSPROC glDeleteBuffers;
 
 GLAD_GLAPI PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;

@@ -43,6 +43,7 @@ public:
     bool startServer(uint16_t port = 25565);
     bool connectToServer(const std::string& ip, uint16_t port = 25565);
     void disconnect();
+    void update(class World* world = nullptr);
 
     void sendPlayerPosition(const glm::vec3& pos, float yaw, float pitch);
     void sendBlockChange(const glm::ivec3& blockPos, BlockType type);
@@ -64,7 +65,7 @@ public:
     static std::vector<uint8_t> serializeChatMessage(const ChatMessagePacket& packet);
     static bool deserializeChatMessage(const uint8_t* data, size_t size, ChatMessagePacket& outPacket);
 
-    void processIncomingPacket(const uint8_t* buffer, size_t size);
+    void processIncomingPacket(const uint8_t* buffer, size_t size, class World* world = nullptr);
 
 private:
     bool m_IsServer = false;
@@ -72,6 +73,10 @@ private:
     uint32_t m_LocalPlayerId = 1;
     std::vector<PlayerPosPacket> m_RemotePlayers;
     std::vector<std::string> m_ChatLog;
+
+    uintptr_t m_Socket = ~0ULL; // socket descriptor
+    std::string m_RemoteIP = "127.0.0.1";
+    uint16_t m_RemotePort = 25565;
 };
 
 }

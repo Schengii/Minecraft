@@ -1,3 +1,4 @@
+#include <glad/glad.h>
 #include "TextureAtlas.hpp"
 #include <iostream>
 #include <cmath>

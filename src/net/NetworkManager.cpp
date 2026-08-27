@@ -1,35 +1,132 @@
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include "NetworkManager.hpp"
+#include "../world/World.hpp"
 #include <iostream>
 #include <cstring>
+#include <algorithm>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+typedef int socklen_t;
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
+#define INVALID_SOCKET -1
+#define SOCKET_ERROR -1
+#define closesocket close
+#endif
 
 namespace Minecraft {
 
-NetworkManager::NetworkManager() = default;
+NetworkManager::NetworkManager() {
+#ifdef _WIN32
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
+}
+
 NetworkManager::~NetworkManager() {
     disconnect();
+#ifdef _WIN32
+    WSACleanup();
+#endif
 }
 
 bool NetworkManager::startServer(uint16_t port) {
     m_IsServer = true;
     m_IsConnected = true;
-    std::cout << "[NetworkManager] Server started listening on port " << port << std::endl;
+    m_RemotePort = port;
+
+#ifdef _WIN32
+    SOCKET sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock == INVALID_SOCKET) {
+        std::cerr << "[NetworkManager] Failed to create UDP server socket." << std::endl;
+        return false;
+    }
+
+    u_long nonBlocking = 1;
+    ioctlsocket(sock, FIONBIO, &nonBlocking);
+
+    sockaddr_in serverAddr{};
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+    serverAddr.sin_port = htons(port);
+
+    if (bind(sock, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+        std::cerr << "[NetworkManager] Failed to bind server socket to port " << port << std::endl;
+        closesocket(sock);
+        return false;
+    }
+
+    m_Socket = static_cast<uintptr_t>(sock);
+#endif
+
+    std::cout << "[NetworkManager] UDP Server started listening on port " << port << std::endl;
     return true;
 }
 
 bool NetworkManager::connectToServer(const std::string& ip, uint16_t port) {
     m_IsServer = false;
     m_IsConnected = true;
+    m_RemoteIP = ip;
+    m_RemotePort = port;
+
+#ifdef _WIN32
+    SOCKET sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock == INVALID_SOCKET) {
+        std::cerr << "[NetworkManager] Failed to create UDP client socket." << std::endl;
+        return false;
+    }
+
+    u_long nonBlocking = 1;
+    ioctlsocket(sock, FIONBIO, &nonBlocking);
+    m_Socket = static_cast<uintptr_t>(sock);
+#endif
+
     std::cout << "[NetworkManager] Connected to server at " << ip << ":" << port << std::endl;
     return true;
 }
 
 void NetworkManager::disconnect() {
     if (m_IsConnected) {
+        if (m_Socket != static_cast<uintptr_t>(~0ULL)) {
+#ifdef _WIN32
+            closesocket(static_cast<SOCKET>(m_Socket));
+#else
+            close(static_cast<int>(m_Socket));
+#endif
+            m_Socket = ~0ULL;
+        }
         std::cout << "[NetworkManager] Network session disconnected." << std::endl;
         m_IsConnected = false;
         m_IsServer = false;
         m_RemotePlayers.clear();
     }
+}
+
+void NetworkManager::update(World* world) {
+    if (!m_IsConnected || m_Socket == static_cast<uintptr_t>(~0ULL)) return;
+
+    uint8_t buffer[2048];
+#ifdef _WIN32
+    sockaddr_in fromAddr{};
+    socklen_t fromLen = sizeof(fromAddr);
+
+    while (true) {
+        int bytesReceived = recvfrom(static_cast<SOCKET>(m_Socket), reinterpret_cast<char*>(buffer), sizeof(buffer), 0, (sockaddr*)&fromAddr, &fromLen);
+        if (bytesReceived <= 0) break;
+
+        processIncomingPacket(buffer, static_cast<size_t>(bytesReceived), world);
+    }
+#endif
 }
 
 void NetworkManager::sendPlayerPosition(const glm::vec3& pos, float yaw, float pitch) {
@@ -39,8 +136,19 @@ void NetworkManager::sendPlayerPosition(const glm::vec3& pos, float yaw, float p
     pkt.position = pos;
     pkt.yaw = yaw;
     pkt.pitch = pitch;
+
     std::vector<uint8_t> bytes = serializePlayerPos(pkt);
-    (void)bytes;
+
+#ifdef _WIN32
+    if (m_Socket != static_cast<uintptr_t>(~0ULL)) {
+        sockaddr_in destAddr{};
+        destAddr.sin_family = AF_INET;
+        destAddr.sin_port = htons(m_RemotePort);
+        inet_pton(AF_INET, m_RemoteIP.c_str(), &destAddr.sin_addr);
+
+        sendto(static_cast<SOCKET>(m_Socket), reinterpret_cast<const char*>(bytes.data()), static_cast<int>(bytes.size()), 0, (sockaddr*)&destAddr, sizeof(destAddr));
+    }
+#endif
 }
 
 void NetworkManager::sendBlockChange(const glm::ivec3& blockPos, BlockType type) {
@@ -48,8 +156,19 @@ void NetworkManager::sendBlockChange(const glm::ivec3& blockPos, BlockType type)
     BlockChangePacket pkt;
     pkt.blockPos = blockPos;
     pkt.newBlock = type;
+
     std::vector<uint8_t> bytes = serializeBlockChange(pkt);
-    (void)bytes;
+
+#ifdef _WIN32
+    if (m_Socket != static_cast<uintptr_t>(~0ULL)) {
+        sockaddr_in destAddr{};
+        destAddr.sin_family = AF_INET;
+        destAddr.sin_port = htons(m_RemotePort);
+        inet_pton(AF_INET, m_RemoteIP.c_str(), &destAddr.sin_addr);
+
+        sendto(static_cast<SOCKET>(m_Socket), reinterpret_cast<const char*>(bytes.data()), static_cast<int>(bytes.size()), 0, (sockaddr*)&destAddr, sizeof(destAddr));
+    }
+#endif
 }
 
 void NetworkManager::sendChatMessage(const std::string& message) {
@@ -57,9 +176,20 @@ void NetworkManager::sendChatMessage(const std::string& message) {
     ChatMessagePacket pkt;
     pkt.senderId = m_LocalPlayerId;
     pkt.message = message;
+
     std::vector<uint8_t> bytes = serializeChatMessage(pkt);
     m_ChatLog.push_back("<Player " + std::to_string(m_LocalPlayerId) + "> " + message);
-    (void)bytes;
+
+#ifdef _WIN32
+    if (m_Socket != static_cast<uintptr_t>(~0ULL)) {
+        sockaddr_in destAddr{};
+        destAddr.sin_family = AF_INET;
+        destAddr.sin_port = htons(m_RemotePort);
+        inet_pton(AF_INET, m_RemoteIP.c_str(), &destAddr.sin_addr);
+
+        sendto(static_cast<SOCKET>(m_Socket), reinterpret_cast<const char*>(bytes.data()), static_cast<int>(bytes.size()), 0, (sockaddr*)&destAddr, sizeof(destAddr));
+    }
+#endif
 }
 
 std::vector<uint8_t> NetworkManager::serializePlayerPos(const PlayerPosPacket& packet) {
@@ -119,11 +249,8 @@ bool NetworkManager::deserializeBlockChange(const uint8_t* data, size_t size, Bl
         return false;
     }
 
-    size_t offset = 1;
-    std::memcpy(&outPacket.blockPos, data + offset, sizeof(glm::ivec3));
-    offset += sizeof(glm::ivec3);
-
-    outPacket.newBlock = static_cast<BlockType>(data[offset]);
+    std::memcpy(&outPacket.blockPos, data + 1, sizeof(glm::ivec3));
+    outPacket.newBlock = static_cast<BlockType>(data[1 + sizeof(glm::ivec3)]);
     return true;
 }
 
@@ -131,11 +258,12 @@ std::vector<uint8_t> NetworkManager::serializeChatMessage(const ChatMessagePacke
     std::vector<uint8_t> buffer;
     buffer.push_back(static_cast<uint8_t>(PacketType::ChatMessage));
 
-    const uint8_t* senderBytes = reinterpret_cast<const uint8_t*>(&packet.senderId);
-    buffer.insert(buffer.end(), senderBytes, senderBytes + sizeof(uint32_t));
+    uint32_t sid = packet.senderId;
+    const uint8_t* sidBytes = reinterpret_cast<const uint8_t*>(&sid);
+    buffer.insert(buffer.end(), sidBytes, sidBytes + sizeof(uint32_t));
 
-    uint16_t len = static_cast<uint16_t>(packet.message.size());
-    const uint8_t* lenBytes = reinterpret_cast<const uint8_t*>(&len);
+    uint16_t msgLen = static_cast<uint16_t>(packet.message.length());
+    const uint8_t* lenBytes = reinterpret_cast<const uint8_t*>(&msgLen);
     buffer.insert(buffer.end(), lenBytes, lenBytes + sizeof(uint16_t));
 
     buffer.insert(buffer.end(), packet.message.begin(), packet.message.end());
@@ -151,17 +279,17 @@ bool NetworkManager::deserializeChatMessage(const uint8_t* data, size_t size, Ch
     std::memcpy(&outPacket.senderId, data + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
 
-    uint16_t len = 0;
-    std::memcpy(&len, data + offset, sizeof(uint16_t));
+    uint16_t msgLen = 0;
+    std::memcpy(&msgLen, data + offset, sizeof(uint16_t));
     offset += sizeof(uint16_t);
 
-    if (size < offset + len) return false;
+    if (size < offset + msgLen) return false;
 
-    outPacket.message = std::string(reinterpret_cast<const char*>(data + offset), len);
+    outPacket.message = std::string(reinterpret_cast<const char*>(data + offset), msgLen);
     return true;
 }
 
-void NetworkManager::processIncomingPacket(const uint8_t* buffer, size_t size) {
+void NetworkManager::processIncomingPacket(const uint8_t* buffer, size_t size, World* world) {
     if (size == 0) return;
 
     PacketType type = static_cast<PacketType>(buffer[0]);
@@ -180,6 +308,13 @@ void NetworkManager::processIncomingPacket(const uint8_t* buffer, size_t size) {
             }
             if (!found) {
                 m_RemotePlayers.push_back(pkt);
+            }
+        }
+    } else if (type == PacketType::BlockChange) {
+        BlockChangePacket pkt;
+        if (deserializeBlockChange(buffer, size, pkt)) {
+            if (world) {
+                world->setBlock(pkt.blockPos.x, pkt.blockPos.y, pkt.blockPos.z, pkt.newBlock);
             }
         }
     } else if (type == PacketType::ChatMessage) {

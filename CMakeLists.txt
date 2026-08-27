@@ -53,6 +53,7 @@ set(SOURCES
     src/renderer/Camera.cpp
     src/renderer/TextureAtlas.cpp
     src/renderer/ParticleEngine.cpp
+    src/renderer/EntityRenderer.cpp
     src/renderer/FrustumCuller.cpp
     src/renderer/ShadowMap.cpp
     src/renderer/PostProcessing.cpp
@@ -83,6 +84,7 @@ set(SOURCES
     src/world/EnchantingEngine.cpp
     src/world/BrewingEngine.cpp
     src/physics/PhysicsEngine.cpp
+    src/gui/FontRenderer.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp
     src/gui/ContainerGUI.cpp
@@ -112,6 +114,9 @@ target_link_libraries(Minecraft PRIVATE
     glm::glm
     OpenGL::GL
 )
+if (WIN32)
+    target_link_libraries(Minecraft PRIVATE ws2_32)
+endif()
 
 # Test Engine Target
 set(TEST_SOURCES
@@ -126,6 +131,7 @@ set(TEST_SOURCES
     src/renderer/Camera.cpp
     src/renderer/TextureAtlas.cpp
     src/renderer/ParticleEngine.cpp
+    src/renderer/EntityRenderer.cpp
     src/renderer/FrustumCuller.cpp
     src/renderer/ShadowMap.cpp
     src/renderer/PostProcessing.cpp
@@ -156,6 +162,7 @@ set(TEST_SOURCES
     src/world/EnchantingEngine.cpp
     src/world/BrewingEngine.cpp
     src/physics/PhysicsEngine.cpp
+    src/gui/FontRenderer.cpp
     src/gui/HUD.cpp
     src/gui/InventoryGUI.cpp
     src/gui/ContainerGUI.cpp
@@ -178,6 +185,9 @@ target_include_directories(TestEngine PRIVATE
     ${entt_SOURCE_DIR}/single_include
 )
 target_link_libraries(TestEngine PRIVATE glfw glm::glm OpenGL::GL)
+if (WIN32)
+    target_link_libraries(TestEngine PRIVATE ws2_32)
+endif()
 
 
 # Copy assets folder to output executable directory
