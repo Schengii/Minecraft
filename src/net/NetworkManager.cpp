@@ -335,4 +335,17 @@ float NetworkManager::interpolateAngle(float currentAngle, float targetAngle, fl
     return currentAngle + diff * std::clamp(alpha, 0.0f, 1.0f);
 }
 
+void NetworkManager::queueIncomingPacket(const std::vector<uint8_t>& packet) {
+    if (!packet.empty()) {
+        m_IncomingPacketQueue.push_back(packet);
+    }
+}
+
+void NetworkManager::flushIncomingPackets(World* world) {
+    for (const auto& pkt : m_IncomingPacketQueue) {
+        processIncomingPacket(pkt.data(), pkt.size(), world);
+    }
+    m_IncomingPacketQueue.clear();
+}
+
 }

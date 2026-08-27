@@ -47,8 +47,13 @@ void ShadowMap::unbind(unsigned int currentWinWidth, unsigned int currentWinHeig
 }
 
 glm::mat4 ShadowMap::getLightSpaceMatrix(const glm::vec3& sunDir, const glm::vec3& targetPos) const {
-    glm::vec3 lightPos = targetPos - glm::normalize(sunDir) * 40.0f;
-    glm::mat4 lightProjection = glm::ortho(-35.0f, 35.0f, -35.0f, 35.0f, 1.0f, 90.0f);
+    return getLightSpaceMatrixCascade(sunDir, targetPos, 35.0f);
+}
+
+glm::mat4 ShadowMap::getLightSpaceMatrixCascade(const glm::vec3& sunDir, const glm::vec3& targetPos, float cascadeRadius) const {
+    float r = std::max(cascadeRadius, 10.0f);
+    glm::vec3 lightPos = targetPos - glm::normalize(sunDir) * (r * 1.2f);
+    glm::mat4 lightProjection = glm::ortho(-r, r, -r, r, 1.0f, r * 2.6f);
     glm::mat4 lightView = glm::lookAt(lightPos, targetPos, glm::vec3(0.0f, 1.0f, 0.0f));
     return lightProjection * lightView;
 }

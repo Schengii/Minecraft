@@ -70,6 +70,9 @@ public:
     static float interpolateAngle(float currentAngle, float targetAngle, float alpha);
 
     void processIncomingPacket(const uint8_t* buffer, size_t size, class World* world = nullptr);
+    void queueIncomingPacket(const std::vector<uint8_t>& packet);
+    void flushIncomingPackets(class World* world = nullptr);
+    size_t getQueuedPacketCount() const { return m_IncomingPacketQueue.size(); }
 
 private:
     bool m_IsServer = false;
@@ -77,6 +80,7 @@ private:
     uint32_t m_LocalPlayerId = 1;
     std::vector<PlayerPosPacket> m_RemotePlayers;
     std::vector<std::string> m_ChatLog;
+    std::vector<std::vector<uint8_t>> m_IncomingPacketQueue;
 
     uintptr_t m_Socket = ~0ULL; // socket descriptor
     std::string m_RemoteIP = "127.0.0.1";

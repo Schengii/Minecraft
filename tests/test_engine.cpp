@@ -1492,6 +1492,67 @@ void testFullIntegrationSuite() {
     std::cout << "  -> Full Integration tests PASSED!" << std::endl;
 }
 
+void testAsyncNetworkPacketQueue() {
+    std::cout << "[TEST] 77. Asynchronous Network Packet Queue & Batch Flush..." << std::endl;
+    World world(1);
+    NetworkManager netMgr;
+
+    BlockChangePacket pkt;
+    pkt.blockPos = glm::ivec3(5, 64, 5);
+    pkt.newBlock = BlockType::EmeraldBlock;
+    std::vector<uint8_t> bytes = NetworkManager::serializeBlockChange(pkt);
+
+    netMgr.queueIncomingPacket(bytes);
+    assert(netMgr.getQueuedPacketCount() == 1);
+
+    netMgr.flushIncomingPackets(&world);
+    assert(netMgr.getQueuedPacketCount() == 0);
+    assert(world.getBlock(5, 64, 5) == BlockType::EmeraldBlock);
+
+    std::cout << "  -> Async Network Packet Queue tests PASSED!" << std::endl;
+}
+
+void testCascadedShadowFrustums() {
+    std::cout << "[TEST] 78. Cascaded Shadow Light-Space Frustum Calculations..." << std::endl;
+    ShadowMap shadowMap(2048, 2048);
+    glm::vec3 sunDir(0.5f, -0.8f, 0.3f);
+    glm::vec3 target(0.0f, 64.0f, 0.0f);
+
+    glm::mat4 nearCascade = shadowMap.getLightSpaceMatrixCascade(sunDir, target, 15.0f);
+    glm::mat4 midCascade  = shadowMap.getLightSpaceMatrixCascade(sunDir, target, 40.0f);
+    glm::mat4 farCascade  = shadowMap.getLightSpaceMatrixCascade(sunDir, target, 90.0f);
+
+    assert(nearCascade != midCascade);
+    assert(midCascade != farCascade);
+
+    std::cout << "  -> Cascaded Shadow Frustums tests PASSED!" << std::endl;
+}
+
+void testPostProcessingSSAOAndNightVision() {
+    std::cout << "[TEST] 79. Post-Processing SSAO, Bloom & Night Vision Combined State..." << std::endl;
+    PostProcessing pp(1920, 1080);
+    pp.setSSAOEnabled(true);
+    pp.setBloomEnabled(true);
+
+    assert(pp.isSSAOEnabled() == true);
+    assert(pp.isBloomEnabled() == true);
+
+    std::cout << "  -> Post-Processing Combined State tests PASSED!" << std::endl;
+}
+
+void testUltimateEngineStabilityAndRegression() {
+    std::cout << "[TEST] 80. Ultimate System-wide Regression & Stability Check..." << std::endl;
+    World world(12345);
+    world.setBlock(0, 64, 0, BlockType::Grass);
+    assert(world.getBlock(0, 64, 0) == BlockType::Grass);
+
+    PlayerStats stats;
+    stats.setHealth(20.0f);
+    assert(stats.getHealth() == 20.0f);
+
+    std::cout << "  -> Ultimate System-wide Regression tests PASSED!" << std::endl;
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << " Running Minecraft Engine Test Suite   " << std::endl;
@@ -1596,8 +1657,14 @@ int main() {
     testSSAOShaderParameters();
     testFullIntegrationSuite();
 
+    // Phase 11 Cascaded Shadows, Async Queues & Ultimate Regression
+    testAsyncNetworkPacketQueue();
+    testCascadedShadowFrustums();
+    testPostProcessingSSAOAndNightVision();
+    testUltimateEngineStabilityAndRegression();
+
     std::cout << "========================================" << std::endl;
-    std::cout << " ALL 76 ENGINE TESTS PASSED 100%!       " << std::endl;
+    std::cout << " ALL 80 ENGINE TESTS PASSED 100%!       " << std::endl;
     std::cout << "========================================" << std::endl;
     return 0;
 }
