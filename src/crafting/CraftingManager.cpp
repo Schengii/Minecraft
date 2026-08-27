@@ -224,4 +224,19 @@ ItemStack CraftingManager::matchRecipe3x3(const std::array<ItemStack, 9>& grid) 
     return { BlockType::Air, 0, 64 };
 }
 
+ItemStack CraftingManager::matchSmithingUpgrade(const ItemStack& baseItem, const ItemStack& upgradeMaterial) {
+    if (baseItem.isEmpty() || upgradeMaterial.isEmpty()) return { BlockType::Air, 0, 64 };
+
+    // Upgrading Diamond/Iron Gear with Netherrack or Obsidian
+    if (upgradeMaterial.type == BlockType::Obsidian || upgradeMaterial.type == BlockType::Netherrack) {
+        if (baseItem.type == BlockType::DiamondSword || baseItem.type == BlockType::IronSword) {
+            return { BlockType::DiamondSword, 1, 1 }; // Netherite / Reinforced tier
+        }
+        if (baseItem.type == BlockType::DiamondPickaxe || baseItem.type == BlockType::IronPickaxe) {
+            return { BlockType::DiamondPickaxe, 1, 1 }; // Netherite / Reinforced tier
+        }
+    }
+    return { BlockType::Air, 0, 64 };
+}
+
 }

@@ -99,6 +99,27 @@ void ParticleEngine::spawnHitCrit(const glm::vec3& targetPos) {
     }
 }
 
+void ParticleEngine::spawnExplosionDebris(const glm::vec3& explosionPos, int count) {
+    for (int i = 0; i < count; ++i) {
+        Particle p;
+        float rx = (rand() % 200 / 100.0f - 1.0f);
+        float ry = (rand() % 200 / 100.0f - 0.5f);
+        float rz = (rand() % 200 / 100.0f - 1.0f);
+
+        p.position = explosionPos + glm::vec3(rx * 0.5f, ry * 0.5f, rz * 0.5f);
+        p.velocity = glm::vec3(rx * 8.0f, 6.0f + ry * 5.0f, rz * 8.0f);
+        p.color = (i % 2 == 0) ? glm::vec4(1.0f, 0.45f, 0.1f, 1.0f) : glm::vec4(0.3f, 0.3f, 0.3f, 0.9f); // Flame or smoke
+        p.size = 0.12f;
+        p.life = 0.8f + (rand() % 50 / 100.0f);
+        p.maxLife = p.life;
+        m_Particles.push_back(p);
+    }
+}
+
+void ParticleEngine::clear() {
+    m_Particles.clear();
+}
+
 void ParticleEngine::update(float deltaTime) {
     for (auto it = m_Particles.begin(); it != m_Particles.end(); ) {
         it->life -= deltaTime;

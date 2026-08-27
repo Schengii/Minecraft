@@ -85,6 +85,14 @@ void main() {
 
     vec3 finalColor = baseColor * lighting + specular;
 
+    // Water Surface Shoreline Foam & Crest Highlights
+    if (texColor.a > 0.1 && texColor.a < 0.95) {
+        float foamWave = sin(FragPos.x * 4.0 + FragPos.z * 4.0) * cos(FragPos.z * 3.0);
+        if (foamWave > 0.65) {
+            finalColor = mix(finalColor, vec3(0.92, 0.96, 1.0), 0.38); // Sea foam crest
+        }
+    }
+
     // Atmospheric Distance Fog & Sun In-Scattering
     float fragDist = length(FragPos - u_PlayerPos);
     float fogDensity = u_IsUnderwater ? 0.045 : 0.0075;

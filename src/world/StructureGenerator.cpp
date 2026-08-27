@@ -293,4 +293,35 @@ void StructureGenerator::generateShipwreck(World& world, int x, int y, int z) {
     world.setBlock(x + 1, y + 1, z + 2, BlockType::Chest);
 }
 
+void StructureGenerator::generateWoodlandMansion(World& world, int x, int y, int z) {
+    // 15x12x15 Multi-Story Woodland Grand Mansion
+    for (int dy = 0; dy < 12; ++dy) {
+        for (int dx = 0; dx < 15; ++dx) {
+            for (int dz = 0; dz < 15; ++dz) {
+                if (dy == 0 || dy == 5 || dy == 11) {
+                    // Floors and Roof
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::Planks);
+                } else if (dx == 0 || dx == 14 || dz == 0 || dz == 14) {
+                    // Exterior Walls with corner pillars
+                    if ((dx == 0 || dx == 14) && (dz == 0 || dz == 14)) {
+                        world.setBlock(x + dx, y + dy, z + dz, BlockType::OakLog);
+                    } else if (dy % 5 == 2 && (dx % 4 == 2 || dz % 4 == 2)) {
+                        world.setBlock(x + dx, y + dy, z + dz, BlockType::Glass); // Glass windows
+                    } else {
+                        world.setBlock(x + dx, y + dy, z + dz, BlockType::Stone);
+                    }
+                } else {
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::Air);
+                }
+            }
+        }
+    }
+
+    // Ground Floor Grand Dining Room & Upper Treasury
+    world.setBlock(x + 7, y + 1, z + 7, BlockType::CraftingTable);
+    world.setBlock(x + 7, y + 6, z + 7, BlockType::Spawner); // Illager / Evoker spawner
+    world.setBlock(x + 7, y + 6, z + 9, BlockType::Chest);   // Grand Treasure chest
+    world.setBlock(x + 7, y + 6, z + 5, BlockType::EmeraldBlock); // Secret emerald vault
+}
+
 }

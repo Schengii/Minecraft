@@ -149,20 +149,33 @@ BlockType World::getBlock(int worldX, int worldY, int worldZ) {
 }
 
 void World::setBlock(int worldX, int worldY, int worldZ, BlockType type) {
+    if (worldY < 0 || worldY >= 256) return;
     int chunkX = static_cast<int>(std::floor(static_cast<float>(worldX) / CHUNK_SIZE_X));
     int chunkZ = static_cast<int>(std::floor(static_cast<float>(worldZ) / CHUNK_SIZE_Z));
 
     Chunk* chunk = getChunk(chunkX, chunkZ);
-    if (chunk) {
-        int localX = (worldX % CHUNK_SIZE_X + CHUNK_SIZE_X) % CHUNK_SIZE_X;
-        int localZ = (worldZ % CHUNK_SIZE_Z + CHUNK_SIZE_Z) % CHUNK_SIZE_Z;
-        chunk->setBlock(localX, worldY, localZ, type);
+    if (!chunk) {
+        auto newChunk = std::make_unique<Chunk>(chunkX, chunkZ);
+        chunk = newChunk.get();
+        m_Chunks[{chunkX, chunkZ}] = std::move(newChunk);
     }
+    int localX = (worldX % CHUNK_SIZE_X + CHUNK_SIZE_X) % CHUNK_SIZE_X;
+    int localZ = (worldZ % CHUNK_SIZE_Z + CHUNK_SIZE_Z) % CHUNK_SIZE_Z;
+    chunk->setBlock(localX, worldY, localZ, type);
 }
 
 BlockType World::getTopBlock(int worldX, int worldZ, int& outY) {
+    int chunkX = static_cast<int>(std::floor(static_cast<float>(worldX) / CHUNK_SIZE_X));
+    int chunkZ = static_cast<int>(std::floor(static_cast<float>(worldZ) / CHUNK_SIZE_Z));
+    Chunk* chunk = getChunk(chunkX, chunkZ);
+    if (!chunk) {
+        outY = 0;
+        return BlockType::Air;
+    }
+    int localX = (worldX % CHUNK_SIZE_X + CHUNK_SIZE_X) % CHUNK_SIZE_X;
+    int localZ = (worldZ % CHUNK_SIZE_Z + CHUNK_SIZE_Z) % CHUNK_SIZE_Z;
     for (int y = 250; y >= 1; --y) {
-        BlockType b = getBlock(worldX, y, worldZ);
+        BlockType b = chunk->getBlock(localX, y, localZ);
         if (b != BlockType::Air) {
             outY = y;
             return b;

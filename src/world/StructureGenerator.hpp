@@ -22,6 +22,7 @@ public:
     static void generateNetherBastion(World& world, int x, int y, int z);
     static void generateOceanMonument(World& world, int x, int y, int z);
     static void generateShipwreck(World& world, int x, int y, int z);
+    static void generateWoodlandMansion(World& world, int x, int y, int z);
 };
 
 }

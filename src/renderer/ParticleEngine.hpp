@@ -28,6 +28,8 @@ public:
     void spawnBlockBreak(const glm::vec3& blockPos);
     void spawnPrecipitation(const glm::vec3& playerPos, bool isSnow);
     void spawnHitCrit(const glm::vec3& targetPos);
+    void spawnExplosionDebris(const glm::vec3& explosionPos, int count = 25);
+    void clear();
     void update(float deltaTime);
     void render(const Camera& camera);
 

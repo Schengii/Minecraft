@@ -10,6 +10,7 @@ class CraftingManager {
 public:
     static ItemStack matchRecipe2x2(const std::array<ItemStack, 4>& grid);
     static ItemStack matchRecipe3x3(const std::array<ItemStack, 9>& grid);
+    static ItemStack matchSmithingUpgrade(const ItemStack& baseItem, const ItemStack& upgradeMaterial);
 };
 
 }
