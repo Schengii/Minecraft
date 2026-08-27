@@ -406,67 +406,85 @@ void ChunkMesh::uploadMeshData(const std::vector<Vertex>& vertices, const std::v
 }
 
 void ChunkMesh::addMergedFace(const glm::vec3& p, float w, float h, Direction dir, BlockType type, float baseLight, const float cornerAO[4], std::vector<Vertex>& vertices, std::vector<unsigned int>& indices) {
-    unsigned int startIndex = static_cast<unsigned int>(vertices.size());
     glm::vec3 normal(0.0f);
     glm::vec2 baseUV = BlockData::getTextureUV(type, dir);
     float tw = 1.0f / 16.0f;
-
     glm::vec2 uv0 = baseUV;
-    glm::vec2 uv1 = baseUV + glm::vec2(tw * w, 0.0f);
-    glm::vec2 uv2 = baseUV + glm::vec2(tw * w, tw * h);
-    glm::vec2 uv3 = baseUV + glm::vec2(0.0f, tw * h);
+    glm::vec2 uv1 = baseUV + glm::vec2(tw, 0.0f);
+    glm::vec2 uv2 = baseUV + glm::vec2(tw, tw);
+    glm::vec2 uv3 = baseUV + glm::vec2(0.0f, tw);
 
-    switch (dir) {
-        case TOP:
-            normal = glm::vec3(0, 1, 0);
-            vertices.push_back({ p + glm::vec3(0, 1, 0), uv0, normal, baseLight * 1.00f, cornerAO[0] });
-            vertices.push_back({ p + glm::vec3(w, 1, 0), uv1, normal, baseLight * 0.95f, cornerAO[1] });
-            vertices.push_back({ p + glm::vec3(w, 1, h), uv2, normal, baseLight * 0.90f, cornerAO[2] });
-            vertices.push_back({ p + glm::vec3(0, 1, h), uv3, normal, baseLight * 0.95f, cornerAO[3] });
-            break;
-        case BOTTOM:
-            normal = glm::vec3(0, -1, 0);
-            vertices.push_back({ p + glm::vec3(0, 0, h), uv0, normal, baseLight * 0.50f, cornerAO[0] });
-            vertices.push_back({ p + glm::vec3(w, 0, h), uv1, normal, baseLight * 0.50f, cornerAO[1] });
-            vertices.push_back({ p + glm::vec3(w, 0, 0), uv2, normal, baseLight * 0.50f, cornerAO[2] });
-            vertices.push_back({ p + glm::vec3(0, 0, 0), uv3, normal, baseLight * 0.50f, cornerAO[3] });
-            break;
-        case NORTH:
-            normal = glm::vec3(0, 0, 1);
-            vertices.push_back({ p + glm::vec3(0, 0, 1), uv0, normal, baseLight * 0.85f, cornerAO[0] });
-            vertices.push_back({ p + glm::vec3(w, 0, 1), uv1, normal, baseLight * 0.80f, cornerAO[1] });
-            vertices.push_back({ p + glm::vec3(w, h, 1), uv2, normal, baseLight * 0.90f, cornerAO[2] });
-            vertices.push_back({ p + glm::vec3(0, h, 1), uv3, normal, baseLight * 0.85f, cornerAO[3] });
-            break;
-        case SOUTH:
-            normal = glm::vec3(0, 0, -1);
-            vertices.push_back({ p + glm::vec3(w, 0, 0), uv0, normal, baseLight * 0.80f, cornerAO[0] });
-            vertices.push_back({ p + glm::vec3(0, 0, 0), uv1, normal, baseLight * 0.85f, cornerAO[1] });
-            vertices.push_back({ p + glm::vec3(0, h, 0), uv2, normal, baseLight * 0.90f, cornerAO[2] });
-            vertices.push_back({ p + glm::vec3(w, h, 0), uv3, normal, baseLight * 0.85f, cornerAO[3] });
-            break;
-        case EAST:
-            normal = glm::vec3(1, 0, 0);
-            vertices.push_back({ p + glm::vec3(1, 0, w), uv0, normal, baseLight * 0.75f, cornerAO[0] });
-            vertices.push_back({ p + glm::vec3(1, 0, 0), uv1, normal, baseLight * 0.70f, cornerAO[1] });
-            vertices.push_back({ p + glm::vec3(1, h, 0), uv2, normal, baseLight * 0.80f, cornerAO[2] });
-            vertices.push_back({ p + glm::vec3(1, h, w), uv3, normal, baseLight * 0.75f, cornerAO[3] });
-            break;
-        case WEST:
-            normal = glm::vec3(-1, 0, 0);
-            vertices.push_back({ p + glm::vec3(0, 0, 0), uv0, normal, baseLight * 0.70f, cornerAO[0] });
-            vertices.push_back({ p + glm::vec3(0, 0, w), uv1, normal, baseLight * 0.75f, cornerAO[1] });
-            vertices.push_back({ p + glm::vec3(0, h, w), uv2, normal, baseLight * 0.80f, cornerAO[2] });
-            vertices.push_back({ p + glm::vec3(0, h, 0), uv3, normal, baseLight * 0.75f, cornerAO[3] });
-            break;
+    int countW = static_cast<int>(w);
+    int countH = static_cast<int>(h);
+
+    for (int dw = 0; dw < countW; ++dw) {
+        for (int dh = 0; dh < countH; ++dh) {
+            unsigned int startIndex = static_cast<unsigned int>(vertices.size());
+
+            // Interpolate corner AO factors across the merged quad
+            float uFraction0 = static_cast<float>(dw) / std::max(1.0f, w);
+            float uFraction1 = static_cast<float>(dw + 1) / std::max(1.0f, w);
+            float vFraction0 = static_cast<float>(dh) / std::max(1.0f, h);
+            float vFraction1 = static_cast<float>(dh + 1) / std::max(1.0f, h);
+
+            float ao0 = glm::mix(glm::mix(cornerAO[0], cornerAO[1], uFraction0), glm::mix(cornerAO[3], cornerAO[2], uFraction0), vFraction0);
+            float ao1 = glm::mix(glm::mix(cornerAO[0], cornerAO[1], uFraction1), glm::mix(cornerAO[3], cornerAO[2], uFraction1), vFraction0);
+            float ao2 = glm::mix(glm::mix(cornerAO[0], cornerAO[1], uFraction1), glm::mix(cornerAO[3], cornerAO[2], uFraction1), vFraction1);
+            float ao3 = glm::mix(glm::mix(cornerAO[0], cornerAO[1], uFraction0), glm::mix(cornerAO[3], cornerAO[2], uFraction0), vFraction1);
+
+            switch (dir) {
+                case TOP:
+                    normal = glm::vec3(0, 1, 0);
+                    vertices.push_back({ p + glm::vec3(dw, 1, dh), uv0, normal, baseLight * 1.00f, ao0 });
+                    vertices.push_back({ p + glm::vec3(dw + 1, 1, dh), uv1, normal, baseLight * 0.95f, ao1 });
+                    vertices.push_back({ p + glm::vec3(dw + 1, 1, dh + 1), uv2, normal, baseLight * 0.90f, ao2 });
+                    vertices.push_back({ p + glm::vec3(dw, 1, dh + 1), uv3, normal, baseLight * 0.95f, ao3 });
+                    break;
+                case BOTTOM:
+                    normal = glm::vec3(0, -1, 0);
+                    vertices.push_back({ p + glm::vec3(dw, 0, dh + 1), uv0, normal, baseLight * 0.50f, ao0 });
+                    vertices.push_back({ p + glm::vec3(dw + 1, 0, dh + 1), uv1, normal, baseLight * 0.50f, ao1 });
+                    vertices.push_back({ p + glm::vec3(dw + 1, 0, dh), uv2, normal, baseLight * 0.50f, ao2 });
+                    vertices.push_back({ p + glm::vec3(dw, 0, dh), uv3, normal, baseLight * 0.50f, ao3 });
+                    break;
+                case NORTH:
+                    normal = glm::vec3(0, 0, 1);
+                    vertices.push_back({ p + glm::vec3(dw, dh, 1), uv0, normal, baseLight * 0.85f, ao0 });
+                    vertices.push_back({ p + glm::vec3(dw + 1, dh, 1), uv1, normal, baseLight * 0.80f, ao1 });
+                    vertices.push_back({ p + glm::vec3(dw + 1, dh + 1, 1), uv2, normal, baseLight * 0.90f, ao2 });
+                    vertices.push_back({ p + glm::vec3(dw, dh + 1, 1), uv3, normal, baseLight * 0.85f, ao3 });
+                    break;
+                case SOUTH:
+                    normal = glm::vec3(0, 0, -1);
+                    vertices.push_back({ p + glm::vec3(dw + 1, dh, 0), uv0, normal, baseLight * 0.80f, ao0 });
+                    vertices.push_back({ p + glm::vec3(dw, dh, 0), uv1, normal, baseLight * 0.85f, ao1 });
+                    vertices.push_back({ p + glm::vec3(dw, dh + 1, 0), uv2, normal, baseLight * 0.90f, ao2 });
+                    vertices.push_back({ p + glm::vec3(dw + 1, dh + 1, 0), uv3, normal, baseLight * 0.85f, ao3 });
+                    break;
+                case EAST:
+                    normal = glm::vec3(1, 0, 0);
+                    vertices.push_back({ p + glm::vec3(1, dh, dw + 1), uv0, normal, baseLight * 0.75f, ao0 });
+                    vertices.push_back({ p + glm::vec3(1, dh, dw), uv1, normal, baseLight * 0.70f, ao1 });
+                    vertices.push_back({ p + glm::vec3(1, dh + 1, dw), uv2, normal, baseLight * 0.80f, ao2 });
+                    vertices.push_back({ p + glm::vec3(1, dh + 1, dw + 1), uv3, normal, baseLight * 0.75f, ao3 });
+                    break;
+                case WEST:
+                    normal = glm::vec3(-1, 0, 0);
+                    vertices.push_back({ p + glm::vec3(0, dh, dw), uv0, normal, baseLight * 0.70f, ao0 });
+                    vertices.push_back({ p + glm::vec3(0, dh, dw + 1), uv1, normal, baseLight * 0.75f, ao1 });
+                    vertices.push_back({ p + glm::vec3(0, dh + 1, dw + 1), uv2, normal, baseLight * 0.80f, ao2 });
+                    vertices.push_back({ p + glm::vec3(0, dh + 1, dw), uv3, normal, baseLight * 0.75f, ao3 });
+                    break;
+            }
+
+            indices.push_back(startIndex + 0);
+            indices.push_back(startIndex + 1);
+            indices.push_back(startIndex + 2);
+            indices.push_back(startIndex + 2);
+            indices.push_back(startIndex + 3);
+            indices.push_back(startIndex + 0);
+        }
     }
-
-    indices.push_back(startIndex + 0);
-    indices.push_back(startIndex + 1);
-    indices.push_back(startIndex + 2);
-    indices.push_back(startIndex + 2);
-    indices.push_back(startIndex + 3);
-    indices.push_back(startIndex + 0);
 }
 
 }

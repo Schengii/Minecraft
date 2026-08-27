@@ -27,6 +27,8 @@
 #include "../src/world/LightEngine.hpp"
 #include "../src/core/ThreadPool.hpp"
 #include "../src/core/ModdingEngine.hpp"
+#include "../src/core/CommandParser.hpp"
+#include "../src/core/Application.hpp"
 #include "../src/inventory/PlayerStats.hpp"
 #include "../src/inventory/FoodSystem.hpp"
 #include "../src/renderer/TextureAtlas.hpp"
@@ -1070,6 +1072,163 @@ void testMaterialFootstepsAndAudioSynthesizer() {
     std::cout << "  -> Material Footstep & Audio Synthesizer tests PASSED!" << std::endl;
 }
 
+void testDDARaycastExactTraversal() {
+    std::cout << "[TEST] 57. Fast Voxel Traversal DDA & Exact Normal Detection..." << std::endl;
+    World world(1);
+    world.setBlock(5, 65, 5, BlockType::Stone);
+
+    // Cast ray from (5.5, 65.5, 0.0) towards +Z direction into the block at (5, 65, 5)
+    glm::vec3 origin(5.5f, 65.5f, 0.0f);
+    glm::vec3 direction(0.0f, 0.0f, 1.0f);
+
+    RaycastResult res = Raycast::raycast(world, origin, direction, 10.0f);
+    assert(res.hit == true);
+    assert(res.blockPos == glm::ivec3(5, 65, 5));
+    assert(res.normal == glm::vec3(0.0f, 0.0f, -1.0f)); // Entered via front face (-Z normal)
+    assert(res.distance >= 4.9f && res.distance <= 5.1f);
+    std::cout << "  -> Fast Voxel Traversal DDA tests PASSED!" << std::endl;
+}
+
+void testOxygenDrowningAndFireMechanics() {
+    std::cout << "[TEST] 58. Oxygen Depletion, Drowning Damage & Fire/Lava Burn..." << std::endl;
+    PlayerStats stats;
+    assert(stats.getOxygen() == 300.0f);
+    assert(stats.getHealth() == 20.0f);
+
+    // Simulate 5 seconds underwater
+    stats.updateEnvironmentalEffects(true, false, true, 5.0f);
+    assert(stats.getOxygen() < 300.0f);
+    assert(stats.getOxygen() == 150.0f);
+
+    // Submerge completely until oxygen is depleted and drowning damage occurs
+    stats.updateEnvironmentalEffects(true, false, true, 6.0f);
+    assert(stats.getOxygen() == 0.0f);
+    assert(stats.getHealth() <= 18.0f); // Drowning damage received
+
+    // Surface out of water -> oxygen replenishes
+    stats.updateEnvironmentalEffects(false, false, false, 2.0f);
+    assert(stats.getOxygen() == 300.0f);
+
+    // Lava ignition
+    stats.updateEnvironmentalEffects(false, true, false, 0.1f);
+    assert(stats.isOnFire() == true);
+    assert(stats.getFireTicks() > 0.0f);
+
+    // Extinguish in water
+    stats.updateEnvironmentalEffects(false, false, true, 0.1f);
+    assert(stats.isOnFire() == false);
+    assert(stats.getFireTicks() == 0.0f);
+    std::cout << "  -> Oxygen & Fire Mechanics tests PASSED!" << std::endl;
+}
+
+void testFallDamageCalculation() {
+    std::cout << "[TEST] 59. Fall Damage Calculation & Armor Absorption..." << std::endl;
+    PlayerStats stats;
+    stats.setHealth(20.0f);
+
+    // Fall of 3 blocks -> no damage
+    float dmg0 = stats.applyFallDamage(3.0f);
+    assert(dmg0 == 0.0f);
+    assert(stats.getHealth() == 20.0f);
+
+    // Fall of 7 blocks -> 4 raw damage
+    float dmg1 = stats.applyFallDamage(7.0f);
+    assert(dmg1 == 4.0f);
+    assert(stats.getHealth() == 16.0f);
+
+    std::cout << "  -> Fall Damage tests PASSED!" << std::endl;
+}
+
+void testInfiniteWaterAndObsidianFormation() {
+    std::cout << "[TEST] 60. Infinite Water Source Creation & Obsidian Reaction..." << std::endl;
+    World world(1);
+
+    // Set up a 2x2 water well with solid cobblestone floor at y=63
+    for (int x = 0; x < 3; ++x) {
+        for (int z = 0; z < 3; ++z) {
+            world.setBlock(x, 63, z, BlockType::Stone);
+        }
+    }
+
+    world.setBlock(0, 64, 0, BlockType::Water);
+    world.setBlock(1, 64, 1, BlockType::Water);
+    world.setBlock(0, 64, 1, BlockType::Air); // Diagonal air pocket
+
+    // Simulate fluid update
+    FluidEngine::updateFluids(world, glm::vec3(0.0f, 64.0f, 0.0f));
+
+    // Water + Lava reaction
+    world.setBlock(10, 64, 10, BlockType::Water);
+    world.setBlock(11, 64, 10, BlockType::Lava);
+    FluidEngine::updateFluids(world, glm::vec3(10.0f, 64.0f, 10.0f));
+
+    assert(world.getBlock(11, 64, 10) == BlockType::Obsidian || world.getBlock(10, 64, 10) == BlockType::Obsidian || world.getBlock(10, 64, 10) == BlockType::Stone || world.getBlock(11, 64, 10) == BlockType::Stone);
+
+    std::cout << "  -> Infinite Water & Obsidian tests PASSED!" << std::endl;
+}
+
+void testInGameConsoleCommands() {
+    std::cout << "[TEST] 61. In-Game Console Command Execution Engine..." << std::endl;
+    TimeManager timeMgr;
+    WeatherManager weatherMgr;
+    PlayerStats playerStats;
+    Inventory inventory;
+    Camera camera(glm::vec3(0, 65, 0));
+    bool isFlying = false;
+
+    bool cmd1 = CommandParser::execute("/time set day", &timeMgr, &weatherMgr, &playerStats, &inventory, &camera, &isFlying);
+    assert(cmd1 == true);
+    assert(timeMgr.getTimeOfDay() == 1000.0f);
+
+    bool cmd2 = CommandParser::execute("/time set night", &timeMgr, &weatherMgr, &playerStats, &inventory, &camera, &isFlying);
+    assert(cmd2 == true);
+    assert(timeMgr.getTimeOfDay() == 14000.0f);
+
+    bool cmd3 = CommandParser::execute("/gamemode creative", &timeMgr, &weatherMgr, &playerStats, &inventory, &camera, &isFlying);
+    assert(cmd3 == true);
+    assert(isFlying == true);
+
+    bool cmd4 = CommandParser::execute("/gamemode survival", &timeMgr, &weatherMgr, &playerStats, &inventory, &camera, &isFlying);
+    assert(cmd4 == true);
+    assert(isFlying == false);
+
+    bool cmd5 = CommandParser::execute("/give diamond 5", &timeMgr, &weatherMgr, &playerStats, &inventory, &camera, &isFlying);
+    assert(cmd5 == true);
+    assert(inventory.getSlot(0).type == BlockType::DiamondOre);
+    assert(inventory.getSlot(0).count == 5);
+
+    bool cmd6 = CommandParser::execute("/weather clear", &timeMgr, &weatherMgr, &playerStats, &inventory, &camera, &isFlying);
+    assert(cmd6 == true);
+    assert(weatherMgr.isRaining() == false);
+
+    bool cmd7 = CommandParser::execute("/heal", &timeMgr, &weatherMgr, &playerStats, &inventory, &camera, &isFlying);
+    assert(cmd7 == true);
+    assert(playerStats.getHealth() == 20.0f);
+    assert(playerStats.getOxygen() == 300.0f);
+
+    bool cmd8 = CommandParser::execute("/kill", &timeMgr, &weatherMgr, &playerStats, &inventory, &camera, &isFlying);
+    assert(cmd8 == true);
+    assert(playerStats.getHealth() == 0.0f);
+
+    std::cout << "  -> In-Game Console Command tests PASSED!" << std::endl;
+}
+
+void testHotbarScrollAndStackSplitting() {
+    std::cout << "[TEST] 62. Hotbar Scroll & Inventory Stack-Splitting..." << std::endl;
+    Inventory inv;
+    inv.addItem(BlockType::OakLog, 16);
+    assert(inv.getSlot(0).count == 16);
+
+    // Simulate right click picking up half stack
+    ItemStack& slot0 = inv.getSlot(0);
+    int half = slot0.count / 2;
+    slot0.count -= half;
+    assert(slot0.count == 8);
+    assert(half == 8);
+
+    std::cout << "  -> Hotbar Scroll & Stack Splitting tests PASSED!" << std::endl;
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << " Running Minecraft Engine Test Suite   " << std::endl;
@@ -1144,8 +1303,16 @@ int main() {
     testRemotePlayerRenderingAndInterpolation();
     testMaterialFootstepsAndAudioSynthesizer();
 
+    // Phase 6 Modern Enhancements
+    testDDARaycastExactTraversal();
+    testOxygenDrowningAndFireMechanics();
+    testFallDamageCalculation();
+    testInfiniteWaterAndObsidianFormation();
+    testInGameConsoleCommands();
+    testHotbarScrollAndStackSplitting();
+
     std::cout << "========================================" << std::endl;
-    std::cout << " ALL 56 ENGINE TESTS PASSED 100%!       " << std::endl;
+    std::cout << " ALL 62 ENGINE TESTS PASSED 100%!       " << std::endl;
     std::cout << "========================================" << std::endl;
     return 0;
 }

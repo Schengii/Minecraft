@@ -4,6 +4,7 @@
 #include "../vendor/glad/glad.h"
 #include "Application.hpp"
 #include "Input.hpp"
+#include "CommandParser.hpp"
 #include "../world/Raycast.hpp"
 #include "../world/RedstoneEngine.hpp"
 #include "../world/FluidEngine.hpp"
@@ -217,6 +218,18 @@ void Application::processInput(float deltaTime) {
     if (Input::isKeyPressed(GLFW_KEY_8)) { m_SelectedSlot = 7; m_SelectedBlock = m_Inventory->getSlot(7).type; }
     if (Input::isKeyPressed(GLFW_KEY_9)) { m_SelectedSlot = 8; m_SelectedBlock = m_Inventory->getSlot(8).type; }
 
+    // Mouse Scroll Wheel Hotbar selection
+    double scrollY = Input::getScrollY();
+    if (scrollY != 0.0) {
+        if (scrollY > 0.0) {
+            m_SelectedSlot = (m_SelectedSlot - 1 + 9) % 9;
+        } else {
+            m_SelectedSlot = (m_SelectedSlot + 1) % 9;
+        }
+        m_SelectedBlock = m_Inventory->getSlot(m_SelectedSlot).type;
+        Input::resetScroll();
+    }
+
     // Movement Controls
     glm::vec3 front = m_Camera->getFront();
     glm::vec3 right = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
@@ -420,8 +433,31 @@ void Application::update(float deltaTime) {
     if (world && m_Camera) {
         glm::vec3 currentPos = m_Camera->getPosition();
         bool isSneaking = !m_IsFlying && Input::isKeyPressed(GLFW_KEY_LEFT_SHIFT);
+        bool wasGrounded = m_IsGrounded;
         PhysicsEngine::updatePlayer(*world, currentPos, m_PlayerVelocity, m_IsGrounded, m_InWater, m_IsFlying, isSneaking, deltaTime);
         
+        // Fall Damage Tracking
+        if (m_PlayerStats && !m_IsFlying && !m_InWater) {
+            if (!m_IsGrounded && m_PlayerVelocity.y < 0.0f) {
+                m_PlayerStats->addFallDistance(-m_PlayerVelocity.y * deltaTime);
+            } else if (m_IsGrounded && !wasGrounded) {
+                float dmg = m_PlayerStats->applyFallDamage(m_PlayerStats->getFallDistance());
+                if (dmg > 0.0f) {
+                    AudioManager::playSound(SoundEffect::MobHit);
+                }
+                m_PlayerStats->resetFallDistance();
+            }
+        } else if (m_PlayerStats) {
+            m_PlayerStats->resetFallDistance();
+        }
+
+        // Environmental Effects: Oxygen / Drowning / Fire / Lava
+        if (m_PlayerStats) {
+            bool isHeadUnderwater = PhysicsEngine::isHeadUnderwater(*world, currentPos);
+            bool inLava = PhysicsEngine::isPointInLava(*world, currentPos + glm::vec3(0.0f, 0.5f, 0.0f));
+            m_PlayerStats->updateEnvironmentalEffects(isHeadUnderwater, inLava, m_InWater, deltaTime);
+        }
+
         // Fluid simulation step
         FluidEngine::updateFluids(*world, currentPos);
 
@@ -549,19 +585,19 @@ void Application::render() {
             EntityRenderer::getInstance().render(*m_Camera, *m_MobEngine, *m_ItemEntityManager, currentTime, m_NetworkManager.get());
         }
 
-        // Render Dynamic Procedural Clouds at Y=128
+        // Render 3D Procedural Skybox Clouds at Y=128
         if (m_Skybox) {
-            m_Skybox->renderClouds(*m_Camera, m_TimeManager->getTimeTicks(), currentTime);
+            m_Skybox->renderClouds(*m_Camera, m_TimeManager->getTimeOfDay(), currentTime);
         }
 
-        // Render 3D Particles (Debris & Weather Precipitation)
+        // Render 3D View-space First-Person Hand & Held Item Model
+        if (!m_IsInventoryOpen && !m_ContainerGUI->isOpen()) {
+            EntityRenderer::getInstance().renderFirstPersonHand(*m_Camera, m_SelectedBlock, m_ArmSwingProgress, m_WalkBobbing, currentTime);
+        }
+
+        // 3D Particles
         if (m_ParticleEngine) {
             m_ParticleEngine->render(*m_Camera);
-        }
-
-        // Render First-Person Hand & Held Item
-        if (m_State == GameState::Playing && !m_IsInventoryOpen && !m_ContainerGUI->isOpen()) {
-            EntityRenderer::getInstance().renderFirstPersonHand(*m_Camera, m_SelectedBlock, m_ArmSwingProgress, m_WalkBobbing, currentTime);
         }
 
         // Transparent pass (water, glass)
@@ -628,6 +664,16 @@ void Application::render() {
             }
         }
     }
+}
+
+bool Application::executeCommand(const std::string& cmd) {
+    return CommandParser::execute(cmd,
+                                  m_TimeManager.get(),
+                                  m_WeatherManager.get(),
+                                  m_PlayerStats.get(),
+                                  m_Inventory.get(),
+                                  m_Camera.get(),
+                                  &m_IsFlying);
 }
 
 }

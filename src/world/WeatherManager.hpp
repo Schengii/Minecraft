@@ -29,6 +29,7 @@ public:
 
     WeatherState getWeatherState() const { return m_State; }
     float getRainIntensity() const { return m_RainIntensity; }
+    bool isRaining() const { return m_State == WeatherState::Rain || m_State == WeatherState::Thunderstorm || m_State == WeatherState::Snow; }
     bool isThundering() const { return m_State == WeatherState::Thunderstorm; }
 
     const std::vector<RainParticle>& getParticles() const { return m_Particles; }

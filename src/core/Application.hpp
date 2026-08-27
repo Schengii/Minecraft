@@ -45,6 +45,7 @@ public:
     ~Application();
 
     void run();
+    bool executeCommand(const std::string& cmd);
 
 private:
     void processInput(float deltaTime);

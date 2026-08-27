@@ -14,6 +14,7 @@ public:
     void setTimeOfDay(float ticks); // 0 to 24000
 
     float getTimeTicks() const { return m_TimeTicks; }
+    float getTimeOfDay() const { return m_TimeTicks; }
     glm::vec3 getSunDirection() const;
     glm::vec3 getSunColor() const;
     glm::vec3 getSkyColor() const;

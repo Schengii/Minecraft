@@ -26,22 +26,44 @@ void FluidEngine::updateFluids(World& world, const glm::vec3& playerPos) {
                 BlockType current = world.getBlock(x, y, z);
                 if (current != BlockType::Water && current != BlockType::Lava) continue;
 
-                // 1. Water + Lava interaction -> Stone
+                // 1. Water + Lava interaction -> Obsidian / Stone
                 glm::ivec3 dirs[4] = { {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1} };
                 for (const auto& d : dirs) {
                     BlockType neighbor = world.getBlock(x + d.x, y + d.y, z + d.z);
-                    if ((current == BlockType::Water && neighbor == BlockType::Lava) ||
-                        (current == BlockType::Lava && neighbor == BlockType::Water)) {
-                        changes.push_back({ x + d.x, y + d.y, z + d.z, BlockType::Stone });
+                    if (current == BlockType::Water && neighbor == BlockType::Lava) {
+                        changes.push_back({ x + d.x, y + d.y, z + d.z, BlockType::Obsidian });
+                    } else if (current == BlockType::Lava && neighbor == BlockType::Water) {
+                        changes.push_back({ x, y, z, BlockType::Stone });
                     }
                 }
 
-                // 2. Flow Downward
+                // 2. Infinite Water Source Generation: Air block with >= 2 water neighbors & solid floor
+                for (const auto& d : dirs) {
+                    int nx = x + d.x;
+                    int ny = y + d.y;
+                    int nz = z + d.z;
+                    if (world.getBlock(nx, ny, nz) == BlockType::Air) {
+                        BlockType floor = world.getBlock(nx, ny - 1, nz);
+                        if (BlockData::isSolid(floor)) {
+                            int waterNeighbors = 0;
+                            for (const auto& d2 : dirs) {
+                                if (world.getBlock(nx + d2.x, ny, nz + d2.z) == BlockType::Water) {
+                                    waterNeighbors++;
+                                }
+                            }
+                            if (waterNeighbors >= 2) {
+                                changes.push_back({ nx, ny, nz, BlockType::Water });
+                            }
+                        }
+                    }
+                }
+
+                // 3. Flow Downward
                 BlockType below = world.getBlock(x, y - 1, z);
                 if (below == BlockType::Air) {
                     changes.push_back({ x, y - 1, z, current });
                 } else if (below != BlockType::Air && below != BlockType::Water && below != BlockType::Lava) {
-                    // 3. Flow Horizontally if below is solid
+                    // 4. Flow Horizontally if below is solid
                     for (const auto& d : dirs) {
                         BlockType side = world.getBlock(x + d.x, y, z + d.z);
                         if (side == BlockType::Air) {

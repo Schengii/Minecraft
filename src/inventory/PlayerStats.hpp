@@ -36,6 +36,21 @@ public:
     float getExhaustion() const { return m_Exhaustion; }
     void addExhaustion(float amount) { m_Exhaustion += amount; }
 
+    float getOxygen() const { return m_Oxygen; }
+    void setOxygen(float ox) { m_Oxygen = std::clamp(ox, 0.0f, 300.0f); }
+
+    float getFireTicks() const { return m_FireTicks; }
+    void setFireTicks(float ticks) { m_FireTicks = std::max(0.0f, ticks); }
+    bool isOnFire() const { return m_FireTicks > 0.0f; }
+
+    float getFallDistance() const { return m_FallDistance; }
+    void setFallDistance(float dist) { m_FallDistance = std::max(0.0f, dist); }
+    void addFallDistance(float dist) { m_FallDistance += dist; }
+    void resetFallDistance() { m_FallDistance = 0.0f; }
+    float applyFallDamage(float distance);
+
+    void updateEnvironmentalEffects(bool isHeadUnderwater, bool inLava, bool inWater, float deltaTime);
+
     void update(float deltaTime);
 
     // Armor Slots: 0=Helmet, 1=Chestplate, 2=Leggings, 3=Boots
@@ -61,6 +76,11 @@ private:
     float m_Exhaustion = 0.0f;
     float m_RegenTimer = 0.0f;
     float m_StarveTimer = 0.0f;
+    float m_Oxygen = 300.0f;
+    float m_DrownTimer = 0.0f;
+    float m_FireTicks = 0.0f;
+    float m_FireDamageTimer = 0.0f;
+    float m_FallDistance = 0.0f;
     std::array<ItemStack, 4> m_ArmorSlots;
     std::vector<ActiveEffect> m_ActiveEffects;
 };

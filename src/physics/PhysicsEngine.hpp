@@ -14,6 +14,8 @@ public:
     static void updateMinecart(World& world, glm::vec3& position, glm::vec3& velocity, float deltaTime);
     static void updateBoat(World& world, glm::vec3& position, glm::vec3& velocity, float deltaTime);
     static bool isPointInWater(World& world, const glm::vec3& point);
+    static bool isPointInLava(World& world, const glm::vec3& point);
+    static bool isHeadUnderwater(World& world, const glm::vec3& position);
 
     static bool checkCollision(World& world, const AABB& playerBox);
 };

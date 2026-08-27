@@ -9,11 +9,13 @@ double Input::s_LastMouseX = 0.0;
 double Input::s_LastMouseY = 0.0;
 double Input::s_MouseDX = 0.0;
 double Input::s_MouseDY = 0.0;
+double Input::s_ScrollY = 0.0;
 bool Input::s_FirstMouse = true;
 
 void Input::init(GLFWwindow* window) {
     s_Window = window;
     glfwSetCursorPosCallback(window, cursorPosCallback);
+    glfwSetScrollCallback(window, scrollCallback);
 }
 
 bool Input::isKeyPressed(int key) {
@@ -46,6 +48,12 @@ void Input::cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 
     s_LastMouseX = xpos;
     s_LastMouseY = ypos;
+}
+
+void Input::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    (void)window;
+    (void)xoffset;
+    s_ScrollY += yoffset;
 }
 
 }

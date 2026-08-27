@@ -11,10 +11,12 @@ out vec3 Normal;
 out float Light;
 out float AO;
 out vec3 FragPos;
+out vec4 FragPosLightSpace;
 
 uniform mat4 u_Model;
 uniform mat4 u_View;
 uniform mat4 u_Projection;
+uniform mat4 u_LightSpaceMatrix;
 uniform float u_Time;
 
 void main() {
@@ -29,6 +31,7 @@ void main() {
     
     vec4 worldPos = u_Model * vec4(pos, 1.0);
     FragPos = worldPos.xyz;
+    FragPosLightSpace = u_LightSpaceMatrix * worldPos;
     TexCoord = aTexCoord;
     Normal = mat3(transpose(inverse(u_Model))) * aNormal;
     Light = aLight;

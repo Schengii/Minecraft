@@ -4,6 +4,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
 
+static const int MOUSE_BUTTON_RIGHT = 1;
+
 namespace Minecraft {
 
 InventoryGUI::InventoryGUI(int windowWidth, int windowHeight)
@@ -251,9 +253,24 @@ void InventoryGUI::handleMouseClick(Inventory& inventory, double mouseX, double 
 
     if (clickedCraftSlot != -1) {
         if (m_SelectedSlotIndex >= 0 && m_SelectedSlotIndex < 36) {
-            std::swap(inventory.getSlot(m_SelectedSlotIndex), inventory.getCraftingInput(clickedCraftSlot));
+            ItemStack& src = inventory.getSlot(m_SelectedSlotIndex);
+            ItemStack& dst = inventory.getCraftingInput(clickedCraftSlot);
+            if (button == MOUSE_BUTTON_RIGHT && !src.isEmpty()) {
+                if (dst.isEmpty()) {
+                    dst = src;
+                    dst.count = 1;
+                    src.count--;
+                    if (src.count <= 0) { src.clear(); m_SelectedSlotIndex = -1; }
+                } else if (dst.type == src.type && dst.count < dst.maxStackSize) {
+                    dst.count++;
+                    src.count--;
+                    if (src.count <= 0) { src.clear(); m_SelectedSlotIndex = -1; }
+                }
+            } else {
+                std::swap(src, dst);
+                m_SelectedSlotIndex = -1;
+            }
             inventory.updateCraftingRecipe();
-            m_SelectedSlotIndex = -1;
         } else if (m_SelectedSlotIndex >= 100 && m_SelectedSlotIndex < 104) {
             int prevCraftIdx = m_SelectedSlotIndex - 100;
             std::swap(inventory.getCraftingInput(prevCraftIdx), inventory.getCraftingInput(clickedCraftSlot));
@@ -279,15 +296,47 @@ void InventoryGUI::handleMouseClick(Inventory& inventory, double mouseX, double 
         }
     } else if (clickedSlot != -1) {
         if (m_SelectedSlotIndex == -1) {
-            m_SelectedSlotIndex = clickedSlot;
+            if (button == MOUSE_BUTTON_RIGHT) {
+                // Pick up half stack on right click
+                ItemStack& slot = inventory.getSlot(clickedSlot);
+                if (!slot.isEmpty() && slot.count > 1) {
+                    int half = slot.count / 2;
+                    slot.count -= half;
+                    m_SelectedSlotIndex = clickedSlot;
+                } else {
+                    m_SelectedSlotIndex = clickedSlot;
+                }
+            } else {
+                m_SelectedSlotIndex = clickedSlot;
+            }
         } else if (m_SelectedSlotIndex >= 100 && m_SelectedSlotIndex < 104) {
             int craftIdx = m_SelectedSlotIndex - 100;
             std::swap(inventory.getCraftingInput(craftIdx), inventory.getSlot(clickedSlot));
             inventory.updateCraftingRecipe();
             m_SelectedSlotIndex = -1;
         } else {
-            inventory.swapSlots(m_SelectedSlotIndex, clickedSlot);
-            m_SelectedSlotIndex = -1;
+            if (button == MOUSE_BUTTON_RIGHT && m_SelectedSlotIndex != clickedSlot) {
+                ItemStack& src = inventory.getSlot(m_SelectedSlotIndex);
+                ItemStack& dst = inventory.getSlot(clickedSlot);
+                if (!src.isEmpty()) {
+                    if (dst.isEmpty()) {
+                        dst = src;
+                        dst.count = 1;
+                        src.count--;
+                        if (src.count <= 0) { src.clear(); m_SelectedSlotIndex = -1; }
+                    } else if (dst.type == src.type && dst.count < dst.maxStackSize) {
+                        dst.count++;
+                        src.count--;
+                        if (src.count <= 0) { src.clear(); m_SelectedSlotIndex = -1; }
+                    } else {
+                        inventory.swapSlots(m_SelectedSlotIndex, clickedSlot);
+                        m_SelectedSlotIndex = -1;
+                    }
+                }
+            } else {
+                inventory.swapSlots(m_SelectedSlotIndex, clickedSlot);
+                m_SelectedSlotIndex = -1;
+            }
         }
     }
 }

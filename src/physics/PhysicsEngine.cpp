@@ -13,6 +13,18 @@ bool PhysicsEngine::isPointInWater(World& world, const glm::vec3& point) {
     return type == BlockType::Water;
 }
 
+bool PhysicsEngine::isPointInLava(World& world, const glm::vec3& point) {
+    int x = static_cast<int>(std::floor(point.x));
+    int y = static_cast<int>(std::floor(point.y));
+    int z = static_cast<int>(std::floor(point.z));
+    BlockType type = world.getBlock(x, y, z);
+    return type == BlockType::Lava;
+}
+
+bool PhysicsEngine::isHeadUnderwater(World& world, const glm::vec3& position) {
+    return isPointInWater(world, position + glm::vec3(0.0f, 1.6f, 0.0f));
+}
+
 void PhysicsEngine::updatePlayer(World& world, glm::vec3& position, glm::vec3& velocity, bool& isGrounded, bool& inWater, bool isFlying, bool isSneaking, float deltaTime) {
     if (isFlying) {
         position += velocity * deltaTime;

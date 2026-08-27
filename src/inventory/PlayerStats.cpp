@@ -125,4 +125,48 @@ void PlayerStats::update(float deltaTime) {
     }
 }
 
+float PlayerStats::applyFallDamage(float distance) {
+    if (distance <= 3.0f) return 0.0f;
+    float rawDamage = distance - 3.0f;
+    float actualDamage = applyDamageReduction(rawDamage);
+    setHealth(m_Health - actualDamage);
+    applyArmorDurabilityDamage();
+    return actualDamage;
+}
+
+void PlayerStats::updateEnvironmentalEffects(bool isHeadUnderwater, bool inLava, bool inWater, float deltaTime) {
+    // Oxygen & Drowning
+    if (isHeadUnderwater) {
+        m_Oxygen = std::max(0.0f, m_Oxygen - 30.0f * deltaTime);
+        if (m_Oxygen <= 0.0f) {
+            m_DrownTimer += deltaTime;
+            if (m_DrownTimer >= 1.0f) {
+                setHealth(m_Health - 2.0f); // 1 heart of drowning damage
+                m_DrownTimer = 0.0f;
+            }
+        } else {
+            m_DrownTimer = 0.0f;
+        }
+    } else {
+        m_Oxygen = std::min(300.0f, m_Oxygen + 150.0f * deltaTime);
+        m_DrownTimer = 0.0f;
+    }
+
+    // Lava & Fire Burning
+    if (inLava) {
+        m_FireTicks = 300.0f; // 15 seconds of fire
+        setHealth(m_Health - 4.0f * deltaTime); // direct contact damage
+    } else if (inWater) {
+        m_FireTicks = 0.0f; // extinguished in water
+        m_FireDamageTimer = 0.0f;
+    } else if (m_FireTicks > 0.0f) {
+        m_FireTicks -= 20.0f * deltaTime;
+        m_FireDamageTimer += deltaTime;
+        if (m_FireDamageTimer >= 1.0f) {
+            setHealth(m_Health - 1.0f); // fire burn damage
+            m_FireDamageTimer = 0.0f;
+        }
+    }
+}
+
 }
