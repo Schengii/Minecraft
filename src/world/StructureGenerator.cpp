@@ -128,4 +128,59 @@ void StructureGenerator::generateNetherPortalFrame(World& world, int x, int y, i
     }
 }
 
+void StructureGenerator::generateStronghold(World& world, int x, int y, int z) {
+    // 9x6x9 Stone Bricks Chamber
+    for (int dx = 0; dx < 9; ++dx) {
+        for (int dy = 0; dy < 6; ++dy) {
+            for (int dz = 0; dz < 9; ++dz) {
+                if (dx == 0 || dx == 8 || dz == 0 || dz == 8 || dy == 0 || dy == 5) {
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::StoneBricks);
+                } else {
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::Air);
+                }
+            }
+        }
+    }
+
+    // Central 3x3 Lava Pool at floor
+    for (int dx = 3; dx <= 5; ++dx) {
+        for (int dz = 3; dz <= 5; ++dz) {
+            world.setBlock(x + dx, y, z + dz, BlockType::Lava);
+        }
+    }
+
+    // End Portal Frame Rim at Y=1 around lava pool
+    for (int dx = 2; dx <= 6; ++dx) {
+        for (int dz = 2; dz <= 6; ++dz) {
+            if ((dx == 2 || dx == 6 || dz == 2 || dz == 6) && !(dx == 2 && dz == 2) && !(dx == 2 && dz == 6) && !(dx == 6 && dz == 2) && !(dx == 6 && dz == 6)) {
+                world.setBlock(x + dx, y + 1, z + dz, BlockType::EndPortalFrame);
+            }
+        }
+    }
+
+    // Silverfish Spawner and Iron Bars Archway
+    world.setBlock(x + 4, y + 2, z + 1, BlockType::Spawner);
+    world.setBlock(x + 3, y + 1, z, BlockType::IronBars);
+    world.setBlock(x + 5, y + 1, z, BlockType::IronBars);
+    world.setBlock(x + 1, y + 1, z + 1, BlockType::Chest);
+}
+
+void StructureGenerator::generateOceanRuin(World& world, int x, int y, int z) {
+    // 5x4x5 Prismarine / Stone Brick underwater ruin
+    for (int dx = 0; dx < 5; ++dx) {
+        for (int dy = 0; dy < 4; ++dy) {
+            for (int dz = 0; dz < 5; ++dz) {
+                if ((dx == 0 || dx == 4 || dz == 0 || dz == 4) && (rand() % 4 != 0)) {
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::StoneBricks);
+                } else if (dy == 0) {
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::Sand);
+                } else {
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::Water);
+                }
+            }
+        }
+    }
+    world.setBlock(x + 2, y + 1, z + 2, BlockType::Chest);
+}
+
 }

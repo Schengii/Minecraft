@@ -2,6 +2,7 @@
 #define REDSTONEENGINE_HPP
 
 #include "Block.hpp"
+#include "../inventory/Inventory.hpp"
 #include <glm/glm.hpp>
 #include <vector>
 
@@ -22,6 +23,10 @@ public:
 
     // Repeater Mechanics
     static int getRepeaterOutput(World& world, const glm::ivec3& pos, int delayTicks = 1);
+
+    // Comparator & Hopper Automation Mechanics
+    static int getComparatorOutput(World& world, const glm::ivec3& pos, const glm::ivec3& rearDir, const std::vector<ItemStack>* containerInv = nullptr);
+    static bool processHopperTransfer(World& world, const glm::ivec3& hopperPos, const glm::ivec3& targetDir, std::vector<ItemStack>* hopperInv, std::vector<ItemStack>* destInv);
 };
 
 }

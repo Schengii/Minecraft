@@ -71,7 +71,13 @@ enum class BlockType : uint8_t {
     EmeraldBlock,
     EnchantingTable,
     Bookshelf,
-    Sugar
+    Sugar,
+    Hopper,
+    Comparator,
+    StoneBricks,
+    EndPortalFrame,
+    IronBars,
+    Spawner
 };
 
 enum Direction {
@@ -87,11 +93,11 @@ struct BlockData {
     BlockType type = BlockType::Air;
 
     static bool isOpaque(BlockType type) {
-        return type != BlockType::Air && type != BlockType::Glass && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::EndPortal && type != BlockType::ItemDrop && type != BlockType::Apple && type != BlockType::Bread && type != BlockType::RawPorkchop && type != BlockType::CookedPorkchop && type != BlockType::GoldenApple && type != BlockType::Bamboo && type != BlockType::Rail && type != BlockType::PoweredRail && type != BlockType::WheatCrop && type != BlockType::CarrotCrop && type != BlockType::PotatoCrop && type != BlockType::Minecart && type != BlockType::Boat && type != BlockType::Sugar;
+        return type != BlockType::Air && type != BlockType::Glass && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::EndPortal && type != BlockType::ItemDrop && type != BlockType::Apple && type != BlockType::Bread && type != BlockType::RawPorkchop && type != BlockType::CookedPorkchop && type != BlockType::GoldenApple && type != BlockType::Bamboo && type != BlockType::Rail && type != BlockType::PoweredRail && type != BlockType::WheatCrop && type != BlockType::CarrotCrop && type != BlockType::PotatoCrop && type != BlockType::Minecart && type != BlockType::Boat && type != BlockType::Sugar && type != BlockType::Hopper && type != BlockType::Comparator && type != BlockType::IronBars && type != BlockType::Spawner;
     }
 
     static bool isSolid(BlockType type) {
-        return type != BlockType::Air && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::EndPortal && type != BlockType::ItemDrop && type != BlockType::Apple && type != BlockType::Bread && type != BlockType::RawPorkchop && type != BlockType::CookedPorkchop && type != BlockType::GoldenApple && type != BlockType::Bamboo && type != BlockType::Rail && type != BlockType::PoweredRail && type != BlockType::WheatCrop && type != BlockType::CarrotCrop && type != BlockType::PotatoCrop && type != BlockType::Minecart && type != BlockType::Boat && type != BlockType::Sugar;
+        return type != BlockType::Air && type != BlockType::Water && type != BlockType::Lava && type != BlockType::RedstoneWire && type != BlockType::RedstoneTorch && type != BlockType::NetherPortal && type != BlockType::EndPortal && type != BlockType::ItemDrop && type != BlockType::Apple && type != BlockType::Bread && type != BlockType::RawPorkchop && type != BlockType::CookedPorkchop && type != BlockType::GoldenApple && type != BlockType::Bamboo && type != BlockType::Rail && type != BlockType::PoweredRail && type != BlockType::WheatCrop && type != BlockType::CarrotCrop && type != BlockType::PotatoCrop && type != BlockType::Minecart && type != BlockType::Boat && type != BlockType::Sugar && type != BlockType::Comparator;
     }
 
     static glm::vec2 getTextureUV(BlockType type, Direction face) {
@@ -244,6 +250,24 @@ struct BlockData {
                 break;
             case BlockType::Sugar:
                 tileIndex = 8;
+                break;
+            case BlockType::Hopper:
+                tileIndex = 3;
+                break;
+            case BlockType::Comparator:
+                tileIndex = 11;
+                break;
+            case BlockType::StoneBricks:
+                tileIndex = 3;
+                break;
+            case BlockType::EndPortalFrame:
+                tileIndex = 8;
+                break;
+            case BlockType::IronBars:
+                tileIndex = 12;
+                break;
+            case BlockType::Spawner:
+                tileIndex = 10;
                 break;
             default:
                 tileIndex = 2;

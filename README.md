@@ -6,7 +6,7 @@
 [![CMake](https://img.shields.io/badge/CMake-%3E%3D3.20-orange.svg)](https://cmake.org/)
 [![Build & Test](https://github.com/Schengii/Minecraft/actions/workflows/build.yml/badge.svg)](.github/workflows/build.yml)
 
-A high-performance, modular 3D voxel game engine written in **C++20** and **OpenGL 4.5**, modeled after Minecraft. Features high-throughput multithreaded chunk generation, $16 \times 16 \times 16$ sub-chunk section slicing, asynchronous CPU meshing with exact atlas UV tiling, Amanatides & Woo 3D DDA fast voxel raycasting, real-time dynamic shadow mapping with 3x3 PCF filtering, procedural pixel-art texture atlas generation, 3D hierarchical mob models, 3-headed Wither boss mechanics, multiplayer remote player models with nametags, procedural skybox clouds at $Y=128$, PBR specular & Fresnel water shaders, environmental player hazards (oxygen/drowning, fire/lava burning, fall damage), mouse scroll hotbar selection, right-click stack splitting, infinite water source generation, console command engine, first-person hand animations, bitmap typography rendering, interactive container GUIs (chests and animated furnaces), continuous mining with tool speed multipliers, non-blocking UDP socket multiplayer networking, vertex ambient occlusion (smooth lighting), ACES filmic tone mapping & bloom post-processing, data-driven modding engine, brewing stand & status effect systems, cellular automaton redstone & piston mechanics, 3D A* mob pathfinding, fluid dynamics, Anvil region saving, and material-based spatial audio.
+A high-performance, modular 3D voxel game engine written in **C++20** and **OpenGL 4.5**, modeled after Minecraft. Features high-throughput multithreaded chunk generation, $16 \times 16 \times 16$ sub-chunk section slicing, asynchronous CPU meshing with exact atlas UV tiling, Amanatides & Woo 3D DDA fast voxel raycasting, real-time dynamic shadow mapping with 3x3 PCF filtering, procedural pixel-art texture atlas generation, 3D hierarchical mob models, 3-headed Wither boss mechanics, multiplayer remote player models with nametags, procedural skybox clouds at $Y=128$, PBR specular & Fresnel water shaders, environmental player hazards (oxygen/drowning, fire/lava burning, fall damage), mouse scroll hotbar selection, right-click stack splitting, infinite water source generation, console command engine, first-person hand animations, bitmap typography rendering, interactive container GUIs (chests and animated furnaces), continuous mining with tool speed multipliers, non-blocking UDP socket multiplayer networking, vertex ambient occlusion (smooth lighting), ACES filmic tone mapping & bloom post-processing, data-driven modding engine, brewing stand & status effect systems, cellular automaton redstone, hopper item transfer & comparator reading, piston mechanics, 3D A* mob pathfinding, fluid dynamics, Anvil region saving, and material-based spatial audio.
 
 ---
 
@@ -58,6 +58,28 @@ A high-performance, modular 3D voxel game engine written in **C++20** and **Open
   - `/give <item> [count]`: Adds items and tools directly into player inventory.
   - `/weather <clear|rain|thunder>`: Changes atmospheric precipitation and lightning states.
   - `/heal` & `/kill`: Instantly restores or zeroes player health and oxygen.
+
+---
+
+### 🔴 Redstone Comparator & Hopper Automation (`RedstoneEngine`)
+- **Redstone Comparator (`BlockType::Comparator`)**: Measures chest/furnace/hopper container inventory fullness and outputs proportional redstone analog power ($0 \dots 15$).
+- **Hopper Item Transfers (`BlockType::Hopper`)**: Automatically extracts and deposits items between connected containers on 20Hz ticks; locks and pauses transfer when powered by redstone.
+
+---
+
+### 🌿 Biome Colormap Blending (`Biome.hpp` & `Biome.cpp`)
+- **Dynamic Grass & Foliage Colors**: Calculates authentic RGB tinting based on biome temperature and humidity:
+  - 🌴 Jungle: Vibrant emerald green `(0.35, 0.80, 0.22)`.
+  - 🏜️ Desert: Parched olive-yellow `(0.75, 0.71, 0.38)`.
+  - 🌲 Taiga: Dark pine teal-green `(0.40, 0.65, 0.50)`.
+  - 🐸 Swamp: Murky olive-brown `(0.42, 0.52, 0.27)`.
+
+---
+
+### 🏛️ Advanced Structures: Strongholds & Ocean Ruins (`StructureGenerator`)
+- **Stronghold Portal Chamber**: $9 \times 6 \times 9$ Stone Brick dungeon featuring suspended $3 \times 3$ End Portal frame blocks around a central lava pool, silverfish spawner, and iron bar archways.
+- **Ocean Ruins**: Submerged underwater structures with prismarine/stone brick arches, sand floors, and sunken loot chests.
+- **Desert Pyramids & Mineshafts**: Multi-room temples with TNT traps and 3D rail tunnel networks.
 
 ---
 
@@ -151,25 +173,6 @@ A high-performance, modular 3D voxel game engine written in **C++20** and **Open
 
 ---
 
-### 🏛️ Advanced World Structures & Nether Biomes (`Biome` & `StructureGenerator`)
-- **Nether Biomes**: Crimson Forest, Warped Forest, Soul Sand Valley, and Basalt Deltas.
-- **Nether Fortress Corridors**: Obsidian bridge corridors with Netherrack railings and overhead Glowstone beacons.
-- **Abandoned Mineshafts**: 3D underground tunnels with oak support arches, rail track networks, cobblestone floors, and redstone wall torches.
-- **Desert Pyramid Temples**: Sandstone pyramids featuring hidden underground basement shafts with 4 corner loot chests and a central TNT floor trap.
-
----
-
-### 🔴 Redstone & Piston Engine (`RedstoneEngine`)
-- **Signal Propagation & Logic Gates**:
-  - 🔴 **Redstone Wire (`RedstoneWire`)**: Signal transport across blocks with signal decay (0–15 strength).
-  - 🕯️ **Redstone Torch (`RedstoneTorch`)**: Infinite power source & signal inverter.
-  - 🎛️ **Lever (`Lever`)**: Interactive state toggling on right-click.
-  - 💡 **Redstone Lamp (`RedstoneLamp`)**: Automatic visual light emission upon active redstone power.
-  - ⏱️ **Redstone Repeater**: Signal delay and full power boost to 15.
-- **Pistons & Sticky Pistons**: Mechanical shifting of up to 12 connected blocks and sticky retraction pulling adjacent blocks.
-
----
-
 ## ⌨️ Controls & Keybindings
 
 | Key / Input | Action |
@@ -216,7 +219,7 @@ nmake Minecraft
 nmake TestEngine
 .\build\TestEngine.exe
 ```
-> **100% Pass Rate**: All **62 automated test suites** execute and validate every engine subsystem across DDA raycasting, PCF shadow mapping, player environmental hazards (oxygen, lava, fall damage), mouse scroll selection, inventory stack-splitting, infinite water fluids, console commands, mob AI, procedural clouds, and UDP socket networking.
+> **100% Pass Rate**: All **66 automated test suites** execute and validate every engine subsystem across DDA raycasting, PCF shadow mapping, player environmental hazards (oxygen, lava, fall damage), mouse scroll selection, inventory stack-splitting, infinite water fluids, console commands, Redstone Comparators, Hopper automation, Biome colormaps, Stronghold dungeons, mob AI, procedural clouds, and UDP socket networking.
 
 ---
 

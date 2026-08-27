@@ -70,4 +70,42 @@ BlockType Biome::getSubSurfaceBlock(BiomeType type) {
     }
 }
 
+glm::vec3 Biome::getGrassColor(BiomeType type) {
+    switch (type) {
+        case BiomeType::Desert:
+            return glm::vec3(0.75f, 0.71f, 0.38f);
+        case BiomeType::Jungle:
+            return glm::vec3(0.35f, 0.80f, 0.22f);
+        case BiomeType::Taiga:
+            return glm::vec3(0.40f, 0.65f, 0.50f);
+        case BiomeType::Swamp:
+            return glm::vec3(0.42f, 0.52f, 0.27f);
+        case BiomeType::Forest:
+            return glm::vec3(0.47f, 0.74f, 0.35f);
+        case BiomeType::Mountains:
+            return glm::vec3(0.50f, 0.70f, 0.45f);
+        case BiomeType::Plains:
+        default:
+            return glm::vec3(0.57f, 0.74f, 0.35f);
+    }
+}
+
+glm::vec3 Biome::getFoliageColor(BiomeType type) {
+    switch (type) {
+        case BiomeType::Desert:
+            return glm::vec3(0.68f, 0.70f, 0.32f);
+        case BiomeType::Jungle:
+            return glm::vec3(0.28f, 0.78f, 0.18f);
+        case BiomeType::Taiga:
+            return glm::vec3(0.35f, 0.60f, 0.45f);
+        case BiomeType::Swamp:
+            return glm::vec3(0.38f, 0.48f, 0.24f);
+        case BiomeType::Forest:
+        case BiomeType::Mountains:
+        case BiomeType::Plains:
+        default:
+            return glm::vec3(0.44f, 0.72f, 0.32f);
+    }
+}
+
 }

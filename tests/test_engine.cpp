@@ -1229,6 +1229,87 @@ void testHotbarScrollAndStackSplitting() {
     std::cout << "  -> Hotbar Scroll & Stack Splitting tests PASSED!" << std::endl;
 }
 
+void testRedstoneComparatorAndContainerReading() {
+    std::cout << "[TEST] 63. Redstone Comparator & Container Fullness Reading..." << std::endl;
+    World world(1);
+    std::vector<ItemStack> chest(27);
+    chest[0] = { BlockType::DiamondOre, 64, 64 };
+    chest[1] = { BlockType::GoldOre, 64, 64 };
+
+    // Comparator measuring chest
+    int sigEmpty = RedstoneEngine::getComparatorOutput(world, glm::ivec3(0, 64, 0), glm::ivec3(0, 0, 1), nullptr);
+    assert(sigEmpty == 0);
+
+    int sigPart = RedstoneEngine::getComparatorOutput(world, glm::ivec3(0, 64, 0), glm::ivec3(0, 0, 1), &chest);
+    assert(sigPart >= 1 && sigPart <= 2);
+
+    // Completely fill chest
+    for (int i = 0; i < 27; ++i) {
+        chest[i] = { BlockType::IronOre, 64, 64 };
+    }
+    int sigFull = RedstoneEngine::getComparatorOutput(world, glm::ivec3(0, 64, 0), glm::ivec3(0, 0, 1), &chest);
+    assert(sigFull == 15);
+
+    std::cout << "  -> Redstone Comparator tests PASSED!" << std::endl;
+}
+
+void testHopperTransferAndLocking() {
+    std::cout << "[TEST] 64. Hopper Item Transfer, Stacking & Redstone Lock..." << std::endl;
+    World world(1);
+    std::vector<ItemStack> hopperInv(5);
+    std::vector<ItemStack> destChest(27);
+
+    hopperInv[0] = { BlockType::Obsidian, 5, 64 };
+
+    // Unpowered hopper transfers 1 item into destination container
+    bool transferred = RedstoneEngine::processHopperTransfer(world, glm::ivec3(5, 64, 5), glm::ivec3(0, -1, 0), &hopperInv, &destChest);
+    assert(transferred == true);
+    assert(hopperInv[0].count == 4);
+    assert(destChest[0].type == BlockType::Obsidian);
+    assert(destChest[0].count == 1);
+
+    // Power the hopper with a redstone torch next to it -> hopper locks
+    world.setBlock(5, 64, 6, BlockType::RedstoneTorch);
+    bool lockedTransfer = RedstoneEngine::processHopperTransfer(world, glm::ivec3(5, 64, 5), glm::ivec3(0, -1, 0), &hopperInv, &destChest);
+    assert(lockedTransfer == false); // Locked, no transfer
+    assert(hopperInv[0].count == 4);
+
+    std::cout << "  -> Hopper Transfer & Redstone Locking tests PASSED!" << std::endl;
+}
+
+void testBiomeColormapsAndFoliage() {
+    std::cout << "[TEST] 65. Biome Temperature, Rainfall & Grass/Foliage Colormaps..." << std::endl;
+    glm::vec3 jungleGrass = Biome::getGrassColor(BiomeType::Jungle);
+    glm::vec3 desertGrass = Biome::getGrassColor(BiomeType::Desert);
+    glm::vec3 swampGrass = Biome::getGrassColor(BiomeType::Swamp);
+
+    assert(jungleGrass.g > jungleGrass.r); // Vibrant green
+    assert(desertGrass.r > 0.7f); // Yellowish dry tone
+    assert(swampGrass.g < jungleGrass.g); // Darker murky swamp tone
+
+    glm::vec3 jungleLeaves = Biome::getFoliageColor(BiomeType::Jungle);
+    assert(jungleLeaves.g > 0.7f);
+
+    std::cout << "  -> Biome Colormap tests PASSED!" << std::endl;
+}
+
+void testStrongholdAndOceanRuinGeneration() {
+    std::cout << "[TEST] 66. Stronghold Chamber, End Portal Rim & Ocean Ruins..." << std::endl;
+    World world(1);
+
+    // Generate Stronghold at (100, 30, 100)
+    StructureGenerator::generateStronghold(world, 100, 30, 100);
+    assert(world.getBlock(100, 30, 100) == BlockType::StoneBricks);
+    assert(world.getBlock(104, 30, 104) == BlockType::Lava); // Central lava pool
+    assert(world.getBlock(104, 32, 101) == BlockType::Spawner); // Spawner block
+
+    // Generate Ocean Ruin at (-50, 40, -50)
+    StructureGenerator::generateOceanRuin(world, -50, 40, -50);
+    assert(world.getBlock(-48, 41, -48) == BlockType::Chest);
+
+    std::cout << "  -> Stronghold & Ocean Ruin tests PASSED!" << std::endl;
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << " Running Minecraft Engine Test Suite   " << std::endl;
@@ -1311,8 +1392,14 @@ int main() {
     testInGameConsoleCommands();
     testHotbarScrollAndStackSplitting();
 
+    // Phase 7 Automation, Ecosystem & Structures
+    testRedstoneComparatorAndContainerReading();
+    testHopperTransferAndLocking();
+    testBiomeColormapsAndFoliage();
+    testStrongholdAndOceanRuinGeneration();
+
     std::cout << "========================================" << std::endl;
-    std::cout << " ALL 62 ENGINE TESTS PASSED 100%!       " << std::endl;
+    std::cout << " ALL 66 ENGINE TESTS PASSED 100%!       " << std::endl;
     std::cout << "========================================" << std::endl;
     return 0;
 }
