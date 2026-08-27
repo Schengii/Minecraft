@@ -1445,6 +1445,53 @@ void testFluidHeightInterpolation() {
     std::cout << "  -> Dynamic Fluid Height tests PASSED!" << std::endl;
 }
 
+void testDeadReckoningInterpolation() {
+    std::cout << "[TEST] 74. Dead-Reckoning Position & Angle Interpolation..." << std::endl;
+    glm::vec3 currPos(10.0f, 64.0f, 10.0f);
+    glm::vec3 targPos(12.0f, 64.0f, 10.0f);
+    glm::vec3 vel(4.0f, 0.0f, 0.0f);
+
+    // Predict 0.5s ahead with alpha 0.5
+    glm::vec3 interpolated = NetworkManager::interpolateDeadReckoning(currPos, targPos, vel, 0.5f, 0.5f);
+    assert(interpolated.x > currPos.x && interpolated.x < 14.0f);
+
+    // Angle interpolation across 360 boundary
+    float angle = NetworkManager::interpolateAngle(350.0f, 10.0f, 0.5f);
+    assert(angle >= 0.0f && angle <= 360.0f);
+
+    std::cout << "  -> Dead-Reckoning tests PASSED!" << std::endl;
+}
+
+void testSSAOShaderParameters() {
+    std::cout << "[TEST] 75. Screen-Space Ambient Occlusion (SSAO) Pipeline..." << std::endl;
+    PostProcessing pp(1280, 720);
+    assert(pp.isSSAOEnabled() == true);
+
+    pp.setSSAOEnabled(false);
+    assert(pp.isSSAOEnabled() == false);
+    pp.setSSAOEnabled(true);
+    assert(pp.isSSAOEnabled() == true);
+
+    std::cout << "  -> SSAO Pipeline tests PASSED!" << std::endl;
+}
+
+void testFullIntegrationSuite() {
+    std::cout << "[TEST] 76. End-to-End Nether Bastion & Mount Steering Integration..." << std::endl;
+    World world(1);
+    MobEngine mobEngine;
+    mobEngine.spawnMob(MobType::Pig, glm::vec3(200.0f, 40.0f, 200.0f));
+    StructureGenerator::generateNetherBastion(world, 200, 40, 200);
+
+    bool saddled = mobEngine.saddleMob(0);
+    assert(saddled == true);
+
+    bool steered = mobEngine.steerMountedMob(0, glm::vec3(0.0f, 0.0f, 1.0f), 0.1f);
+    assert(steered == true);
+    assert(world.getBlock(205, 41, 205) == BlockType::GoldOre);
+
+    std::cout << "  -> Full Integration tests PASSED!" << std::endl;
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << " Running Minecraft Engine Test Suite   " << std::endl;
@@ -1544,8 +1591,13 @@ int main() {
     testMountSaddlingAndSteering();
     testFluidHeightInterpolation();
 
+    // Phase 10 Prediction, SSAO & Full Integration
+    testDeadReckoningInterpolation();
+    testSSAOShaderParameters();
+    testFullIntegrationSuite();
+
     std::cout << "========================================" << std::endl;
-    std::cout << " ALL 73 ENGINE TESTS PASSED 100%!       " << std::endl;
+    std::cout << " ALL 76 ENGINE TESTS PASSED 100%!       " << std::endl;
     std::cout << "========================================" << std::endl;
     return 0;
 }

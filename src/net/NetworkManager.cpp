@@ -325,4 +325,14 @@ void NetworkManager::processIncomingPacket(const uint8_t* buffer, size_t size, W
     }
 }
 
+glm::vec3 NetworkManager::interpolateDeadReckoning(const glm::vec3& currentPos, const glm::vec3& targetPos, const glm::vec3& velocity, float alpha, float deltaTime) {
+    glm::vec3 predictedPos = targetPos + velocity * deltaTime;
+    return glm::mix(currentPos, predictedPos, std::clamp(alpha, 0.0f, 1.0f));
+}
+
+float NetworkManager::interpolateAngle(float currentAngle, float targetAngle, float alpha) {
+    float diff = std::fmod(targetAngle - currentAngle + 180.0f, 360.0f) - 180.0f;
+    return currentAngle + diff * std::clamp(alpha, 0.0f, 1.0f);
+}
+
 }

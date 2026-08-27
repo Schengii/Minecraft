@@ -7,6 +7,7 @@ uniform sampler2D u_ScreenTexture;
 uniform bool u_IsUnderwater;
 uniform bool u_HasNightVision;
 uniform bool u_BloomEnabled;
+uniform bool u_SSAOEnabled;
 
 // ACES Filmic Tone Mapping Curve
 vec3 ACESFilm(vec3 x) {
@@ -29,6 +30,19 @@ void main() {
         col = mix(col, vec3(0.05, 0.25, 0.65), 0.45);
     } else {
         col = texture(u_ScreenTexture, uv).rgb;
+    }
+
+    // Screen-Space Ambient Occlusion (SSAO) Contact Darkening
+    if (u_SSAOEnabled) {
+        vec2 texel = 1.0 / textureSize(u_ScreenTexture, 0);
+        float sample1 = length(texture(u_ScreenTexture, uv + vec2(texel.x * 2.0, 0.0)).rgb);
+        float sample2 = length(texture(u_ScreenTexture, uv - vec2(texel.x * 2.0, 0.0)).rgb);
+        float sample3 = length(texture(u_ScreenTexture, uv + vec2(0.0, texel.y * 2.0)).rgb);
+        float sample4 = length(texture(u_ScreenTexture, uv - vec2(0.0, texel.y * 2.0)).rgb);
+        float center = length(col);
+        float curvature = max(sample1 + sample2 + sample3 + sample4 - 4.0 * center, 0.0);
+        float ssaoFactor = clamp(1.0 - curvature * 0.35, 0.55, 1.0);
+        col *= ssaoFactor;
     }
 
     // Bloom extraction approximation for glowing elements

@@ -65,6 +65,10 @@ public:
     static std::vector<uint8_t> serializeChatMessage(const ChatMessagePacket& packet);
     static bool deserializeChatMessage(const uint8_t* data, size_t size, ChatMessagePacket& outPacket);
 
+    // Client-Side Prediction & Dead-Reckoning Interpolation
+    static glm::vec3 interpolateDeadReckoning(const glm::vec3& currentPos, const glm::vec3& targetPos, const glm::vec3& velocity, float alpha, float deltaTime);
+    static float interpolateAngle(float currentAngle, float targetAngle, float alpha);
+
     void processIncomingPacket(const uint8_t* buffer, size_t size, class World* world = nullptr);
 
 private:

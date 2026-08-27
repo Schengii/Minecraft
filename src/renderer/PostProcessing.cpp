@@ -52,7 +52,7 @@ void PostProcessing::bindForWriting() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void PostProcessing::unbindAndRender(bool isUnderwater, bool hasNightVision, bool bloomEnabled) {
+void PostProcessing::unbindAndRender(bool isUnderwater, bool hasNightVision, bool bloomEnabled, bool ssaoEnabled) {
     if (!glBindFramebuffer) return;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, m_Width, m_Height);
@@ -63,6 +63,7 @@ void PostProcessing::unbindAndRender(bool isUnderwater, bool hasNightVision, boo
     m_Shader->setBool("u_IsUnderwater", isUnderwater);
     m_Shader->setBool("u_HasNightVision", hasNightVision);
     m_Shader->setBool("u_BloomEnabled", bloomEnabled);
+    m_Shader->setBool("u_SSAOEnabled", ssaoEnabled);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_ColorTex);
