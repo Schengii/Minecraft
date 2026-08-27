@@ -433,8 +433,9 @@ void Application::update(float deltaTime) {
     if (world && m_Camera) {
         glm::vec3 currentPos = m_Camera->getPosition();
         bool isSneaking = !m_IsFlying && Input::isKeyPressed(GLFW_KEY_LEFT_SHIFT);
+        bool isGliding = (m_PlayerStats && m_PlayerStats->isGliding());
         bool wasGrounded = m_IsGrounded;
-        PhysicsEngine::updatePlayer(*world, currentPos, m_PlayerVelocity, m_IsGrounded, m_InWater, m_IsFlying, isSneaking, deltaTime);
+        PhysicsEngine::updatePlayer(*world, currentPos, m_PlayerVelocity, m_IsGrounded, m_InWater, m_IsFlying, isSneaking, deltaTime, isGliding, m_Camera->getFront());
         
         // Fall Damage Tracking
         if (m_PlayerStats && !m_IsFlying && !m_InWater) {

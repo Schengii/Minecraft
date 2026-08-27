@@ -68,6 +68,15 @@ public:
     float getJumpMultiplier() const;
     bool hasNightVision() const { return hasEffect(StatusEffect::NightVision); }
 
+    // Elytra & Gliding Mechanics
+    bool isGliding() const { return m_IsGliding; }
+    void setGliding(bool gliding) { m_IsGliding = gliding; }
+
+    // Animal Mount Riding Mechanics
+    bool isRiding() const { return m_IsRiding; }
+    void setRiding(bool riding, int mobIdx = -1) { m_IsRiding = riding; m_RiddenMobIndex = mobIdx; }
+    int getRiddenMobIndex() const { return m_RiddenMobIndex; }
+
     const std::vector<ActiveEffect>& getActiveEffects() const { return m_ActiveEffects; }
 
 private:
@@ -81,6 +90,9 @@ private:
     float m_FireTicks = 0.0f;
     float m_FireDamageTimer = 0.0f;
     float m_FallDistance = 0.0f;
+    bool m_IsGliding = false;
+    bool m_IsRiding = false;
+    int m_RiddenMobIndex = -1;
     std::array<ItemStack, 4> m_ArmorSlots;
     std::vector<ActiveEffect> m_ActiveEffects;
 };

@@ -6,7 +6,7 @@
 [![CMake](https://img.shields.io/badge/CMake-%3E%3D3.20-orange.svg)](https://cmake.org/)
 [![Build & Test](https://github.com/Schengii/Minecraft/actions/workflows/build.yml/badge.svg)](.github/workflows/build.yml)
 
-A high-performance, modular 3D voxel game engine written in **C++20** and **OpenGL 4.5**, modeled after Minecraft. Features high-throughput multithreaded chunk generation, $16 \times 16 \times 16$ sub-chunk section slicing, asynchronous CPU meshing with exact atlas UV tiling, Amanatides & Woo 3D DDA fast voxel raycasting, real-time dynamic shadow mapping with 3x3 PCF filtering, procedural pixel-art texture atlas generation, 3D hierarchical mob models, 3-headed Wither boss mechanics, multiplayer remote player models with nametags, procedural skybox clouds at $Y=128$, PBR specular & Fresnel water shaders, environmental player hazards (oxygen/drowning, fire/lava burning, fall damage), mouse scroll hotbar selection, right-click stack splitting, infinite water source generation, console command engine, first-person hand animations, bitmap typography rendering, interactive container GUIs (chests and animated furnaces), continuous mining with tool speed multipliers, non-blocking UDP socket multiplayer networking, vertex ambient occlusion (smooth lighting), ACES filmic tone mapping & bloom post-processing, data-driven modding engine, brewing stand & status effect systems, cellular automaton redstone, hopper item transfer & comparator reading, piston mechanics, 3D A* mob pathfinding, fluid dynamics, Anvil region saving, and material-based spatial audio.
+A high-performance, modular 3D voxel game engine written in **C++20** and **OpenGL 4.5**, modeled after Minecraft. Features high-throughput multithreaded chunk generation, $16 \times 16 \times 16$ sub-chunk section slicing, asynchronous CPU meshing with exact atlas UV tiling, Amanatides & Woo 3D DDA fast voxel raycasting, real-time dynamic shadow mapping with 3x3 PCF filtering, procedural pixel-art texture atlas generation, 3D hierarchical mob models, 3-headed Wither boss mechanics, multiplayer remote player models with nametags, procedural skybox clouds at $Y=128$, PBR specular & Fresnel water shaders, environmental player hazards (oxygen/drowning, fire/lava burning, fall damage), animal breeding & feeding mechanics, pig & horse mount saddling and steering, dynamic fluid flow level height calculations, Nether Bastion remnants, Elytra aerodynamic gliding physics, End City towers, atmospheric distance fog with sun in-scattering, mouse scroll hotbar selection, right-click stack splitting, infinite water source generation, console command engine, first-person hand animations, bitmap typography rendering, interactive container GUIs (chests and animated furnaces), continuous mining with tool speed multipliers, non-blocking UDP socket multiplayer networking, vertex ambient occlusion (smooth lighting), ACES filmic tone mapping & bloom post-processing, data-driven modding engine, brewing stand & status effect systems, cellular automaton redstone, hopper item transfer & comparator reading, piston mechanics, 3D A* mob pathfinding, fluid dynamics, Anvil region saving, and material-based spatial audio.
 
 ---
 
@@ -21,6 +21,45 @@ A high-performance, modular 3D voxel game engine written in **C++20** and **Open
 ### ☀️ Real-Time Shadow Mapping & PCF Filtering (`block.vert` & `block.frag`)
 - **Directional Light-Space Shadows**: Dynamic shadow depth map generated from the moving sun orientation.
 - **3x3 Percentage-Closer Filtering (PCF)**: Smooth, anti-aliased soft shadow edges with slope-scaled adaptive depth bias preventing shadow acne.
+
+---
+
+### 🌫️ Atmospheric Distance Fog & Sun In-Scattering (`block.frag`)
+- **Exponential Squared Distance Fog**: $1.0 - e^{-(\text{dist} \times \text{density})^2}$ smoothly dissolves distant chunk edges into the horizon and skybox without clipping pop-in.
+- **Sun Ray In-Scattering**: Computes forward Rayleigh/Mie solar scattering $\max(-\vec{v} \cdot \vec{l}, 0)^4$ adding warm golden volumetric glows when looking toward the sun.
+
+---
+
+### 🐎 Mount Saddling & Steered Riding (`MobEngine` & `PlayerStats`)
+- **Saddle Equipment**: Right-clicking an adult pig or cow with a saddle equips the mount with full ridable capabilities.
+- **Player-Steered Velocity**: Mounted players directly steer the animal with accelerated directional velocity ($6.0\,\text{m/s}$).
+
+---
+
+### 🦅 Elytra Aerodynamic Gliding Physics (`PhysicsEngine.cpp` & `PlayerStats.cpp`)
+- **Pitch-to-Thrust Translation**: Translates downward gravitational potential energy into forward horizontal aerodynamic thrust ($\vec{v}_{\text{horiz}} += \vec{d}_{\text{look}} \times 14.0\,\text{m/s}^2$).
+- **Cushioned Descent**: Clamps maximum downward glide velocity to $-2.5\,\text{m/s}$ for smooth panoramic aerial travel.
+
+---
+
+### 🐷 Animal Breeding & Feeding Mechanics (`MobEngine.hpp` & `MobEngine.cpp`)
+- **Food Acceptance & Love Mode**: Feeding pigs (carrots, potatoes, apples) or cows (wheat, apples) initiates a 30-second breeding state with hearts.
+- **Pair Reproduction & Baby Spawning**: When two animals in love meet ($\text{dist} < 3.5\text{m}$), they spawn a miniature baby animal with an age growth timer ($300\text{s}$).
+
+---
+
+### 🌊 Dynamic Fluid Flow Levels & Infinite Sources (`FluidEngine.cpp`)
+- **Fluid Height Leveling**: Computes distance from source ($1 \dots 7$), supplying proportional surface heights ($h = 1.0 - \text{level} \times 0.12$).
+- **2-Source Infinite Well Formation**: Air blocks with a solid floor and $\ge 2$ horizontally adjacent water source blocks automatically form new infinite water source blocks.
+- **Lava + Water Obsidian Reaction**: Flowing water touching stationary lava blocks instantly transforms them into solid Obsidian.
+
+---
+
+### 🏛️ Advanced Structures: Nether Bastions, End Cities & Strongholds (`StructureGenerator`)
+- **Nether Bastion Remnants**: $11 \times 8 \times 11$ fortified fortresses with gold deposits, central treasure vault chest, and magma cube spawners.
+- **End City Towers**: $7 \times 14 \times 7$ Obsidian/Stone Brick fortresses in The End with floor dividers, floating overhang balconies, Shulker spawners, and loot chests.
+- **Stronghold Portal Chamber**: $9 \times 6 \times 9$ Stone Brick dungeon featuring suspended $3 \times 3$ End Portal frame blocks around a central lava pool, silverfish spawner, and iron bar archways.
+- **Ocean Ruins & Desert Pyramids**: Submerged underwater structures and multi-room sandstone temples with TNT basement traps.
 
 ---
 
@@ -41,12 +80,6 @@ A high-performance, modular 3D voxel game engine written in **C++20** and **Open
 - **Mouse Wheel Hotbar Selection**: Smooth hotbar slot cycling ($0 \dots 8$) via GLFW scroll events.
 - **Right-Click Half-Stack Pickup**: Right-clicking an item stack in inventory or chest picks up $\lfloor \text{count} / 2 \rfloor$ items.
 - **Single-Item Drop & Distribution**: Right-clicking a destination slot while holding an item stack deposits exactly 1 item.
-
----
-
-### 🌊 Infinite Water Sources & Fluid Dynamics (`FluidEngine.cpp`)
-- **2-Source Infinite Well Formation**: Air blocks with a solid floor and $\ge 2$ horizontally adjacent water source blocks automatically form new infinite water source blocks.
-- **Lava + Water Obsidian Reaction**: Flowing water touching stationary lava blocks instantly transforms them into solid Obsidian.
 
 ---
 
@@ -73,13 +106,6 @@ A high-performance, modular 3D voxel game engine written in **C++20** and **Open
   - 🏜️ Desert: Parched olive-yellow `(0.75, 0.71, 0.38)`.
   - 🌲 Taiga: Dark pine teal-green `(0.40, 0.65, 0.50)`.
   - 🐸 Swamp: Murky olive-brown `(0.42, 0.52, 0.27)`.
-
----
-
-### 🏛️ Advanced Structures: Strongholds & Ocean Ruins (`StructureGenerator`)
-- **Stronghold Portal Chamber**: $9 \times 6 \times 9$ Stone Brick dungeon featuring suspended $3 \times 3$ End Portal frame blocks around a central lava pool, silverfish spawner, and iron bar archways.
-- **Ocean Ruins**: Submerged underwater structures with prismarine/stone brick arches, sand floors, and sunken loot chests.
-- **Desert Pyramids & Mineshafts**: Multi-room temples with TNT traps and 3D rail tunnel networks.
 
 ---
 
@@ -219,7 +245,7 @@ nmake Minecraft
 nmake TestEngine
 .\build\TestEngine.exe
 ```
-> **100% Pass Rate**: All **66 automated test suites** execute and validate every engine subsystem across DDA raycasting, PCF shadow mapping, player environmental hazards (oxygen, lava, fall damage), mouse scroll selection, inventory stack-splitting, infinite water fluids, console commands, Redstone Comparators, Hopper automation, Biome colormaps, Stronghold dungeons, mob AI, procedural clouds, and UDP socket networking.
+> **100% Pass Rate**: All **73 automated test suites** execute and validate every engine subsystem across DDA raycasting, PCF shadow mapping, volumetric distance fog, animal breeding, mount riding & saddling, dynamic fluid levels, Nether Bastions, Elytra gliding aerodynamics, End City structures, player hazards (oxygen, lava, fall damage), mouse scroll selection, inventory stack-splitting, infinite water fluids, console commands, Redstone Comparators, Hopper automation, Biome colormaps, Stronghold dungeons, mob AI, procedural clouds, and UDP socket networking.
 
 ---
 

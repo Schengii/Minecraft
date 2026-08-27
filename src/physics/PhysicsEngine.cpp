@@ -25,7 +25,7 @@ bool PhysicsEngine::isHeadUnderwater(World& world, const glm::vec3& position) {
     return isPointInWater(world, position + glm::vec3(0.0f, 1.6f, 0.0f));
 }
 
-void PhysicsEngine::updatePlayer(World& world, glm::vec3& position, glm::vec3& velocity, bool& isGrounded, bool& inWater, bool isFlying, bool isSneaking, float deltaTime) {
+void PhysicsEngine::updatePlayer(World& world, glm::vec3& position, glm::vec3& velocity, bool& isGrounded, bool& inWater, bool isFlying, bool isSneaking, float deltaTime, bool isGliding, const glm::vec3& lookDir) {
     if (isFlying) {
         position += velocity * deltaTime;
         velocity *= 0.85f;
@@ -54,8 +54,20 @@ void PhysicsEngine::updatePlayer(World& world, glm::vec3& position, glm::vec3& v
         return;
     }
 
-    // Normal Gravity
-    velocity.y -= 25.0f * deltaTime;
+    if (isGliding && !isGrounded) {
+        // Elytra Gliding Aerodynamics: Cushion gravity & translate pitch to forward horizontal thrust
+        velocity.y = std::max(velocity.y - 4.5f * deltaTime, -2.5f);
+        velocity.x += lookDir.x * 14.0f * deltaTime;
+        velocity.z += lookDir.z * 14.0f * deltaTime;
+        float hSpeed = std::sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
+        if (hSpeed > 18.0f) {
+            velocity.x = (velocity.x / hSpeed) * 18.0f;
+            velocity.z = (velocity.z / hSpeed) * 18.0f;
+        }
+    } else {
+        // Normal Gravity
+        velocity.y -= 25.0f * deltaTime;
+    }
 
     // Movement X with Auto Step-Up & Sneak Edge Check
     glm::vec3 nextPosX = position;

@@ -142,7 +142,18 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
         if (mob.attackCooldown > 0.0f) {
             mob.attackCooldown -= deltaTime;
         }
+        // Natural mob aging & love timer
+        if (mob.age < 0.0f) {
+            mob.age += deltaTime;
+        }
+        if (mob.inLove) {
+            mob.loveTimer -= deltaTime;
+            if (mob.loveTimer <= 0.0f) {
+                mob.inLove = false;
+            }
+        }
 
+        // Check if dead
         if (mob.health <= 0.0f) {
             if (itemMgr) {
                 if (mob.type == MobType::Pig) {
@@ -353,7 +364,32 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
         ++it;
     }
 
-    // 3. Periodic Natural Mob Spawner
+    // 4. Animal Breeding Pair Reproduction
+    std::vector<Mob> babySpawns;
+    for (size_t i = 0; i < m_Mobs.size(); ++i) {
+        if (!m_Mobs[i].inLove || m_Mobs[i].age < 0.0f) continue;
+        for (size_t j = i + 1; j < m_Mobs.size(); ++j) {
+            if (!m_Mobs[j].inLove || m_Mobs[j].age < 0.0f || m_Mobs[i].type != m_Mobs[j].type) continue;
+            float pairDist = glm::distance(m_Mobs[i].position, m_Mobs[j].position);
+            if (pairDist < 3.5f) {
+                m_Mobs[i].inLove = false;
+                m_Mobs[j].inLove = false;
+                Mob baby;
+                baby.type = m_Mobs[i].type;
+                baby.position = (m_Mobs[i].position + m_Mobs[j].position) * 0.5f;
+                baby.health = 10.0f;
+                baby.maxHealth = 10.0f;
+                baby.age = -300.0f; // Baby animal
+                babySpawns.push_back(baby);
+                break;
+            }
+        }
+    }
+    for (const auto& baby : babySpawns) {
+        m_Mobs.push_back(baby);
+    }
+
+    // 5. Periodic Natural Mob Spawner
     checkNaturalSpawning(world, playerPos, deltaTime);
 }
 
@@ -415,6 +451,53 @@ bool MobEngine::checkPlayerAttack(const glm::vec3& playerPos, const glm::vec3& p
         }
     }
     return false;
+}
+
+bool MobEngine::feedAnimal(size_t mobIndex, BlockType foodType) {
+    if (mobIndex >= m_Mobs.size()) return false;
+    Mob& mob = m_Mobs[mobIndex];
+    if (mob.type != MobType::Pig && mob.type != MobType::Cow) return false;
+    if (mob.age < 0.0f) return false; // Already a baby
+
+    bool validFood = false;
+    if (mob.type == MobType::Pig && (foodType == BlockType::CarrotCrop || foodType == BlockType::PotatoCrop || foodType == BlockType::Apple)) {
+        validFood = true;
+    } else if (mob.type == MobType::Cow && (foodType == BlockType::WheatCrop || foodType == BlockType::Apple)) {
+        validFood = true;
+    }
+
+    if (validFood && !mob.inLove) {
+        mob.inLove = true;
+        mob.loveTimer = 30.0f;
+        return true;
+    }
+    return false;
+}
+
+bool MobEngine::saddleMob(size_t mobIndex) {
+    if (mobIndex >= m_Mobs.size()) return false;
+    Mob& mob = m_Mobs[mobIndex];
+    if (mob.type != MobType::Pig && mob.type != MobType::Cow) return false;
+    if (mob.age < 0.0f) return false; // Baby animals cannot be saddled
+
+    if (!mob.isSaddled) {
+        mob.isSaddled = true;
+        return true;
+    }
+    return false;
+}
+
+bool MobEngine::steerMountedMob(size_t mobIndex, const glm::vec3& moveDir, float deltaTime) {
+    if (mobIndex >= m_Mobs.size()) return false;
+    Mob& mob = m_Mobs[mobIndex];
+    if (!mob.isSaddled) return false;
+
+    float mountSpeed = 6.0f;
+    mob.velocity.x = moveDir.x * mountSpeed;
+    mob.velocity.z = moveDir.z * mountSpeed;
+    mob.position += mob.velocity * deltaTime;
+    mob.limbSwing += deltaTime * 10.0f;
+    return true;
 }
 
 }

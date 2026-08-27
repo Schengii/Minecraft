@@ -85,11 +85,21 @@ void main() {
 
     vec3 finalColor = baseColor * lighting + specular;
 
-    // Underwater Fog & Tint Effect
+    // Atmospheric Distance Fog & Sun In-Scattering
+    float fragDist = length(FragPos - u_PlayerPos);
+    float fogDensity = u_IsUnderwater ? 0.045 : 0.0075;
+    float fogFactor = 1.0 - exp(-pow(fragDist * fogDensity, 2.0));
+    fogFactor = clamp(fogFactor, 0.0, 1.0);
+
+    // Sun In-Scattering (God ray glow towards sun)
+    float sunScattering = max(dot(-viewDir, sunDir), 0.0);
+    vec3 fogColor = mix(u_SkyColor, u_SunColor, pow(sunScattering, 4.0) * 0.45);
+
     if (u_IsUnderwater) {
-        vec3 waterTint = vec3(0.1, 0.3, 0.7);
-        finalColor = mix(finalColor, waterTint, 0.55);
+        fogColor = vec3(0.08, 0.25, 0.65);
     }
+
+    finalColor = mix(finalColor, fogColor, fogFactor);
 
     FragColor = vec4(finalColor, texColor.a < 0.1 ? 1.0 : texColor.a);
 }

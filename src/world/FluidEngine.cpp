@@ -89,5 +89,31 @@ void FluidEngine::updateFluids(World& world, const glm::vec3& playerPos) {
     }
 }
 
+int FluidEngine::getFluidLevel(World& world, int x, int y, int z) {
+    BlockType current = world.getBlock(x, y, z);
+    if (current != BlockType::Water && current != BlockType::Lava) return 0;
+    if (world.getBlock(x, y + 1, z) == current) return 0; // Submerged under another fluid block
+
+    glm::ivec3 dirs[4] = { {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1} };
+    int minNeighborLevel = 8;
+    for (const auto& d : dirs) {
+        BlockType neighbor = world.getBlock(x + d.x, y, z + d.z);
+        if (neighbor == current) {
+            minNeighborLevel = std::min(minNeighborLevel, 1);
+        }
+    }
+    return (minNeighborLevel == 8) ? 0 : minNeighborLevel;
+}
+
+float FluidEngine::getFluidHeight(World& world, int x, int y, int z) {
+    BlockType current = world.getBlock(x, y, z);
+    if (current != BlockType::Water && current != BlockType::Lava) return 0.0f;
+    if (world.getBlock(x, y + 1, z) == current) return 1.0f;
+
+    int level = getFluidLevel(world, x, y, z);
+    float h = 1.0f - static_cast<float>(level) * 0.12f;
+    return std::clamp(h, 0.15f, 1.0f);
+}
+
 }
 

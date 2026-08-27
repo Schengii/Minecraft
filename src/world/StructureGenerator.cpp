@@ -183,4 +183,60 @@ void StructureGenerator::generateOceanRuin(World& world, int x, int y, int z) {
     world.setBlock(x + 2, y + 1, z + 2, BlockType::Chest);
 }
 
+void StructureGenerator::generateEndCity(World& world, int x, int y, int z) {
+    // 7x14x7 End City Main Tower
+    for (int dy = 0; dy < 14; ++dy) {
+        for (int dx = 0; dx < 7; ++dx) {
+            for (int dz = 0; dz < 7; ++dz) {
+                if (dx == 0 || dx == 6 || dz == 0 || dz == 6 || dy == 0 || dy == 13) {
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::Obsidian);
+                } else if (dy == 4 || dy == 8) {
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::StoneBricks); // Floor dividers
+                } else {
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::Air);
+                }
+            }
+        }
+    }
+
+    // Floating Overhang & Balcony with Chest & Spawner
+    for (int bx = -1; bx <= 7; ++bx) {
+        for (int bz = -1; bz <= 7; ++bz) {
+            if (bx == -1 || bx == 7 || bz == -1 || bz == 7) {
+                world.setBlock(x + bx, y + 13, z + bz, BlockType::EndPortalFrame);
+            }
+        }
+    }
+
+    world.setBlock(x + 3, y + 9, z + 3, BlockType::Spawner);
+    world.setBlock(x + 3, y + 9, z + 5, BlockType::Chest);
+    world.setBlock(x + 3, y + 14, z + 3, BlockType::Glowstone);
+}
+
+void StructureGenerator::generateNetherBastion(World& world, int x, int y, int z) {
+    // 11x8x11 Fortified Nether Bastion Remnant
+    for (int dy = 0; dy < 8; ++dy) {
+        for (int dx = 0; dx < 11; ++dx) {
+            for (int dz = 0; dz < 11; ++dz) {
+                if (dx == 0 || dx == 10 || dz == 0 || dz == 10 || dy == 0 || dy == 7) {
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::Netherrack);
+                } else {
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::Air);
+                }
+            }
+        }
+    }
+
+    // Central Gold Treasure Vault & Spawner
+    world.setBlock(x + 5, y + 1, z + 5, BlockType::GoldOre);
+    world.setBlock(x + 4, y + 1, z + 5, BlockType::GoldOre);
+    world.setBlock(x + 6, y + 1, z + 5, BlockType::GoldOre);
+    world.setBlock(x + 5, y + 2, z + 5, BlockType::Chest);
+    world.setBlock(x + 5, y + 4, z + 5, BlockType::Spawner);
+
+    // Wall Torches / Glowstone
+    world.setBlock(x + 1, y + 4, z + 5, BlockType::Glowstone);
+    world.setBlock(x + 9, y + 4, z + 5, BlockType::Glowstone);
+}
+
 }

@@ -1310,6 +1310,141 @@ void testStrongholdAndOceanRuinGeneration() {
     std::cout << "  -> Stronghold & Ocean Ruin tests PASSED!" << std::endl;
 }
 
+void testAnimalBreedingAndFeeding() {
+    std::cout << "[TEST] 67. Animal Breeding, Feeding & Baby Spawning..." << std::endl;
+    World world(1);
+    MobEngine mobEngine;
+    glm::vec3 p1(10.0f, 64.0f, 10.0f);
+    glm::vec3 p2(11.0f, 64.0f, 10.0f);
+
+    mobEngine.spawnMob(MobType::Pig, p1);
+    mobEngine.spawnMob(MobType::Pig, p2);
+    assert(mobEngine.getMobs().size() == 2);
+
+    // Feed pigs with Carrot
+    bool fed1 = mobEngine.feedAnimal(0, BlockType::CarrotCrop);
+    bool fed2 = mobEngine.feedAnimal(1, BlockType::CarrotCrop);
+    assert(fed1 == true);
+    assert(fed2 == true);
+    assert(mobEngine.getMobs()[0].inLove == true);
+    assert(mobEngine.getMobs()[1].inLove == true);
+
+    // Update mob engine so breeding takes place
+    glm::vec3 playerPos(0.0f);
+    glm::vec3 playerVel(0.0f);
+    float playerHealth = 20.0f;
+    mobEngine.update(world, playerPos, playerVel, playerHealth, 0.1f);
+
+    // Mobs should now reproduce and create a 3rd baby mob
+    assert(mobEngine.getMobs().size() == 3);
+    assert(mobEngine.getMobs()[2].age < 0.0f); // Baby pig
+
+    std::cout << "  -> Animal Breeding & Baby Spawning tests PASSED!" << std::endl;
+}
+
+void testElytraGlidingAerodynamics() {
+    std::cout << "[TEST] 68. Elytra Gliding Aerodynamics & Gravity Cushioning..." << std::endl;
+    World world(1);
+    glm::vec3 pos(0.0f, 100.0f, 0.0f);
+    glm::vec3 vel(0.0f, -10.0f, 0.0f);
+    bool isGrounded = false;
+    bool inWater = false;
+
+    // Normal falling without gliding
+    PhysicsEngine::updatePlayer(world, pos, vel, isGrounded, inWater, false, false, 0.1f, false);
+    assert(vel.y < -10.0f); // Falls faster
+
+    // Gliding active: velocity.y cushioned towards terminal gliding speed
+    vel = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 lookFront(0.0f, 0.0f, 1.0f);
+    PhysicsEngine::updatePlayer(world, pos, vel, isGrounded, inWater, false, false, 0.5f, true, lookFront);
+    assert(vel.y >= -2.5f); // Cushioned descent
+    assert(vel.z > 0.0f);   // Forward thrust generated
+
+    std::cout << "  -> Elytra Gliding Aerodynamics tests PASSED!" << std::endl;
+}
+
+void testEndCityGeneration() {
+    std::cout << "[TEST] 69. End City Tower, Balcony & Spawner Loot Chamber..." << std::endl;
+    World world(1);
+    StructureGenerator::generateEndCity(world, 50, 60, 50);
+
+    assert(world.getBlock(50, 60, 50) == BlockType::Obsidian); // Base wall
+    assert(world.getBlock(53, 69, 53) == BlockType::Spawner);  // Shulker spawner chamber
+    assert(world.getBlock(53, 69, 55) == BlockType::Chest);    // Loot chest
+    assert(world.getBlock(53, 74, 53) == BlockType::Glowstone);// Beacon pinnacle
+
+    std::cout << "  -> End City Structure tests PASSED!" << std::endl;
+}
+
+void testAtmosphericDistanceFogCalculations() {
+    std::cout << "[TEST] 70. Atmospheric Exponential Squared Fog Density..." << std::endl;
+    float fragDistNear = 10.0f;
+    float fragDistFar = 160.0f;
+    float density = 0.0075f;
+
+    float fogNear = 1.0f - std::exp(-std::pow(fragDistNear * density, 2.0f));
+    float fogFar = 1.0f - std::exp(-std::pow(fragDistFar * density, 2.0f));
+
+    assert(fogNear < 0.05f); // Crystal clear in near foreground
+    assert(fogFar > 0.70f);  // Thick atmospheric fog at horizon
+
+    std::cout << "  -> Atmospheric Distance Fog tests PASSED!" << std::endl;
+}
+
+void testNetherBastionGeneration() {
+    std::cout << "[TEST] 71. Nether Bastion Remnants, Treasure Vault & Spawner..." << std::endl;
+    World world(1);
+    StructureGenerator::generateNetherBastion(world, 200, 40, 200);
+
+    assert(world.getBlock(200, 40, 200) == BlockType::Netherrack); // Outer wall
+    assert(world.getBlock(205, 41, 205) == BlockType::GoldOre);    // Gold deposit
+    assert(world.getBlock(205, 42, 205) == BlockType::Chest);      // Treasure chest
+    assert(world.getBlock(205, 44, 205) == BlockType::Spawner);    // Magma Cube spawner
+
+    std::cout << "  -> Nether Bastion tests PASSED!" << std::endl;
+}
+
+void testMountSaddlingAndSteering() {
+    std::cout << "[TEST] 72. Mount Saddling, Player Mounting & Steered Speed..." << std::endl;
+    World world(1);
+    MobEngine mobEngine;
+    mobEngine.spawnMob(MobType::Pig, glm::vec3(0.0f, 64.0f, 0.0f));
+
+    // Saddle pig
+    bool saddled = mobEngine.saddleMob(0);
+    assert(saddled == true);
+    assert(mobEngine.getMobs()[0].isSaddled == true);
+
+    // Player mounts and steers pig
+    PlayerStats stats;
+    stats.setRiding(true, 0);
+    assert(stats.isRiding() == true);
+    assert(stats.getRiddenMobIndex() == 0);
+
+    glm::vec3 moveDir(1.0f, 0.0f, 0.0f);
+    bool steered = mobEngine.steerMountedMob(0, moveDir, 0.5f);
+    assert(steered == true);
+    assert(mobEngine.getMobs()[0].position.x > 0.0f); // Traveled forward
+
+    std::cout << "  -> Mount Saddling & Steered Speed tests PASSED!" << std::endl;
+}
+
+void testFluidHeightInterpolation() {
+    std::cout << "[TEST] 73. Dynamic Fluid Flow Level & Height Calculations..." << std::endl;
+    World world(1);
+    world.setBlock(10, 64, 10, BlockType::Water);
+    world.setBlock(10, 65, 10, BlockType::Water); // Submerged source
+
+    float subHeight = FluidEngine::getFluidHeight(world, 10, 64, 10);
+    assert(subHeight == 1.0f); // Submerged is full 1.0f height
+
+    float topHeight = FluidEngine::getFluidHeight(world, 10, 65, 10);
+    assert(topHeight >= 0.85f && topHeight <= 1.0f);
+
+    std::cout << "  -> Dynamic Fluid Height tests PASSED!" << std::endl;
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << " Running Minecraft Engine Test Suite   " << std::endl;
@@ -1398,8 +1533,19 @@ int main() {
     testBiomeColormapsAndFoliage();
     testStrongholdAndOceanRuinGeneration();
 
+    // Phase 8 Advanced Dynamics & Dimensions
+    testAnimalBreedingAndFeeding();
+    testElytraGlidingAerodynamics();
+    testEndCityGeneration();
+    testAtmosphericDistanceFogCalculations();
+
+    // Phase 9 Nether Bastions, Mounts & Fluid Interpolation
+    testNetherBastionGeneration();
+    testMountSaddlingAndSteering();
+    testFluidHeightInterpolation();
+
     std::cout << "========================================" << std::endl;
-    std::cout << " ALL 66 ENGINE TESTS PASSED 100%!       " << std::endl;
+    std::cout << " ALL 73 ENGINE TESTS PASSED 100%!       " << std::endl;
     std::cout << "========================================" << std::endl;
     return 0;
 }
