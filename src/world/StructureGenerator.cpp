@@ -239,4 +239,58 @@ void StructureGenerator::generateNetherBastion(World& world, int x, int y, int z
     world.setBlock(x + 9, y + 4, z + 5, BlockType::Glowstone);
 }
 
+void StructureGenerator::generateOceanMonument(World& world, int x, int y, int z) {
+    // 13x9x13 Submerged Ocean Monument Temple
+    for (int dy = 0; dy < 9; ++dy) {
+        for (int dx = 0; dx < 13; ++dx) {
+            for (int dz = 0; dz < 13; ++dz) {
+                if (dx == 0 || dx == 12 || dz == 0 || dz == 12 || dy == 0 || dy == 8) {
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::Stone); // Monument outer wall
+                } else {
+                    world.setBlock(x + dx, y + dy, z + dz, BlockType::Water); // Interior flooded
+                }
+            }
+        }
+    }
+
+    // Corner Sea Lantern / Glowstone Pillars
+    world.setBlock(x + 2, y + 4, z + 2, BlockType::Glowstone);
+    world.setBlock(x + 10, y + 4, z + 2, BlockType::Glowstone);
+    world.setBlock(x + 2, y + 4, z + 10, BlockType::Glowstone);
+    world.setBlock(x + 10, y + 4, z + 10, BlockType::Glowstone);
+
+    // Central Treasure Core with Gold & Spawner
+    world.setBlock(x + 6, y + 1, z + 6, BlockType::GoldOre);
+    world.setBlock(x + 6, y + 2, z + 6, BlockType::Chest);
+    world.setBlock(x + 6, y + 4, z + 6, BlockType::Spawner); // Guardian spawner
+}
+
+void StructureGenerator::generateShipwreck(World& world, int x, int y, int z) {
+    // 12x6x5 Sunken Shipwreck Hull
+    for (int dx = 0; dx < 12; ++dx) {
+        for (int dz = 0; dz < 5; ++dz) {
+            // Hull bottom & ribs
+            world.setBlock(x + dx, y, z + dz, BlockType::OakLog);
+            if (dz == 0 || dz == 4) {
+                world.setBlock(x + dx, y + 1, z + dz, BlockType::Planks);
+                world.setBlock(x + dx, y + 2, z + dz, BlockType::Planks);
+            }
+        }
+    }
+
+    // Bow & Stern Rise
+    for (int dz = 0; dz < 5; ++dz) {
+        world.setBlock(x, y + 3, z + dz, BlockType::Planks);
+        world.setBlock(x + 11, y + 3, z + dz, BlockType::Planks);
+    }
+
+    // Mast
+    for (int my = 1; my <= 5; ++my) {
+        world.setBlock(x + 5, y + my, z + 2, BlockType::OakLog);
+    }
+
+    // Captain's Quarter Loot Chest
+    world.setBlock(x + 1, y + 1, z + 2, BlockType::Chest);
+}
+
 }

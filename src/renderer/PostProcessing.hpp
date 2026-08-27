@@ -14,13 +14,15 @@ public:
 
     void resize(unsigned int width, unsigned int height);
     void bindForWriting();
-    void unbindAndRender(bool isUnderwater, bool hasNightVision = false, bool bloomEnabled = true, bool ssaoEnabled = true);
+    void unbindAndRender(bool isUnderwater, bool hasNightVision = false, bool bloomEnabled = true, bool ssaoEnabled = true, bool godRaysEnabled = true, const glm::vec2& sunScreenPos = glm::vec2(0.5f, 0.75f));
 
     GLuint getColorTexture() const { return m_ColorTex; }
     bool isBloomEnabled() const { return m_BloomEnabled; }
     void setBloomEnabled(bool enabled) { m_BloomEnabled = enabled; }
     bool isSSAOEnabled() const { return m_SSAOEnabled; }
     void setSSAOEnabled(bool enabled) { m_SSAOEnabled = enabled; }
+    bool isGodRaysEnabled() const { return m_GodRaysEnabled; }
+    void setGodRaysEnabled(bool enabled) { m_GodRaysEnabled = enabled; }
 
 private:
     GLuint m_FBO = 0;
@@ -33,6 +35,7 @@ private:
     unsigned int m_Height = 720;
     bool m_BloomEnabled = true;
     bool m_SSAOEnabled = true;
+    bool m_GodRaysEnabled = true;
     std::unique_ptr<Shader> m_Shader;
 
     void initQuad();

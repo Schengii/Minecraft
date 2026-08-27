@@ -8,6 +8,8 @@ uniform bool u_IsUnderwater;
 uniform bool u_HasNightVision;
 uniform bool u_BloomEnabled;
 uniform bool u_SSAOEnabled;
+uniform bool u_GodRaysEnabled;
+uniform vec2 u_SunScreenPos;
 
 // ACES Filmic Tone Mapping Curve
 vec3 ACESFilm(vec3 x) {
@@ -43,6 +45,19 @@ void main() {
         float curvature = max(sample1 + sample2 + sample3 + sample4 - 4.0 * center, 0.0);
         float ssaoFactor = clamp(1.0 - curvature * 0.35, 0.55, 1.0);
         col *= ssaoFactor;
+    }
+
+    // Volumetric God-Rays / Solar Light Shafts
+    if (u_GodRaysEnabled) {
+        vec2 deltaTextCoord = (uv - u_SunScreenPos) * (1.0 / 12.0) * 0.4;
+        vec2 rayUv = uv;
+        vec3 illuminationRay = vec3(0.0);
+        for (int i = 0; i < 12; i++) {
+            rayUv -= deltaTextCoord;
+            vec3 s = max(texture(u_ScreenTexture, rayUv).rgb - vec3(0.65), vec3(0.0));
+            illuminationRay += s * (1.0 / 12.0) * 0.35;
+        }
+        col += illuminationRay * vec3(1.0, 0.85, 0.5); // Warm golden sunbeams
     }
 
     // Bloom extraction approximation for glowing elements

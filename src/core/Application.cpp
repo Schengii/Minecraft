@@ -610,7 +610,7 @@ void Application::render() {
 
     // Render screen quad with Post-Processing
     if (m_PostProcessing) {
-        m_PostProcessing->unbindAndRender(m_InWater, m_PlayerStats && m_PlayerStats->hasNightVision(), m_PostProcessing->isBloomEnabled(), m_PostProcessing->isSSAOEnabled());
+        m_PostProcessing->unbindAndRender(m_InWater, m_PlayerStats && m_PlayerStats->hasNightVision(), m_PostProcessing->isBloomEnabled(), m_PostProcessing->isSSAOEnabled(), m_PostProcessing->isGodRaysEnabled());
     }
 
     // 4. Render 2D HUD Layer

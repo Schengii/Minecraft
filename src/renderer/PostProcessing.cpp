@@ -52,7 +52,7 @@ void PostProcessing::bindForWriting() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void PostProcessing::unbindAndRender(bool isUnderwater, bool hasNightVision, bool bloomEnabled, bool ssaoEnabled) {
+void PostProcessing::unbindAndRender(bool isUnderwater, bool hasNightVision, bool bloomEnabled, bool ssaoEnabled, bool godRaysEnabled, const glm::vec2& sunScreenPos) {
     if (!glBindFramebuffer) return;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, m_Width, m_Height);
@@ -64,6 +64,8 @@ void PostProcessing::unbindAndRender(bool isUnderwater, bool hasNightVision, boo
     m_Shader->setBool("u_HasNightVision", hasNightVision);
     m_Shader->setBool("u_BloomEnabled", bloomEnabled);
     m_Shader->setBool("u_SSAOEnabled", ssaoEnabled);
+    m_Shader->setBool("u_GodRaysEnabled", godRaysEnabled);
+    m_Shader->setVec2("u_SunScreenPos", sunScreenPos);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_ColorTex);

@@ -6,7 +6,7 @@
 [![CMake](https://img.shields.io/badge/CMake-%3E%3D3.20-orange.svg)](https://cmake.org/)
 [![Build & Test](https://github.com/Schengii/Minecraft/actions/workflows/build.yml/badge.svg)](.github/workflows/build.yml)
 
-A high-performance, modular 3D voxel game engine written in **C++20** and **OpenGL 4.5**, modeled after Minecraft. Features high-throughput multithreaded chunk generation, $16 \times 16 \times 16$ sub-chunk section slicing, asynchronous CPU meshing with exact atlas UV tiling, Amanatides & Woo 3D DDA fast voxel raycasting, real-time cascaded dynamic shadow mapping with 3x3 PCF filtering, multi-threaded asynchronous network packet queuing, procedural pixel-art texture atlas generation, 3D hierarchical mob models, 3-headed Wither boss mechanics, multiplayer remote player models with nametags, client-side prediction with dead-reckoning interpolation, screen-space ambient occlusion (SSAO), procedural skybox clouds at $Y=128$, PBR specular & Fresnel water shaders, environmental player hazards (oxygen/drowning, fire/lava burning, fall damage), animal breeding & feeding mechanics, pig & horse mount saddling and steering, dynamic fluid flow level height calculations, Nether Bastion remnants, Elytra aerodynamic gliding physics, End City towers, atmospheric distance fog with sun in-scattering, mouse scroll hotbar selection, right-click stack splitting, infinite water source generation, console command engine, first-person hand animations, bitmap typography rendering, interactive container GUIs (chests and animated furnaces), continuous mining with tool speed multipliers, non-blocking UDP socket multiplayer networking, vertex ambient occlusion (smooth lighting), ACES filmic tone mapping & bloom post-processing, data-driven modding engine, brewing stand & status effect systems, cellular automaton redstone, hopper item transfer & comparator reading, piston mechanics, 3D A* mob pathfinding, fluid dynamics, Anvil region saving, and material-based spatial audio.
+A high-performance, modular 3D voxel game engine written in **C++20** and **OpenGL 4.5**, modeled after Minecraft. Features high-throughput multithreaded chunk generation, $16 \times 16 \times 16$ sub-chunk section slicing, asynchronous CPU meshing with exact atlas UV tiling, Amanatides & Woo 3D DDA fast voxel raycasting, real-time cascaded dynamic shadow mapping with 3x3 PCF filtering, volumetric God-Ray solar light shafts, multi-threaded asynchronous network packet queuing, procedural pixel-art texture atlas generation, 3D hierarchical mob models, 3-headed Wither boss mechanics, multiplayer remote player models with nametags, client-side prediction with dead-reckoning interpolation, screen-space ambient occlusion (SSAO), procedural skybox clouds at $Y=128$, PBR specular & Fresnel water shaders, environmental player hazards (oxygen/drowning, fire/lava burning, fall damage), animal breeding & feeding mechanics, pig & horse mount saddling and steering, dynamic fluid flow level height calculations, Ocean Monuments, Sunken Shipwrecks, Nether Bastion remnants, Elytra aerodynamic gliding physics, End City towers, atmospheric distance fog with sun in-scattering, mouse scroll hotbar selection, right-click stack splitting, infinite water source generation, console command engine, first-person hand animations, bitmap typography rendering, interactive container GUIs (chests and animated furnaces), continuous mining with tool speed multipliers, non-blocking UDP socket multiplayer networking, vertex ambient occlusion (smooth lighting), ACES filmic tone mapping & bloom post-processing, data-driven modding engine, brewing stand & status effect systems, cellular automaton redstone, hopper item transfer & comparator reading, piston mechanics, 3D A* mob pathfinding, fluid dynamics, Anvil region saving, and material-based spatial audio.
 
 ---
 
@@ -21,6 +21,22 @@ A high-performance, modular 3D voxel game engine written in **C++20** and **Open
 ### ☀️ Cascaded Dynamic Shadow Mapping & PCF Filtering (`ShadowMap` & `block.frag`)
 - **Multi-Distance Cascaded Frustums**: Calculates localized near-cascade ($r=15\text{m}$), mid-cascade ($r=40\text{m}$), and far-cascade ($r=90\text{m}$) light-space projection matrices.
 - **3x3 Percentage-Closer Filtering (PCF)**: Smooth, anti-aliased soft shadow edges with slope-scaled adaptive depth bias preventing shadow acne.
+
+---
+
+### ✨ Volumetric God-Rays & Solar Light Shafts (`postprocess.frag` & `PostProcessing.cpp`)
+- **Radial Raymarch Sampling**: Multi-sample screen-space illumination raymarching creating authentic warm golden sunbeams streaming across landscapes, tree canopies, and horizons.
+
+---
+
+### 🏛️ Ocean Monuments & Sunken Shipwrecks (`StructureGenerator.cpp`)
+- **Submerged Ocean Monuments**: $13 \times 9 \times 13$ underwater stone fortresses featuring glowing sea lantern pillars, central gold treasure vault, and Guardian spawners.
+- **Sunken Shipwrecks**: $12 \times 6 \times 5$ wooden hulls with oak ribs, mast, and captain's loot chest.
+
+---
+
+### 🗺️ Top-Down World Surface & Map Color Sampling (`World.cpp`)
+- **Minimap Elevation Queries**: Live vertical surface scanning (`getTopBlock`) and biome/block color mapping (`getMapColor`) for live overhead maps.
 
 ---
 
@@ -257,7 +273,7 @@ nmake Minecraft
 nmake TestEngine
 .\build\TestEngine.exe
 ```
-> **100% Pass Rate**: All **80 automated test suites** execute and validate every engine subsystem across DDA raycasting, Cascaded Shadow Mapping (CSM), Screen-Space Ambient Occlusion (SSAO), async network packet queuing, dead-reckoning client prediction, volumetric distance fog, animal breeding, mount riding & saddling, dynamic fluid levels, Nether Bastions, Elytra gliding aerodynamics, End City structures, player hazards (oxygen, lava, fall damage), mouse scroll selection, inventory stack-splitting, infinite water fluids, console commands, Redstone Comparators, Hopper automation, Biome colormaps, Stronghold dungeons, mob AI, procedural clouds, and UDP socket networking.
+> **100% Pass Rate**: All **85 automated test suites** execute and validate every engine subsystem across DDA raycasting, Cascaded Shadow Mapping (CSM), Volumetric God-Rays, Ocean Monuments, Sunken Shipwrecks, Screen-Space Ambient Occlusion (SSAO), async network packet queuing, dead-reckoning client prediction, volumetric distance fog, animal breeding, mount riding & saddling, dynamic fluid levels, Nether Bastions, Elytra gliding aerodynamics, End City structures, player hazards (oxygen, lava, fall damage), mouse scroll selection, inventory stack-splitting, infinite water fluids, console commands, Redstone Comparators, Hopper automation, Biome colormaps, Stronghold dungeons, mob AI, procedural clouds, and UDP socket networking.
 
 ---
 

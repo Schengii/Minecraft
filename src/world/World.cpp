@@ -160,4 +160,38 @@ void World::setBlock(int worldX, int worldY, int worldZ, BlockType type) {
     }
 }
 
+BlockType World::getTopBlock(int worldX, int worldZ, int& outY) {
+    for (int y = 250; y >= 1; --y) {
+        BlockType b = getBlock(worldX, y, worldZ);
+        if (b != BlockType::Air) {
+            outY = y;
+            return b;
+        }
+    }
+    outY = 0;
+    return BlockType::Air;
+}
+
+glm::vec3 World::getMapColor(int worldX, int worldZ) {
+    int topY = 0;
+    BlockType b = getTopBlock(worldX, worldZ, topY);
+    switch (b) {
+        case BlockType::Grass: return glm::vec3(0.4f, 0.7f, 0.2f);
+        case BlockType::Dirt: return glm::vec3(0.55f, 0.4f, 0.25f);
+        case BlockType::Stone:
+        case BlockType::Bedrock: return glm::vec3(0.5f, 0.5f, 0.5f);
+        case BlockType::Sand: return glm::vec3(0.85f, 0.82f, 0.55f);
+        case BlockType::Water: return glm::vec3(0.2f, 0.4f, 0.8f);
+        case BlockType::Lava: return glm::vec3(0.9f, 0.35f, 0.1f);
+        case BlockType::Leaves: return glm::vec3(0.25f, 0.55f, 0.15f);
+        case BlockType::OakLog:
+        case BlockType::BirchLog:
+        case BlockType::Planks: return glm::vec3(0.6f, 0.45f, 0.25f);
+        case BlockType::Snow: return glm::vec3(0.95f, 0.95f, 0.98f);
+        case BlockType::Netherrack: return glm::vec3(0.45f, 0.1f, 0.1f);
+        case BlockType::EndStone: return glm::vec3(0.85f, 0.85f, 0.65f);
+        default: return glm::vec3(0.3f, 0.3f, 0.3f);
+    }
+}
+
 }

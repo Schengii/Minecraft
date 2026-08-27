@@ -20,6 +20,8 @@ public:
     static void generateOceanRuin(World& world, int x, int y, int z);
     static void generateEndCity(World& world, int x, int y, int z);
     static void generateNetherBastion(World& world, int x, int y, int z);
+    static void generateOceanMonument(World& world, int x, int y, int z);
+    static void generateShipwreck(World& world, int x, int y, int z);
 };
 
 }

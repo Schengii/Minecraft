@@ -44,6 +44,10 @@ public:
 
     void unloadFarChunks(const glm::vec3& playerPos);
 
+    // Top-Down Minimap & Map Rendering
+    BlockType getTopBlock(int worldX, int worldZ, int& outY);
+    glm::vec3 getMapColor(int worldX, int worldZ);
+
 private:
     int m_RenderDistance;
     std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>> m_Chunks;

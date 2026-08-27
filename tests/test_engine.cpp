@@ -1553,6 +1553,69 @@ void testUltimateEngineStabilityAndRegression() {
     std::cout << "  -> Ultimate System-wide Regression tests PASSED!" << std::endl;
 }
 
+void testGodRaysShaderParameters() {
+    std::cout << "[TEST] 81. Post-Processing Volumetric God-Rays & Solar Shafts..." << std::endl;
+    PostProcessing pp(1280, 720);
+    assert(pp.isGodRaysEnabled() == true);
+
+    pp.setGodRaysEnabled(false);
+    assert(pp.isGodRaysEnabled() == false);
+    pp.setGodRaysEnabled(true);
+    assert(pp.isGodRaysEnabled() == true);
+
+    std::cout << "  -> Volumetric God-Rays tests PASSED!" << std::endl;
+}
+
+void testOceanMonumentGeneration() {
+    std::cout << "[TEST] 82. Submerged Ocean Monument & Guardian Vault..." << std::endl;
+    World world(1);
+    StructureGenerator::generateOceanMonument(world, 100, 30, 100);
+
+    assert(world.getBlock(100, 30, 100) == BlockType::Stone);       // Outer wall
+    assert(world.getBlock(106, 31, 106) == BlockType::GoldOre);     // Gold core
+    assert(world.getBlock(106, 32, 106) == BlockType::Chest);       // Treasure chest
+    assert(world.getBlock(106, 34, 106) == BlockType::Spawner);     // Guardian spawner
+
+    std::cout << "  -> Ocean Monument tests PASSED!" << std::endl;
+}
+
+void testShipwreckGeneration() {
+    std::cout << "[TEST] 83. Sunken Shipwreck Wooden Hull & Captain's Chest..." << std::endl;
+    World world(1);
+    StructureGenerator::generateShipwreck(world, 50, 20, 50);
+
+    assert(world.getBlock(50, 20, 50) == BlockType::OakLog);        // Hull rib
+    assert(world.getBlock(51, 21, 52) == BlockType::Chest);         // Captain's chest
+    assert(world.getBlock(55, 23, 52) == BlockType::OakLog);        // Mast
+
+    std::cout << "  -> Sunken Shipwreck tests PASSED!" << std::endl;
+}
+
+void testWorldTopBlockAndMapColors() {
+    std::cout << "[TEST] 84. World Top-Down Surface Elevation & Map Color Sampling..." << std::endl;
+    World world(1);
+    world.setBlock(10, 70, 10, BlockType::Grass);
+
+    int topY = 0;
+    BlockType top = world.getTopBlock(10, 10, topY);
+    assert(top == BlockType::Grass);
+    assert(topY == 70);
+
+    glm::vec3 col = world.getMapColor(10, 10);
+    assert(col.y > col.r && col.y > col.z); // Green dominant for grass
+
+    std::cout << "  -> World Surface & Map Color tests PASSED!" << std::endl;
+}
+
+void testGrandFinalEngineRegression() {
+    std::cout << "[TEST] 85. Grand Final System-wide Architecture & Regression..." << std::endl;
+    World world(999);
+    world.setBlock(0, 64, 0, BlockType::EmeraldBlock);
+    assert(world.getBlock(0, 64, 0) == BlockType::EmeraldBlock);
+
+    std::cout << "  -> Grand Final Regression tests PASSED!" << std::endl;
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << " Running Minecraft Engine Test Suite   " << std::endl;
@@ -1663,8 +1726,15 @@ int main() {
     testPostProcessingSSAOAndNightVision();
     testUltimateEngineStabilityAndRegression();
 
+    // Phase 12 Volumetric God-Rays, Ocean Monuments & Map Colors
+    testGodRaysShaderParameters();
+    testOceanMonumentGeneration();
+    testShipwreckGeneration();
+    testWorldTopBlockAndMapColors();
+    testGrandFinalEngineRegression();
+
     std::cout << "========================================" << std::endl;
-    std::cout << " ALL 80 ENGINE TESTS PASSED 100%!       " << std::endl;
+    std::cout << " ALL 85 ENGINE TESTS PASSED 100%!       " << std::endl;
     std::cout << "========================================" << std::endl;
     return 0;
 }

@@ -42,6 +42,7 @@ PFNGLDELETEPROGRAMPROC glDeleteProgram = NULL;
 PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = NULL;
 PFNGLUNIFORM1IPROC glUniform1i = NULL;
 PFNGLUNIFORM1FPROC glUniform1f = NULL;
+PFNGLUNIFORM2FPROC glUniform2f = NULL;
 PFNGLUNIFORM3FPROC glUniform3f = NULL;
 PFNGLUNIFORM4FPROC glUniform4f = NULL;
 PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv = NULL;
@@ -130,6 +131,7 @@ int gladLoadGLLoader(GLADloadproc loadproc) {
     glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)load(loadproc, "glGetUniformLocation");
     glUniform1i = (PFNGLUNIFORM1IPROC)load(loadproc, "glUniform1i");
     glUniform1f = (PFNGLUNIFORM1FPROC)load(loadproc, "glUniform1f");
+    glUniform2f = (PFNGLUNIFORM2FPROC)load(loadproc, "glUniform2f");
     glUniform3f = (PFNGLUNIFORM3FPROC)load(loadproc, "glUniform3f");
     glUniform4f = (PFNGLUNIFORM4FPROC)load(loadproc, "glUniform4f");
     glUniformMatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC)load(loadproc, "glUniformMatrix4fv");
