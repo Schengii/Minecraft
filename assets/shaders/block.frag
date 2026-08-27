@@ -22,6 +22,8 @@ uniform bool u_HasHandheldLight;
 void main() {
     vec3 norm = normalize(Normal);
     vec3 sunDir = normalize(u_SunDirection);
+    vec3 viewDir = normalize(u_PlayerPos - FragPos);
+
     float diff = max(dot(norm, sunDir), 0.0);
     
     vec3 ambient = u_AmbientLight * u_SkyColor;
@@ -31,7 +33,12 @@ void main() {
     float aoFactor = clamp(AO, 0.2, 1.0);
     vec3 lighting = (ambient + diffuse) * Light * aoFactor;
 
-    // Handheld Light calculation
+    // Blinn-Phong Specular calculation (sun glint)
+    vec3 halfwayDir = normalize(sunDir + viewDir);
+    float specFactor = pow(max(dot(norm, halfwayDir), 0.0), 32.0);
+    vec3 specular = specFactor * u_SunColor * 0.35 * max(dot(norm, sunDir), 0.0);
+
+    // Dynamic Handheld Torch Light calculation
     if (u_HasHandheldLight) {
         float dist = length(FragPos - u_PlayerPos);
         if (dist < 14.0) {
@@ -51,7 +58,7 @@ void main() {
         baseColor = texColor.rgb;
     }
 
-    vec3 finalColor = baseColor * lighting;
+    vec3 finalColor = baseColor * lighting + specular;
 
     // Underwater Fog & Tint Effect
     if (u_IsUnderwater) {

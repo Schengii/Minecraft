@@ -262,7 +262,15 @@ void Application::processInput(float deltaTime) {
             float stepInterval = isSprinting ? 0.28f : 0.42f;
             if (m_StepTimer >= stepInterval) {
                 m_StepTimer = 0.0f;
-                AudioManager::playSound(SoundEffect::Footstep);
+                World* curWorld = m_DimensionManager->getCurrentWorld();
+                BlockType groundType = BlockType::Grass;
+                if (curWorld) {
+                    int gx = static_cast<int>(std::floor(m_Camera->getPosition().x));
+                    int gy = static_cast<int>(std::floor(m_Camera->getPosition().y - 1.2f));
+                    int gz = static_cast<int>(std::floor(m_Camera->getPosition().z));
+                    groundType = curWorld->getBlock(gx, gy, gz);
+                }
+                AudioManager::playMaterialFootstep(groundType, m_Camera->getPosition(), m_Camera->getPosition(), m_Camera->getFront());
             }
         } else {
             m_StepTimer = 0.0f;
@@ -536,9 +544,14 @@ void Application::render() {
         // Render Opaque World Geometry
         world->render(m_FrustumCuller.get());
 
-        // Render 3D Entities, Mobs, Items & Arrows
+        // Render 3D Entities, Mobs, Items, Arrows, Wither & Remote Players
         if (m_MobEngine && m_ItemEntityManager) {
-            EntityRenderer::getInstance().render(*m_Camera, *m_MobEngine, *m_ItemEntityManager, currentTime);
+            EntityRenderer::getInstance().render(*m_Camera, *m_MobEngine, *m_ItemEntityManager, currentTime, m_NetworkManager.get());
+        }
+
+        // Render Dynamic Procedural Clouds at Y=128
+        if (m_Skybox) {
+            m_Skybox->renderClouds(*m_Camera, m_TimeManager->getTimeTicks(), currentTime);
         }
 
         // Render 3D Particles (Debris & Weather Precipitation)

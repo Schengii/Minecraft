@@ -1,5 +1,6 @@
 #include "EntityRenderer.hpp"
 #include "TextureAtlas.hpp"
+#include "../gui/FontRenderer.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <cmath>
@@ -29,10 +30,8 @@ void EntityRenderer::init() {
 }
 
 void EntityRenderer::initCubeBuffers() {
-    // 36 vertices (6 faces x 2 triangles x 3 vertices) with Pos (3), Normal (3), TexCoord (2), Light (1), AO (1)
-    // Total: 10 floats per vertex
     float cubeVertices[] = {
-        // Front face (+Z) - Normal: 0, 0, 1
+        // Front face (+Z)
         -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,  1.0f, 1.0f,
          0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
          0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f,  1.0f, 1.0f,
@@ -40,7 +39,7 @@ void EntityRenderer::initCubeBuffers() {
         -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f,  1.0f, 1.0f,
         -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,  1.0f, 1.0f,
 
-        // Back face (-Z) - Normal: 0, 0, -1
+        // Back face (-Z)
         -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
         -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,  1.0f, 1.0f,
          0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,  1.0f, 1.0f,
@@ -48,7 +47,7 @@ void EntityRenderer::initCubeBuffers() {
          0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,  1.0f, 1.0f,
         -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
 
-        // Left face (-X) - Normal: -1, 0, 0
+        // Left face (-X)
         -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,  1.0f, 1.0f,
         -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
         -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,  1.0f, 1.0f,
@@ -56,7 +55,7 @@ void EntityRenderer::initCubeBuffers() {
         -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,  1.0f, 1.0f,
         -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,  1.0f, 1.0f,
 
-        // Right face (+X) - Normal: 1, 0, 0
+        // Right face (+X)
          0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
          0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,  1.0f, 1.0f,
          0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,  1.0f, 1.0f,
@@ -64,7 +63,7 @@ void EntityRenderer::initCubeBuffers() {
          0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,  1.0f, 1.0f,
          0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
 
-        // Top face (+Y) - Normal: 0, 1, 0
+        // Top face (+Y)
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
         -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,  1.0f, 1.0f,
          0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,  1.0f, 1.0f,
@@ -72,7 +71,7 @@ void EntityRenderer::initCubeBuffers() {
          0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,  1.0f, 1.0f,
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
 
-        // Bottom face (-Y) - Normal: 0, -1, 0
+        // Bottom face (-Y)
         -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,  1.0f, 1.0f,
          0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,  1.0f, 1.0f,
          0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,  1.0f, 1.0f,
@@ -90,19 +89,14 @@ void EntityRenderer::initCubeBuffers() {
         glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
 
         GLsizei stride = 10 * sizeof(float);
-        // Pos (3)
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-        // Normal (3)
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-        // TexCoord (2)
         glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
-        // Light (1)
         glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, stride, (void*)(8 * sizeof(float)));
-        // AO (1)
         glEnableVertexAttribArray(4);
         glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, stride, (void*)(9 * sizeof(float)));
 
@@ -136,19 +130,17 @@ void EntityRenderer::renderHumanoid(const glm::mat4& viewProj, const Mob& mob, c
     float swing = std::sin(mob.limbSwing) * 35.0f;
     glm::vec3 pos = mob.position;
 
-    // Head (0.5 x 0.5 x 0.5)
+    // Head
     renderBox(viewProj, pos + glm::vec3(0.0f, 1.6f, 0.0f), glm::vec3(mob.pitch, mob.yaw, 0.0f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.0f), skinColor);
 
-    // Body (0.5 x 0.7 x 0.25)
+    // Body
     renderBox(viewProj, pos + glm::vec3(0.0f, 1.05f, 0.0f), glm::vec3(0.0f, mob.yaw, 0.0f), glm::vec3(0.5f, 0.7f, 0.25f), glm::vec3(0.0f), clothesColor);
 
     // Arms
     if (mob.type == MobType::Zombie) {
-        // Zombie arms raised forward (-90 deg pitch)
         renderBox(viewProj, pos + glm::vec3(-0.35f, 1.25f, 0.0f), glm::vec3(-90.0f, mob.yaw, 0.0f), glm::vec3(0.2f, 0.65f, 0.2f), glm::vec3(0.0f, 0.25f, 0.0f), skinColor);
         renderBox(viewProj, pos + glm::vec3(0.35f, 1.25f, 0.0f), glm::vec3(-90.0f, mob.yaw, 0.0f), glm::vec3(0.2f, 0.65f, 0.2f), glm::vec3(0.0f, 0.25f, 0.0f), skinColor);
     } else {
-        // Normal arm swing
         renderBox(viewProj, pos + glm::vec3(-0.35f, 1.25f, 0.0f), glm::vec3(swing, mob.yaw, 0.0f), glm::vec3(0.2f, 0.65f, 0.2f), glm::vec3(0.0f, 0.25f, 0.0f), skinColor);
         renderBox(viewProj, pos + glm::vec3(0.35f, 1.25f, 0.0f), glm::vec3(-swing, mob.yaw, 0.0f), glm::vec3(0.2f, 0.65f, 0.2f), glm::vec3(0.0f, 0.25f, 0.0f), skinColor);
     }
@@ -163,13 +155,8 @@ void EntityRenderer::renderCreeper(const glm::mat4& viewProj, const Mob& mob) {
     glm::vec3 pos = mob.position;
     glm::vec4 color = (mob.fuseTimer > 0.0f && static_cast<int>(mob.fuseTimer * 10) % 2 == 0) ? glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) : glm::vec4(0.15f, 0.75f, 0.2f, 1.0f);
 
-    // Head
     renderBox(viewProj, pos + glm::vec3(0.0f, 1.4f, 0.0f), glm::vec3(0.0f, mob.yaw, 0.0f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.0f), color);
-
-    // Body
     renderBox(viewProj, pos + glm::vec3(0.0f, 0.8f, 0.0f), glm::vec3(0.0f, mob.yaw, 0.0f), glm::vec3(0.45f, 0.7f, 0.25f), glm::vec3(0.0f), color);
-
-    // 4 Legs
     renderBox(viewProj, pos + glm::vec3(-0.16f, 0.25f, 0.16f), glm::vec3(swing, mob.yaw, 0.0f), glm::vec3(0.18f, 0.45f, 0.18f), glm::vec3(0.0f), color * 0.85f);
     renderBox(viewProj, pos + glm::vec3(0.16f, 0.25f, 0.16f), glm::vec3(-swing, mob.yaw, 0.0f), glm::vec3(0.18f, 0.45f, 0.18f), glm::vec3(0.0f), color * 0.85f);
     renderBox(viewProj, pos + glm::vec3(-0.16f, 0.25f, -0.16f), glm::vec3(-swing, mob.yaw, 0.0f), glm::vec3(0.18f, 0.45f, 0.18f), glm::vec3(0.0f), color * 0.85f);
@@ -180,13 +167,8 @@ void EntityRenderer::renderQuadruped(const glm::mat4& viewProj, const Mob& mob, 
     float swing = std::sin(mob.limbSwing) * 30.0f;
     glm::vec3 pos = mob.position;
 
-    // Body (horizontal)
     renderBox(viewProj, pos + glm::vec3(0.0f, 0.65f, 0.0f), glm::vec3(0.0f, mob.yaw, 0.0f), glm::vec3(0.6f, 0.5f, 0.9f), glm::vec3(0.0f), bodyColor);
-
-    // Head
     renderBox(viewProj, pos + glm::vec3(0.0f, 0.85f, 0.55f), glm::vec3(0.0f, mob.yaw, 0.0f), glm::vec3(0.4f, 0.4f, 0.4f), glm::vec3(0.0f), bodyColor * 1.05f);
-
-    // 4 Legs
     renderBox(viewProj, pos + glm::vec3(-0.2f, 0.25f, 0.3f), glm::vec3(swing, mob.yaw, 0.0f), glm::vec3(0.18f, 0.45f, 0.18f), glm::vec3(0.0f), bodyColor * 0.9f);
     renderBox(viewProj, pos + glm::vec3(0.2f, 0.25f, 0.3f), glm::vec3(-swing, mob.yaw, 0.0f), glm::vec3(0.18f, 0.45f, 0.18f), glm::vec3(0.0f), bodyColor * 0.9f);
     renderBox(viewProj, pos + glm::vec3(-0.2f, 0.25f, -0.3f), glm::vec3(-swing, mob.yaw, 0.0f), glm::vec3(0.18f, 0.45f, 0.18f), glm::vec3(0.0f), bodyColor * 0.9f);
@@ -198,19 +180,36 @@ void EntityRenderer::renderDragon(const glm::mat4& viewProj, const Mob& mob, flo
     glm::vec3 pos = mob.position;
     glm::vec4 dragonColor(0.12f, 0.12f, 0.15f, 1.0f);
 
-    // Body
     renderBox(viewProj, pos, glm::vec3(0.0f, mob.yaw, 0.0f), glm::vec3(1.5f, 1.2f, 3.5f), glm::vec3(0.0f), dragonColor);
-    // Neck & Head
     renderBox(viewProj, pos + glm::vec3(0.0f, 0.6f, 2.2f), glm::vec3(-15.0f, mob.yaw, 0.0f), glm::vec3(0.9f, 0.9f, 1.4f), glm::vec3(0.0f), dragonColor * 1.1f);
-    // Wings
     renderBox(viewProj, pos + glm::vec3(-1.8f, 0.5f, 0.0f), glm::vec3(0.0f, mob.yaw, wingFlap), glm::vec3(2.5f, 0.15f, 1.8f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec4(0.2f, 0.1f, 0.25f, 1.0f));
     renderBox(viewProj, pos + glm::vec3(1.8f, 0.5f, 0.0f), glm::vec3(0.0f, mob.yaw, -wingFlap), glm::vec3(2.5f, 0.15f, 1.8f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec4(0.2f, 0.1f, 0.25f, 1.0f));
-    // Tail
     renderBox(viewProj, pos + glm::vec3(0.0f, 0.0f, -2.5f), glm::vec3(0.0f, mob.yaw, 0.0f), glm::vec3(0.6f, 0.6f, 2.5f), glm::vec3(0.0f), dragonColor);
 }
 
+void EntityRenderer::renderWither(const glm::mat4& viewProj, const Mob& mob, float totalTime) {
+    float hover = std::sin(totalTime * 4.0f) * 0.15f;
+    glm::vec3 pos = mob.position + glm::vec3(0.0f, hover, 0.0f);
+    glm::vec4 witherColor(0.14f, 0.14f, 0.16f, 1.0f);
+
+    // Central Body & Spine Ribcage
+    renderBox(viewProj, pos + glm::vec3(0.0f, 1.1f, 0.0f), glm::vec3(0.0f, mob.yaw, 0.0f), glm::vec3(0.9f, 0.35f, 0.35f), glm::vec3(0.0f), witherColor);
+    renderBox(viewProj, pos + glm::vec3(0.0f, 0.6f, 0.0f), glm::vec3(0.0f, mob.yaw, 0.0f), glm::vec3(0.35f, 0.7f, 0.25f), glm::vec3(0.0f), witherColor * 0.9f);
+    renderBox(viewProj, pos + glm::vec3(0.0f, 0.1f, 0.0f), glm::vec3(0.0f, mob.yaw, 0.0f), glm::vec3(0.25f, 0.45f, 0.2f), glm::vec3(0.0f), witherColor * 0.8f);
+
+    // Central Head (0.6 x 0.6 x 0.6)
+    renderBox(viewProj, pos + glm::vec3(0.0f, 1.65f, 0.0f), glm::vec3(mob.pitch, mob.yaw, 0.0f), glm::vec3(0.6f, 0.6f, 0.6f), glm::vec3(0.0f), witherColor * 1.1f);
+
+    // Left Head (smaller, looking slightly outward)
+    renderBox(viewProj, pos + glm::vec3(-0.65f, 1.5f, 0.0f), glm::vec3(mob.pitch, mob.yaw - 20.0f, 0.0f), glm::vec3(0.45f, 0.45f, 0.45f), glm::vec3(0.0f), witherColor * 1.05f);
+
+    // Right Head (smaller, looking slightly outward)
+    renderBox(viewProj, pos + glm::vec3(0.65f, 1.5f, 0.0f), glm::vec3(mob.pitch, mob.yaw + 20.0f, 0.0f), glm::vec3(0.45f, 0.45f, 0.45f), glm::vec3(0.0f), witherColor * 1.05f);
+}
+
 void EntityRenderer::render(const Camera& camera, const MobEngine& mobEngine, 
-                            const ItemEntityManager& itemMgr, float totalTime) {
+                            const ItemEntityManager& itemMgr, float totalTime,
+                            const NetworkManager* netManager) {
     if (!m_EntityShader) return;
 
     m_EntityShader->use();
@@ -260,6 +259,9 @@ void EntityRenderer::render(const Camera& camera, const MobEngine& mobEngine,
             case MobType::EnderDragon:
                 renderDragon(viewProj, mob, totalTime);
                 break;
+            case MobType::Wither:
+                renderWither(viewProj, mob, totalTime);
+                break;
         }
     }
 
@@ -278,7 +280,35 @@ void EntityRenderer::render(const Camera& camera, const MobEngine& mobEngine,
         renderBox(viewProj, arrow.position, glm::vec3(-pitch, yaw, 0.0f), glm::vec3(0.06f, 0.06f, 0.6f), glm::vec3(0.0f), glm::vec4(0.6f, 0.4f, 0.2f, 1.0f));
     }
 
+    // 4. Render Wither Skulls
+    for (const auto& skull : mobEngine.getWitherSkulls()) {
+        if (!skull.active) continue;
+        renderBox(viewProj, skull.position, glm::vec3(0.0f, totalTime * 90.0f, 0.0f), glm::vec3(0.35f, 0.35f, 0.35f), glm::vec3(0.0f), glm::vec4(0.1f, 0.1f, 0.12f, 1.0f));
+    }
+
+    // 5. Render Remote Multiplayer Players
+    if (netManager) {
+        renderRemotePlayers(camera, *netManager, totalTime);
+    }
+
     TextureAtlas::getInstance().unbind();
+}
+
+void EntityRenderer::renderRemotePlayers(const Camera& camera, const NetworkManager& netManager, float totalTime) {
+    glm::mat4 proj = camera.getProjectionMatrix(16.0f / 9.0f);
+    glm::mat4 view = camera.getViewMatrix();
+    glm::mat4 viewProj = proj * view;
+
+    for (const auto& remote : netManager.getRemotePlayers()) {
+        Mob playerMob;
+        playerMob.position = remote.position;
+        playerMob.yaw = remote.yaw;
+        playerMob.pitch = remote.pitch;
+        playerMob.limbSwing = totalTime * 4.0f;
+
+        // Render Steve (cyan shirt, blue pants, skin head/arms)
+        renderHumanoid(viewProj, playerMob, glm::vec4(0.85f, 0.65f, 0.5f, 1.0f), glm::vec4(0.15f, 0.65f, 0.75f, 1.0f));
+    }
 }
 
 void EntityRenderer::renderFirstPersonHand(const Camera& camera, BlockType heldItem, 
@@ -320,10 +350,8 @@ void EntityRenderer::renderFirstPersonHand(const Camera& camera, BlockType heldI
     model = glm::rotate(model, glm::radians(-25.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
     if (heldItem != BlockType::Air) {
-        // Render 3D miniature block / tool
         model = glm::scale(model, glm::vec3(0.28f, 0.28f, 0.28f));
     } else {
-        // Render player's arm / hand (flesh tone)
         model = glm::scale(model, glm::vec3(0.18f, 0.55f, 0.18f));
     }
 

@@ -17,7 +17,8 @@ enum class MobType {
     Creeper,
     EnderDragon,
     Villager,
-    IronGolem
+    IronGolem,
+    Wither
 };
 
 struct Mob {
@@ -42,6 +43,12 @@ struct ArrowEntity {
     bool active = true;
 };
 
+struct WitherSkullEntity {
+    glm::vec3 position;
+    glm::vec3 velocity;
+    bool active = true;
+};
+
 class MobEngine {
 public:
     MobEngine();
@@ -55,10 +62,12 @@ public:
 
     const std::vector<Mob>& getMobs() const { return m_Mobs; }
     const std::vector<ArrowEntity>& getArrows() const { return m_Arrows; }
+    const std::vector<WitherSkullEntity>& getWitherSkulls() const { return m_WitherSkulls; }
 
 private:
     std::vector<Mob> m_Mobs;
     std::vector<ArrowEntity> m_Arrows;
+    std::vector<WitherSkullEntity> m_WitherSkulls;
     float m_SpawnTimer = 0.0f;
 };
 

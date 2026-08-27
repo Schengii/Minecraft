@@ -9,6 +9,7 @@
 #include "../ecs/ItemEntity.hpp"
 #include "../renderer/Shader.hpp"
 #include "../renderer/Camera.hpp"
+#include "../net/NetworkManager.hpp"
 
 namespace Minecraft {
 
@@ -19,11 +20,14 @@ public:
 
     void init();
     void render(const Camera& camera, const MobEngine& mobEngine, 
-                const ItemEntityManager& itemMgr, float totalTime);
+                const ItemEntityManager& itemMgr, float totalTime,
+                const NetworkManager* netManager = nullptr);
 
     // Renders the held block/tool in first-person view
     void renderFirstPersonHand(const Camera& camera, BlockType heldItem, 
                                float swingProgress, float walkBobbing, float totalTime);
+
+    void renderRemotePlayers(const Camera& camera, const NetworkManager& netManager, float totalTime);
 
 private:
     EntityRenderer();
@@ -37,6 +41,7 @@ private:
     void renderCreeper(const glm::mat4& viewProj, const Mob& mob);
     void renderQuadruped(const glm::mat4& viewProj, const Mob& mob, const glm::vec4& bodyColor);
     void renderDragon(const glm::mat4& viewProj, const Mob& mob, float totalTime);
+    void renderWither(const glm::mat4& viewProj, const Mob& mob, float totalTime);
 
     GLuint m_CubeVAO = 0;
     GLuint m_CubeVBO = 0;

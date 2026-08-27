@@ -30,6 +30,7 @@ void MobEngine::spawnMob(MobType type, const glm::vec3& position) {
     else if (type == MobType::Skeleton) mob.health = 20.0f;
     else if (type == MobType::Creeper) mob.health = 20.0f;
     else if (type == MobType::EnderDragon) mob.health = 200.0f;
+    else if (type == MobType::Wither) mob.health = 300.0f;
     else if (type == MobType::IronGolem) mob.health = 100.0f;
     else if (type == MobType::Villager) mob.health = 20.0f;
     else mob.health = 10.0f; // Pig / Cow
@@ -158,6 +159,8 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
                     itemMgr->spawnItemDrop(BlockType::Emerald, 1, mob.position);
                 } else if (mob.type == MobType::IronGolem) {
                     itemMgr->spawnItemDrop(BlockType::IronOre, 3 + rand() % 3, mob.position);
+                } else if (mob.type == MobType::Wither) {
+                    itemMgr->spawnItemDrop(BlockType::DiamondOre, 5, mob.position);
                 }
             }
             AudioManager::playSound3D(SoundEffect::MobHit, mob.position, playerPos, glm::vec3(0, 0, -1));
@@ -168,7 +171,7 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
         float distToPlayer = glm::distance(mob.position, playerPos);
 
         // Despawn far away mobs (> 72 blocks) except bosses
-        if (distToPlayer > 72.0f && mob.type != MobType::EnderDragon) {
+        if (distToPlayer > 72.0f && mob.type != MobType::EnderDragon && mob.type != MobType::Wither) {
             it = m_Mobs.erase(it);
             continue;
         }
@@ -265,6 +268,24 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
             ++it;
             continue;
         }
+        // --- Wither 3-Headed Boss AI ---
+        else if (mob.type == MobType::Wither) {
+            mob.limbSwing += deltaTime * 2.0f;
+            glm::vec3 hoverTarget = playerPos + glm::vec3(std::cos(mob.limbSwing) * 5.0f, 7.5f, std::sin(mob.limbSwing) * 5.0f);
+            mob.position += (hoverTarget - mob.position) * deltaTime * 2.0f;
+
+            if (mob.attackCooldown <= 0.0f && distToPlayer < 35.0f) {
+                WitherSkullEntity skull;
+                skull.position = mob.position + glm::vec3(0.0f, 0.4f, 0.0f);
+                glm::vec3 aimDir = glm::normalize((playerPos + glm::vec3(0, 1.0f, 0)) - skull.position);
+                skull.velocity = aimDir * 15.0f;
+                m_WitherSkulls.push_back(skull);
+                mob.attackCooldown = 2.2f;
+                AudioManager::playSound3D(SoundEffect::Explosion, mob.position, playerPos, glm::vec3(0, 0, -1));
+            }
+            ++it;
+            continue;
+        }
 
         // Apply Mob Gravity & Physics
         mob.velocity.y -= 25.0f * deltaTime;
@@ -304,6 +325,28 @@ void MobEngine::update(World& world, glm::vec3& playerPos, glm::vec3& playerVel,
 
         if (ArrowEntityCollisionCheck(world, arrow.position)) {
             it = m_Arrows.erase(it);
+            continue;
+        }
+
+        ++it;
+    }
+
+    // 3. Update Wither Skulls
+    for (auto it = m_WitherSkulls.begin(); it != m_WitherSkulls.end(); ) {
+        WitherSkullEntity& skull = *it;
+        skull.position += skull.velocity * deltaTime;
+
+        if (glm::distance(skull.position, playerPos + glm::vec3(0, 1, 0)) < 1.4f) {
+            playerHealth -= 7.0f;
+            playerVel += glm::normalize(skull.velocity) * 5.0f;
+            ExplosionEngine::createExplosion(world, skull.position, 2.5f, &playerVel, &playerPos);
+            it = m_WitherSkulls.erase(it);
+            continue;
+        }
+
+        if (ArrowEntityCollisionCheck(world, skull.position)) {
+            ExplosionEngine::createExplosion(world, skull.position, 2.5f, &playerVel, &playerPos);
+            it = m_WitherSkulls.erase(it);
             continue;
         }
 
